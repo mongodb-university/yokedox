@@ -3,6 +3,7 @@
  */
 package com.yokedox
 
+import com.beust.klaxon.JsonObject
 import java.util.*
 import javax.lang.model.SourceVersion
 import jdk.javadoc.doclet.*
@@ -28,7 +29,9 @@ class JsonDoclet : Doclet {
     }
 
     override fun run(docEnv: DocletEnvironment?): Boolean {
-        System.out.println("Chbus it owrks!")
+        var root = JsonObject()
+        root["test"] = "test"
+        println(root.toString())
         return true
     }
 }

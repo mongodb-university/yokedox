@@ -8,8 +8,7 @@ plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
 
-    // Apply the application plugin to add support for building a CLI application.
-    application
+    id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
 repositories {
@@ -30,10 +29,14 @@ dependencies {
 
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+
+    // JSON parsing https://github.com/cbeust/klaxon
+    implementation("com.beust:klaxon:5.0.1")
 }
 
 tasks.register("testDoclet") {
+    dependsOn("shadowJar")
     project.exec {
-        commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
+        commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox-all.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
     }
 }
