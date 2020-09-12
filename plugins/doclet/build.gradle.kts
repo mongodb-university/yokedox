@@ -11,6 +11,11 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.0.0"
 }
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_10
+  targetCompatibility = JavaVersion.VERSION_1_10
+}
+
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
@@ -35,8 +40,12 @@ dependencies {
 }
 
 tasks.register("testDoclet") {
-    dependsOn("shadowJar")
-    project.exec {
+    val shadowJar = tasks.getByPath("shadowJar")
+    dependsOn(shadowJar)
+    mustRunAfter(shadowJar)
+    doLast {
+      project.exec {
         commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox-all.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
+      }
     }
 }

@@ -3,35 +3,49 @@
  */
 package com.yokedox
 
+import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
+import com.beust.klaxon.json
 import java.util.*
 import javax.lang.model.SourceVersion
 import jdk.javadoc.doclet.*
+import javax.lang.model.element.AnnotationMirror
+import javax.lang.model.element.Element
 
 /**
  * A doclet for creating a manifest json file of available code examples for the entities in the project.
  */
 class JsonDoclet : Doclet {
-    override fun init(locale: Locale?, reporter: Reporter?) {
-    }
+  override fun init(locale: Locale?, reporter: Reporter?) {
+  }
 
-    override fun getName(): String {
-        return "JsonDoclet"
-    }
+  override fun getName(): String {
+    return "JsonDoclet"
+  }
 
-    override fun getSupportedOptions(): Set<Doclet.Option> {
-        val options = HashSet<Doclet.Option>()
-        return options
-    }
+  override fun getSupportedOptions(): Set<Doclet.Option> {
+    return HashSet()
+  }
 
-    override fun getSupportedSourceVersion(): SourceVersion {
-        return SourceVersion.RELEASE_0
-    }
+  override fun getSupportedSourceVersion(): SourceVersion {
+    return SourceVersion.RELEASE_9
+  }
 
-    override fun run(docEnv: DocletEnvironment?): Boolean {
-        var root = JsonObject()
-        root["test"] = "test"
-        println(root.toString())
-        return true
+  override fun run(environment: DocletEnvironment?): Boolean {
+    if (environment == null) {
+      return false
     }
+    var root = JsonObject()
+    root["includedElements"] = toJson(environment.includedElements)
+    println(root.toJsonString())
+    return true
+  }
+
+  fun toJson(elements: Set<Element>): List<JsonObject> {
+    return elements.map { toJson(it) }
+  }
+
+  fun toJson(element: Element): JsonObject {
+    return JsonElementVisitor().visit(element)
+  }
 }
