@@ -1,3 +1,4 @@
+.DS_Store
 *-debug.log
 *-error.log
 /.nyc_output
@@ -5,4 +6,5 @@
 /lib
 /tmp
 /yarn.lock
-node_modules
+build/
+node_modules/

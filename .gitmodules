@@ -1,0 +1,3 @@
+[submodule "submodules/xml-doclet"]
+	path = submodules/xml-doclet
+	url = git@github.com:cbush/xml-doclet.git
