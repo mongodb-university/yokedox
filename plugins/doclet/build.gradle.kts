@@ -31,3 +31,9 @@ dependencies {
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
+
+tasks.register("testDoclet") {
+    project.exec {
+        commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
+    }
+}
