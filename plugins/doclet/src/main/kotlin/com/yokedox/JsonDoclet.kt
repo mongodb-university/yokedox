@@ -23,7 +23,7 @@ class JsonDoclet : Doclet {
   }
 
   override fun getSupportedSourceVersion(): SourceVersion {
-    return SourceVersion.RELEASE_9
+    return SourceVersion.RELEASE_0
   }
 
   override fun run(environment: DocletEnvironment): Boolean {
