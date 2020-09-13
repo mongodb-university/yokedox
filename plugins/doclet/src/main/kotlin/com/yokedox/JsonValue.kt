@@ -24,29 +24,42 @@ fun toJson(list: Iterable<JsonValue>): JsonValue {
 class JsonValue {
   private val value: Any?
 
-  // Constrain possible types in the constructor
-  constructor(value: Iterable<JsonValue>) {
+  constructor(other: JsonValue?) {
+    value = other?.value
+  }
+
+  constructor(value: Iterable<Any?>) {
+    this.value = value.map { JsonValue(it) }
+  }
+
+  constructor(value: Map<String, Any?>) {
     this.value = value
   }
 
-  constructor(value: JsonObject) {
-    this.value = value
-  }
-
-  constructor(value: String) {
-    this.value = value
-  }
-
-  constructor(value: Boolean) {
-    this.value = value
+  constructor(value: Any?) {
+    this.value = when(value) {
+      null -> null
+      is String -> value
+      is Boolean -> value
+      is Number -> value
+      is Iterable<*> -> value.map { JsonValue(it) }
+      is Map<*, *> -> value.map { it.key as String to JsonValue(it.value) }
+      is JsonValue -> value.value
+      else -> throw Error("Cannot convert type to JsonValue: $value")
+    }
   }
 
   constructor(value: Number) {
     this.value = value
   }
 
-  constructor() {
-    this.value = null
+  override fun equals(other: Any?): Boolean {
+    return value == other
+  }
+
+  operator fun get(key: String): JsonValue? {
+    assert(value is Map<*, *>)
+    return (value as Map<*, *>)[key] as JsonValue?
   }
 
   override fun toString(): String {

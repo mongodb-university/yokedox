@@ -3,15 +3,36 @@
  */
 package com.yokedox
 
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import org.junit.Test
+import org.junit.Assert.*
 
 class JsonValueTest {
+  @Test fun testValueEquality() {
+    assertEquals(JsonValue(null), null)
+    assertEquals(JsonValue(1), 1)
+    assertEquals(JsonValue(1.023), 1.023)
+    assertEquals(JsonValue(1e-10), 1e-10)
+    assertEquals(JsonValue(-20), -20)
+    assertEquals(JsonValue(true), true)
+    assertEquals(JsonValue(false), false)
+    assertEquals(JsonValue("something"), "something")
+    assertEquals(JsonValue(mapOf(
+      "a" to 1
+    )), mapOf(
+      "a" to 1
+    ))
+    assertEquals(JsonValue(listOf(
+      1, "a", false
+    )), listOf(1, "a", false))
+
+
+  }
+
   @Test fun testArrayToString() {
-    val array = JsonValue(listOf<JsonValue>(
-      JsonValue(1),
-      JsonValue("some \" string"),
-      JsonValue(1e-13),
+    val array = JsonValue(listOf(
+      1,
+      "some \" string",
+      1e-13,
       JsonValue(1.02),
       JsonValue(true)
     ))
@@ -25,7 +46,7 @@ class JsonValueTest {
       "small number" to JsonValue(1e-13),
       "float" to JsonValue(1.02),
       "true" to JsonValue(true),
-      "null" to JsonValue(),
+      "null" to JsonValue(null),
       "array" to JsonValue(listOf(
         JsonValue(1),
         JsonValue(2),
