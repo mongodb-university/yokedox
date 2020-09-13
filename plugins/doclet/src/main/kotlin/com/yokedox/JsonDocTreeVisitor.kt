@@ -2,13 +2,9 @@ package com.yokedox
 
 import com.sun.source.doctree.*
 
-fun toJson(kind: DocTree.Kind): JsonValue {
-  return JsonValue(kind.name)
-}
-
 fun toJson(tree: DocTree): JsonValue {
-  val base = mutableMapOf<String, JsonValue>(
-    "kind" to toJson(tree.kind)
+  val base = mutableMapOf<String, Any?>(
+    "kind" to tree.kind.name
   )
   base.putAll(JsonDocTreeVisitor().visit(tree))
   return JsonValue(base)
@@ -252,6 +248,7 @@ class JsonDocTreeVisitor : DocTreeVisitor<JsonObject, Void> {
 
   override fun visitUses(node: UsesTree, p: Void?): JsonObject {
     return mapOf(
+      "tagName" to toJson(node.tagName),
       "description" to toJson(node.description),
       "serviceType" to toJson(node.serviceType)
     )
@@ -272,6 +269,8 @@ class JsonDocTreeVisitor : DocTreeVisitor<JsonObject, Void> {
   }
 
   override fun visitOther(node: DocTree, p: Void?): JsonObject {
-    TODO("Not yet implemented: ${node}")
+    return mapOf(
+      "kind" to toJson(node.kind.name)
+    )
   }
 }

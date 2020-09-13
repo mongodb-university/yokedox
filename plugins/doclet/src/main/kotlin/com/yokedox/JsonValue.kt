@@ -47,7 +47,7 @@ class JsonValue {
     }
   }
 
-  override fun equals(other: Any?): Boolean {
+  override operator fun equals(other: Any?): Boolean {
     return value == other
   }
 
@@ -78,6 +78,10 @@ class JsonValue {
       is Map<*, *> -> objectToString()
       else -> Klaxon().toJsonString(value) // Let Klaxon handle this
     }
+  }
+
+  override fun toString(): String {
+    return value.toString()
   }
 
   private fun arrayToString(): String {
