@@ -7,6 +7,7 @@ fun toJson(b: Boolean): JsonValue {
   return JsonValue(b)
 }
 
+@JvmName("toJsonIterableJsonValue")
 fun toJson(list: Iterable<JsonValue>): JsonValue {
   return JsonValue(list)
 }
@@ -20,6 +21,11 @@ fun toJson(kind: NestingKind): JsonValue {
     "name" to toJson(kind.name),
     "isNested" to toJson(kind.isNested)
   ))
+}
+
+@JvmName("toJsonIterableModuleElementDirective")
+fun toJson(list: Iterable<ModuleElement.Directive>): JsonValue {
+  return JsonValue(list.map { toJson(it) })
 }
 
 fun toJson(element: Element): JsonValue {
@@ -96,10 +102,21 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
   }
 
   override fun visitTypeParameter(e: TypeParameterElement, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "bounds" to toJson(e.bounds),
+      "enclosingElement" to toJson(e.enclosingElement),
+      "genericElement" to toJson(e.genericElement)
+    )
   }
 
   override fun visitModule(t: ModuleElement, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "directives" to toJson(t.directives),
+      "enclosedElements" to toJson(t.enclosedElements),
+      //  "enclosingElement" to toJson(t.enclosingElement), // TODO: This can be null and will crash
+      "qualifiedName" to toJson(t.qualifiedName),
+      "isOpen" to toJson(t.isOpen),
+      "isUnnamed" to toJson(t.isUnnamed)
+    )
   }
 }
