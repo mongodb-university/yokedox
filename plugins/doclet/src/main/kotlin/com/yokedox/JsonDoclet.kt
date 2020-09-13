@@ -3,9 +3,12 @@
  */
 package com.yokedox
 
+import com.sun.source.util.DocTrees
 import java.util.*
 import javax.lang.model.SourceVersion
 import jdk.javadoc.doclet.*
+
+lateinit var docTrees: DocTrees
 
 /**
  * A doclet for creating a manifest json file of available code examples for the entities in the project.
@@ -26,14 +29,10 @@ class JsonDoclet : Doclet {
     return SourceVersion.RELEASE_9
   }
 
-  override fun run(environment: DocletEnvironment?): Boolean {
-    if (environment == null) {
-      return false
-    }
-    val root = mapOf(
-      "includedElements" to toJson(environment.includedElements)
-    )
-    println(JsonValue(root).toString())
+  override fun run(environment: DocletEnvironment): Boolean {
+    docTrees = environment.docTrees
+    val root = toJson(environment)
+    println(root.toString())
     return true
   }
 }

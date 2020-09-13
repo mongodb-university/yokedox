@@ -2,6 +2,11 @@ package com.yokedox
 
 import javax.lang.model.element.ModuleElement
 
+@JvmName("toJsonIterableModuleElementDirective")
+fun toJson(list: Iterable<ModuleElement.Directive>): JsonValue {
+  return JsonValue(list.map { toJson(it) })
+}
+
 fun toJson(directive: ModuleElement.Directive): JsonValue {
   val base = mutableMapOf(
     "kind" to toJson(directive.kind)

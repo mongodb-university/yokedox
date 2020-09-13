@@ -14,6 +14,17 @@ fun toJson(list: Iterable<AnnotationValue>): JsonValue {
   return JsonValue(list.map { toJson(it) })
 }
 
+@JvmName("toJsonIterableAnnotationMirror")
+fun toJson(list: Iterable<AnnotationMirror>): JsonValue {
+  return JsonValue(list.map { toJson(it) })
+}
+
+fun toJson(mirror: AnnotationMirror): JsonValue {
+  return JsonValue(mapOf(
+    "annotationType" to toJson(mirror.annotationType)
+  ))
+}
+
 class JsonAnnotationValueVisitor : AbstractAnnotationValueVisitor9<JsonValue, Void>() {
   override fun visitBoolean(b: Boolean, p: Void?): JsonValue {
     return JsonValue(b)

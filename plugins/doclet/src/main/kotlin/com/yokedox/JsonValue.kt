@@ -6,51 +6,54 @@ typealias JsonObject = Map<String, JsonValue>
 
 typealias JsonArray = List<JsonValue>
 
+fun toJson(b: Boolean): JsonValue {
+  return JsonValue(b)
+}
+
+fun toJson(s: String): JsonValue {
+  return JsonValue(s)
+}
+
+@JvmName("toJsonIterableJsonValue")
+fun toJson(list: Iterable<JsonValue>): JsonValue {
+  return JsonValue(list)
+}
+
+// Klaxon (JSON library) did not do well with building up JSON value trees
+// so wrapping it here
 class JsonValue {
-  enum class Type {
-    ARRAY,
-    OBJECT,
-    PRIMITIVE,
-  }
-  val type: Type
   private val value: Any?
 
   // Constrain possible types in the constructor
   constructor(value: Iterable<JsonValue>) {
     this.value = value
-    type = Type.ARRAY
   }
 
   constructor(value: JsonObject) {
     this.value = value
-    type = Type.OBJECT
   }
 
   constructor(value: String) {
     this.value = value
-    type = Type.PRIMITIVE
   }
 
   constructor(value: Boolean) {
     this.value = value
-    type = Type.PRIMITIVE
   }
 
   constructor(value: Number) {
     this.value = value
-    type = Type.PRIMITIVE
   }
 
   constructor() {
     this.value = null
-    type = Type.PRIMITIVE
   }
 
   override fun toString(): String {
-    return when (type) {
-      Type.ARRAY -> arrayToString()
-      Type.OBJECT -> objectToString()
-      Type.PRIMITIVE -> Klaxon().toJsonString(value)
+    return when (value) {
+      is Iterable<*> -> arrayToString()
+      is Map<*, *> -> objectToString()
+      else -> Klaxon().toJsonString(value) // Let Klaxon handle this
     }
   }
 
@@ -64,13 +67,4 @@ class JsonValue {
     }
     return "{$serialized}"
   }
-}
-
-fun toJson(b: Boolean): JsonValue {
-  return JsonValue(b)
-}
-
-@JvmName("toJsonIterableJsonValue")
-fun toJson(list: Iterable<JsonValue>): JsonValue {
-  return JsonValue(list)
 }

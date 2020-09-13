@@ -5,7 +5,7 @@ package com.yokedox.test;
  */
 @interface Annotation5 {
 	/**
-	 * id
+	 * id chbus does this work
 	 * 
 	 * @return ret
 	 */

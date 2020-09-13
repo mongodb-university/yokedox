@@ -3,53 +3,23 @@ package com.yokedox
 import javax.lang.model.element.*
 import javax.lang.model.util.AbstractElementVisitor9
 
-fun toJson(name: Name): JsonValue {
-  return JsonValue(name.toString())
-}
-
-fun toJson(kind: NestingKind): JsonValue {
-  return JsonValue(mapOf(
-    "name" to toJson(kind.name),
-    "isNested" to toJson(kind.isNested)
-  ))
-}
-
-@JvmName("toJsonIterableModuleElementDirective")
-fun toJson(list: Iterable<ModuleElement.Directive>): JsonValue {
-  return JsonValue(list.map { toJson(it) })
-}
-
 fun toJson(element: Element): JsonValue {
   val base = mutableMapOf<String, JsonValue>(
-    // TODO: Ignoring annotation mirrors for now
+    "annotationMirrors" to toJson(element.annotationMirrors),
     "kind" to toJson(element.kind),
     "modifiers" to toJson(element.modifiers),
     "simpleName" to toJson(element.simpleName)
   )
+  val docCommentTree = docTrees.getDocCommentTree(element)
+  if (docCommentTree != null) {
+    base["comments"] = toJson(docCommentTree)
+  }
   base.putAll(JsonElementVisitor().visit(element))
   return JsonValue(base)
 }
 
-fun toJson(s: String): JsonValue {
-  return JsonValue(s)
-}
-
 fun toJson(kind: ElementKind): JsonValue {
-  return JsonValue(mapOf(
-    "name" to toJson(kind.name),
-    "isClass" to toJson(kind.isClass),
-    "isField" to toJson(kind.isField),
-    "isInterface" to toJson(kind.isInterface)
-  ))
-}
-
-fun toJson(modifier: Modifier): JsonValue {
-  return JsonValue(modifier.name)
-}
-
-@JvmName("toJsonIterableModifier")
-fun toJson(modifiers: Iterable<Modifier>): JsonValue {
-  return JsonValue(modifiers.map { toJson(it) })
+  return JsonValue(kind.name)
 }
 
 @JvmName("toJsonIterableElement")
