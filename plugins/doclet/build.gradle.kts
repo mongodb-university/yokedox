@@ -39,8 +39,10 @@ dependencies {
     implementation("com.beust:klaxon:5.0.1")
 }
 
+// Build fat jar (all dependencies included) for use with javadoc
+val shadowJar = tasks.named("shadowJar")
+
 tasks.register("testDoclet") {
-    val shadowJar = tasks.getByPath("shadowJar")
     dependsOn(shadowJar)
     mustRunAfter(shadowJar)
     doLast {
@@ -48,4 +50,8 @@ tasks.register("testDoclet") {
         commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox-all.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
       }
     }
+}
+
+tasks.named("build") {
+  finalizedBy(shadowJar)
 }
