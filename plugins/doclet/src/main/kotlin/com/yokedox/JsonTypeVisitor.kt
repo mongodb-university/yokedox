@@ -13,8 +13,8 @@ fun toJson(typeMirror: TypeMirror): JsonValue {
 
 fun toJson(typeKind: TypeKind): JsonValue {
   return JsonValue(mapOf(
-    "name" to typeKind.name,
-    "isPrimitive" to typeKind.isPrimitive
+    "name" to toJson(typeKind.name),
+    "isPrimitive" to toJson(typeKind.isPrimitive)
   ))
 }
 

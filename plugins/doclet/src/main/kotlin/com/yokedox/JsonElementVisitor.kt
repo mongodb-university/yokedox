@@ -78,7 +78,7 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
 
   override fun visitVariable(e: VariableElement, p: Void?): JsonObject {
     return mapOf(
-      "constantValue" to JsonValue(e.constantValue)
+      // "constantValue" to JsonValue(e.constantValue) // TODO: constantValue is type-erased 'Object'
     )
   }
 

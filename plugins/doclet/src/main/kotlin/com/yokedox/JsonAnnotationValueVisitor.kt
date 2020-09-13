@@ -24,7 +24,7 @@ class JsonAnnotationValueVisitor : AbstractAnnotationValueVisitor9<JsonValue, Vo
   }
 
   override fun visitChar(c: Char, p: Void?): JsonValue {
-    return JsonValue(c)
+    return JsonValue("$c")
   }
 
   override fun visitDouble(d: Double, p: Void?): JsonValue {
@@ -52,15 +52,15 @@ class JsonAnnotationValueVisitor : AbstractAnnotationValueVisitor9<JsonValue, Vo
   }
 
   override fun visitType(t: TypeMirror, p: Void?): JsonValue {
-    return JsonValue(t)
+    return toJson(t)
   }
 
   override fun visitEnumConstant(c: VariableElement, p: Void?): JsonValue {
-    return JsonValue(c)
+    return toJson(c)
   }
 
   override fun visitAnnotation(a: AnnotationMirror, p: Void?): JsonValue {
-    return JsonValue(null) // TODO: Ignoring annotation mirrors until finding out whether they are actually useful
+    return JsonValue() // TODO: Ignoring annotation mirrors until finding out whether they are actually useful
   }
 
   override fun visitArray(vals: MutableList<out AnnotationValue>, p: Void?): JsonValue {

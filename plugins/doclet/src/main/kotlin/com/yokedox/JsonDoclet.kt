@@ -33,8 +33,7 @@ class JsonDoclet : Doclet {
     val root = mapOf(
       "includedElements" to toJson(environment.includedElements)
     )
-    println(root)
+    println(JsonValue(root).toString())
     return true
   }
-
 }
