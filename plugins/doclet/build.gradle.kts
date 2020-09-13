@@ -34,9 +34,6 @@ dependencies {
 
     // Use the Kotlin JUnit integration.
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
-
-    // JSON parsing https://github.com/cbeust/klaxon
-    implementation("com.beust:klaxon:5.0.1")
 }
 
 tasks.register("testDoclet") {

@@ -3,14 +3,9 @@
  */
 package com.yokedox
 
-import com.beust.klaxon.JsonArray
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.json
 import java.util.*
 import javax.lang.model.SourceVersion
 import jdk.javadoc.doclet.*
-import javax.lang.model.element.AnnotationMirror
-import javax.lang.model.element.Element
 
 /**
  * A doclet for creating a manifest json file of available code examples for the entities in the project.
@@ -35,9 +30,10 @@ class JsonDoclet : Doclet {
     if (environment == null) {
       return false
     }
-    var root = JsonObject()
-    root["includedElements"] = toJson(environment.includedElements)
-    println(root.toJsonString(true, true))
+    val root = mapOf(
+      "includedElements" to toJson(environment.includedElements)
+    )
+    println(root)
     return true
   }
 

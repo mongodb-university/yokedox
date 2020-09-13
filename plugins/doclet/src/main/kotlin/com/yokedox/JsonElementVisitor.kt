@@ -1,50 +1,58 @@
 package com.yokedox
 
-import com.beust.klaxon.JsonArray
-import com.beust.klaxon.JsonObject
-import com.beust.klaxon.JsonValue
 import javax.lang.model.element.*
 import javax.lang.model.util.AbstractElementVisitor9
 
 fun toJson(b: Boolean): JsonValue {
-  return makeJsonValue(b)
+  return JsonValue(b)
 }
 
 fun toJson(list: Iterable<JsonValue>): JsonValue {
-  return makeJsonValue(list)
+  return JsonValue(list)
 }
 
 fun toJson(name: Name): JsonValue {
-  return makeJsonValue(name.toString())
+  return JsonValue(name.toString())
+}
+
+fun toJson(kind: NestingKind): JsonValue {
+  return JsonValue(mapOf(
+    "name" to toJson(kind.name),
+    "isNested" to toJson(kind.isNested)
+  ))
 }
 
 fun toJson(element: Element): JsonValue {
-  val base = JsonObject(mapOf(
+  val base = mutableMapOf<String, JsonValue>(
     // TODO: Ignoring annotation mirrors for now
     "kind" to toJson(element.kind),
     "modifiers" to toJson(element.modifiers),
     "simpleName" to toJson(element.simpleName)
-  ))
+  )
   base.putAll(JsonElementVisitor().visit(element))
-  return makeJsonValue(base)
+  return JsonValue(base)
 }
 
-fun toJson(kind: ElementKind): JsonObject {
-  return JsonObject(mapOf(
-    "name" to kind.name,
-    "isClass" to kind.isClass,
-    "isField" to kind.isField,
-    "isInterface" to kind.isInterface
+fun toJson(s: String): JsonValue {
+  return JsonValue(s)
+}
+
+fun toJson(kind: ElementKind): JsonValue {
+  return JsonValue(mapOf(
+    "name" to toJson(kind.name),
+    "isClass" to toJson(kind.isClass),
+    "isField" to toJson(kind.isField),
+    "isInterface" to toJson(kind.isInterface)
   ))
 }
 
 fun toJson(modifier: Modifier): JsonValue {
-  return makeJsonValue(modifier.name)
+  return JsonValue(modifier.name)
 }
 
 @JvmName("toJsonIterableModifier")
 fun toJson(modifiers: Iterable<Modifier>): JsonValue {
-  return makeJsonValue(modifiers.map { toJson(it) })
+  return JsonValue(modifiers.map { toJson(it) })
 }
 
 @JvmName("toJsonIterableElement")
@@ -54,29 +62,28 @@ fun toJson(list: Iterable<Element>): JsonValue {
 
 class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
   override fun visitPackage(e: PackageElement, p: Void?): JsonObject {
-    return JsonObject(mapOf(
-      "qualifiedName" to e.qualifiedName,
-      "isUnnamed" to e.isUnnamed
-    ))
+    return mapOf(
+      "qualifiedName" to toJson(e.qualifiedName),
+      "isUnnamed" to toJson(e.isUnnamed)
+    )
   }
 
   override fun visitType(e: TypeElement, p: Void?): JsonObject {
-    return JsonObject(mapOf(
-      "nestingKind" to e.nestingKind.toString(),
-      "nestingKindIsNested" to e.nestingKind.isNested,
-      "qualifiedName" to e.qualifiedName,
+    return mapOf(
+      "nestingKind" to toJson(e.nestingKind),
+      "qualifiedName" to toJson(e.qualifiedName),
       "superclass" to toJson(e.superclass)
-    ))
+    )
   }
 
   override fun visitVariable(e: VariableElement, p: Void?): JsonObject {
-    return JsonObject(mapOf(
-      "constantValue" to e.constantValue
-    ))
+    return mapOf(
+      "constantValue" to JsonValue(e.constantValue)
+    )
   }
 
   override fun visitExecutable(e: ExecutableElement, p: Void?): JsonObject {
-    return JsonObject(mapOf(
+    return mapOf(
       "defaultValue" to toJson(e.defaultValue),
       "parameters" to toJson(e.parameters),
       "receiverType" to toJson(e.receiverType),
@@ -85,14 +92,14 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
       "typeParameters" to toJson(e.typeParameters),
       "isDefault" to toJson(e.isDefault),
       "isVarargs" to toJson(e.isVarArgs)
-    ))
+    )
   }
 
   override fun visitTypeParameter(e: TypeParameterElement, p: Void?): JsonObject {
-    return JsonObject()
+    return mapOf()
   }
 
   override fun visitModule(t: ModuleElement, p: Void?): JsonObject {
-    return JsonObject()
+    return mapOf()
   }
 }

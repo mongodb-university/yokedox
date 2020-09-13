@@ -1,7 +1,5 @@
 package com.yokedox
 
-import com.beust.klaxon.JsonArray
-import com.beust.klaxon.JsonValue
 import javax.lang.model.element.AnnotationMirror
 import javax.lang.model.element.AnnotationValue
 import javax.lang.model.element.VariableElement
@@ -13,56 +11,56 @@ fun toJson(annotationValue: AnnotationValue): JsonValue {
 }
 
 fun toJson(list: Iterable<AnnotationValue>): JsonValue {
-  return makeJsonValue(list.map { toJson(it) })
+  return JsonValue(list.map { toJson(it) })
 }
 
 class JsonAnnotationValueVisitor : AbstractAnnotationValueVisitor9<JsonValue, Void>() {
   override fun visitBoolean(b: Boolean, p: Void?): JsonValue {
-    return makeJsonValue(b)
+    return JsonValue(b)
   }
 
   override fun visitByte(b: Byte, p: Void?): JsonValue {
-    return makeJsonValue(b)
+    return JsonValue(b)
   }
 
   override fun visitChar(c: Char, p: Void?): JsonValue {
-    return makeJsonValue(c)
+    return JsonValue(c)
   }
 
   override fun visitDouble(d: Double, p: Void?): JsonValue {
-    return makeJsonValue(d)
+    return JsonValue(d)
   }
 
   override fun visitFloat(f: Float, p: Void?): JsonValue {
-    return makeJsonValue(f)
+    return JsonValue(f)
   }
 
   override fun visitInt(i: Int, p: Void?): JsonValue {
-    return makeJsonValue(i)
+    return JsonValue(i)
   }
 
   override fun visitLong(i: Long, p: Void?): JsonValue {
-    return makeJsonValue(i)
+    return JsonValue(i)
   }
 
   override fun visitShort(s: Short, p: Void?): JsonValue {
-    return makeJsonValue(s)
+    return JsonValue(s)
   }
 
   override fun visitString(s: String, p: Void?): JsonValue {
-    return makeJsonValue(s)
+    return JsonValue(s)
   }
 
   override fun visitType(t: TypeMirror, p: Void?): JsonValue {
-    return makeJsonValue(t)
+    return JsonValue(t)
   }
 
   override fun visitEnumConstant(c: VariableElement, p: Void?): JsonValue {
-    return makeJsonValue(c)
+    return JsonValue(c)
   }
 
   override fun visitAnnotation(a: AnnotationMirror, p: Void?): JsonValue {
-    return makeJsonValue(null) // TODO: Ignoring annotation mirrors until finding out whether they are actually useful
+    return JsonValue(null) // TODO: Ignoring annotation mirrors until finding out whether they are actually useful
   }
 
   override fun visitArray(vals: MutableList<out AnnotationValue>, p: Void?): JsonValue {
