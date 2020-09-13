@@ -37,15 +37,8 @@ class JsonDoclet : Doclet {
     }
     var root = JsonObject()
     root["includedElements"] = toJson(environment.includedElements)
-    println(root.toJsonString())
+    println(root.toJsonString(true, true))
     return true
   }
 
-  fun toJson(elements: Set<Element>): List<JsonObject> {
-    return elements.map { toJson(it) }
-  }
-
-  fun toJson(element: Element): JsonObject {
-    return JsonElementVisitor().visit(element)
-  }
 }

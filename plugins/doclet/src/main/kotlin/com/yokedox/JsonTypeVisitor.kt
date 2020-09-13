@@ -2,15 +2,20 @@ package com.yokedox
 
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
+import com.beust.klaxon.JsonValue
 import javax.lang.model.type.*
 import javax.lang.model.util.AbstractTypeVisitor9
 
-fun toJson(typeMirror: TypeMirror): JsonObject {
+fun toJson(obj: JsonObject): JsonValue {
+  return makeJsonValue(obj)
+}
+
+fun toJson(typeMirror: TypeMirror): JsonValue {
   val result = JsonObject(mapOf(
     "kind" to toJson(typeMirror.kind)
   ))
   result.putAll(JsonTypeVisitor().visit(typeMirror))
-  return result
+  return toJson(result)
 }
 
 fun toJson(typeKind: TypeKind): JsonObject {
@@ -20,8 +25,8 @@ fun toJson(typeKind: TypeKind): JsonObject {
   ))
 }
 
-fun toJson(list: List<TypeMirror>): JsonArray<JsonObject> {
-  return JsonArray(list.map { toJson(it) })
+fun toJson(list: Iterable<TypeMirror>): JsonValue {
+  return toJson(list.map { toJson(it) })
 }
 
 class JsonTypeVisitor : AbstractTypeVisitor9<JsonObject, Void>() {
