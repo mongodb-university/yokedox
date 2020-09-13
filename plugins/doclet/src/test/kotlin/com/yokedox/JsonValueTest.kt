@@ -81,6 +81,16 @@ class JsonValueTest {
     assertEquals(objectValue.size, 4)
   }
 
+  @Test fun testNumberToString() {
+    assertEquals("123", JsonValue(123).toJsonString())
+    assertEquals("123", JsonValue(123.toByte()).toJsonString())
+    assertEquals("123", JsonValue(123.toShort()).toJsonString())
+    assertEquals("123", JsonValue(123.toLong()).toJsonString())
+    assertEquals("\"a\"", JsonValue('a').toJsonString())
+    assertEquals("123.0", JsonValue(123.toDouble()).toJsonString())
+    assertEquals("123.0", JsonValue(123.toFloat()).toJsonString())
+  }
+
   @Test fun testArrayToString() {
     val array = JsonValue(listOf(
       1,

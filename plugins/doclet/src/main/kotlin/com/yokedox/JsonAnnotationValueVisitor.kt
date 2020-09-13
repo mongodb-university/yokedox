@@ -35,7 +35,7 @@ class JsonAnnotationValueVisitor : AbstractAnnotationValueVisitor9<JsonValue, Vo
   }
 
   override fun visitChar(c: Char, p: Void?): JsonValue {
-    return JsonValue("$c")
+    return JsonValue(c)
   }
 
   override fun visitDouble(d: Double, p: Void?): JsonValue {
