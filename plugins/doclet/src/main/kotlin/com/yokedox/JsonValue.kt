@@ -28,13 +28,11 @@ class JsonValue {
     value = other?.value
   }
 
-  constructor(value: Iterable<Any?>) {
-    this.value = value.map { JsonValue(it) }
-  }
+  constructor(value: Iterable<Any?>): this(value as Any?)
 
-  constructor(value: Map<String, Any?>) {
-    this.value = value
-  }
+  constructor(value: Map<String, Any?>): this(value as Any?)
+
+  constructor(value: Number): this(value as Any?)
 
   constructor(value: Any?) {
     this.value = when(value) {
@@ -43,14 +41,10 @@ class JsonValue {
       is Boolean -> value
       is Number -> value
       is Iterable<*> -> value.map { JsonValue(it) }
-      is Map<*, *> -> value.map { it.key as String to JsonValue(it.value) }
+      is Map<*, *> -> value.mapKeys { it.key as String }.mapValues { JsonValue(it.value) }
       is JsonValue -> value.value
       else -> throw Error("Cannot convert type to JsonValue: $value")
     }
-  }
-
-  constructor(value: Number) {
-    this.value = value
   }
 
   override fun equals(other: Any?): Boolean {
@@ -58,11 +52,27 @@ class JsonValue {
   }
 
   operator fun get(key: String): JsonValue? {
-    assert(value is Map<*, *>)
-    return (value as Map<*, *>)[key] as JsonValue?
+    return when(value) {
+      is Map<*, *> -> value.get(key) as JsonValue?
+      else -> throw Error("get() called with string key on non-object type! (value=$value)")
+    }
   }
 
-  override fun toString(): String {
+  operator fun get(index: Int): JsonValue? {
+    return when(value) {
+      is Iterable<*> -> value.elementAt(index) as JsonValue?
+      else -> throw Error("get() called with integer index on non-array type! (value=$value)")
+    }
+  }
+
+  val size: Int
+    get() = when(value) {
+      is Iterable<*> -> value.count()
+      is Map<*, *> -> value.size
+      else -> throw Error("`size` called on JsonValue that is not an object or array (value=$value)")
+    }
+
+  fun toJsonString(): String {
     return when (value) {
       is Iterable<*> -> arrayToString()
       is Map<*, *> -> objectToString()
@@ -71,12 +81,12 @@ class JsonValue {
   }
 
   private fun arrayToString(): String {
-    return "[${(value as Iterable<*>).joinToString { (it as JsonValue).toString() }}]"
+    return "[${(value as Iterable<*>).joinToString { (it as JsonValue).toJsonString() }}]"
   }
 
   private fun objectToString(): String {
     val serialized = (value as Map<*, *>).entries.joinToString {
-      "${JsonValue(it.key as String)}: ${(it.value as JsonValue)}"
+      "${JsonValue(it.key as String).toJsonString()}: ${(it.value as JsonValue).toJsonString()}"
     }
     return "{$serialized}"
   }

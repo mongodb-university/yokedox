@@ -29,7 +29,7 @@ class JsonDoclet : Doclet {
   override fun run(environment: DocletEnvironment): Boolean {
     docTrees = environment.docTrees
     val root = toJson(environment)
-    println(root.toString())
+    println(root.toJsonString())
     return true
   }
 }

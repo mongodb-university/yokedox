@@ -5,6 +5,7 @@ package com.yokedox
 
 import org.junit.Test
 import org.junit.Assert.*
+import kotlin.test.assertFails
 
 class JsonValueTest {
   @Test fun testValueEquality() {
@@ -24,8 +25,60 @@ class JsonValueTest {
     assertEquals(JsonValue(listOf(
       1, "a", false
     )), listOf(1, "a", false))
+  }
 
+  @Test fun testObjectGet() {
+    val nullValue = JsonValue(null)
+    val numberValue = JsonValue(1.234)
+    val boolValue = JsonValue(true)
+    val stringValue = JsonValue("string")
+    val arrayValue = JsonValue(listOf())
+    val objectValue = JsonValue(mapOf("a" to 1))
+    assertFails { nullValue["bad"] }
+    assertFails { numberValue["bad"] }
+    assertFails { boolValue["bad"] }
+    assertFails { stringValue["bad"] }
+    assertFails { arrayValue["bad"] }
+    assertEquals(objectValue["a"], 1)
+  }
 
+  @Test fun testArrayGet() {
+    val nullValue = JsonValue(null)
+    val numberValue = JsonValue(1.234)
+    val boolValue = JsonValue(true)
+    val stringValue = JsonValue("string")
+    val objectValue = JsonValue(mapOf("a" to 1))
+    val arrayValue = JsonValue(listOf(100, 200, 300, 400))
+    assertFails { nullValue[0] }
+    assertFails { numberValue[1] }
+    assertFails { boolValue[2] }
+    assertFails { stringValue[3] }
+    assertFails { objectValue[4] }
+    assertFails { arrayValue[999] }
+    assertEquals(arrayValue[0], 100)
+    assertEquals(arrayValue[1], 200)
+    assertEquals(arrayValue[2], 300)
+    assertEquals(arrayValue[3], 400)
+  }
+
+  @Test fun testArrayOrObjectSize() {
+    val nullValue = JsonValue(null)
+    val numberValue = JsonValue(1.234)
+    val boolValue = JsonValue(true)
+    val stringValue = JsonValue("string")
+    val objectValue = JsonValue(mapOf(
+      "a" to 1,
+      "b" to 2,
+      "c" to 3,
+      "d" to 4
+    ))
+    val arrayValue = JsonValue(listOf(100, 200, 300, 400))
+    assertFails { nullValue.size }
+    assertFails { numberValue.size }
+    assertFails { boolValue.size }
+    assertFails { stringValue.size }
+    assertEquals(arrayValue.size, 4)
+    assertEquals(objectValue.size, 4)
   }
 
   @Test fun testArrayToString() {
@@ -36,7 +89,7 @@ class JsonValueTest {
       JsonValue(1.02),
       JsonValue(true)
     ))
-    assertEquals("""[1, "some \" string", 1.0E-13, 1.02, true]""", array.toString())
+    assertEquals("""[1, "some \" string", 1.0E-13, 1.02, true]""", array.toJsonString())
   }
 
   @Test fun testObjectToString() {
@@ -53,6 +106,6 @@ class JsonValueTest {
         JsonValue(3)
       ))
     ))
-    assertEquals("""{"one": 1, "some string": "some \" string", "small number": 1.0E-13, "float": 1.02, "true": true, "null": null, "array": [1, 2, 3]}""", obj.toString())
+    assertEquals("""{"one": 1, "some string": "some \" string", "small number": 1.0E-13, "float": 1.02, "true": true, "null": null, "array": [1, 2, 3]}""", obj.toJsonString())
   }
 }
