@@ -65,3 +65,12 @@ class JsonValue {
     return "{$serialized}"
   }
 }
+
+fun toJson(b: Boolean): JsonValue {
+  return JsonValue(b)
+}
+
+@JvmName("toJsonIterableJsonValue")
+fun toJson(list: Iterable<JsonValue>): JsonValue {
+  return JsonValue(list)
+}

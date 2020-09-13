@@ -3,15 +3,6 @@ package com.yokedox
 import javax.lang.model.element.*
 import javax.lang.model.util.AbstractElementVisitor9
 
-fun toJson(b: Boolean): JsonValue {
-  return JsonValue(b)
-}
-
-@JvmName("toJsonIterableJsonValue")
-fun toJson(list: Iterable<JsonValue>): JsonValue {
-  return JsonValue(list)
-}
-
 fun toJson(name: Name): JsonValue {
   return JsonValue(name.toString())
 }
