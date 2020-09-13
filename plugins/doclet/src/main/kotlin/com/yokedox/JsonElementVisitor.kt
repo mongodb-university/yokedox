@@ -4,11 +4,11 @@ import javax.lang.model.element.*
 import javax.lang.model.util.AbstractElementVisitor9
 
 fun toJson(element: Element): JsonValue {
-  val base = mutableMapOf<String, JsonValue>(
-    "annotationMirrors" to toJson(element.annotationMirrors),
-    "kind" to toJson(element.kind),
-    "modifiers" to toJson(element.modifiers),
-    "simpleName" to toJson(element.simpleName)
+  val base = mutableMapOf(
+    "annotationMirrors" to element.annotationMirrors,
+    "kind" to element.kind.name,
+    "modifiers" to element.modifiers,
+    "simpleName" to element.simpleName
   )
   val docCommentTree = docTrees.getDocCommentTree(element)
   if (docCommentTree != null) {

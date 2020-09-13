@@ -1,7 +1,6 @@
 package com.yokedox
 
 import com.sun.source.doctree.*
-import jdk.jshell.Diag
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -131,7 +130,6 @@ fun makeName(s: String): Name {
 }
 
 class JsonDocTreeVisitorTest {
-
   @Test
   fun visitAttribute() {
     val node = object: MockTree(DocTree.Kind.ATTRIBUTE), AttributeTree {

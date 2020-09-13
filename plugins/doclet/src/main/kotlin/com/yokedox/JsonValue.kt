@@ -2,7 +2,7 @@ package com.yokedox
 
 import com.beust.klaxon.Klaxon
 
-typealias JsonObject = Map<String, JsonValue>
+typealias JsonObject = Map<String, Any?>
 
 typealias JsonArray = List<JsonValue>
 

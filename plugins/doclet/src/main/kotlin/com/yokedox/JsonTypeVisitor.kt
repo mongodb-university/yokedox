@@ -4,18 +4,11 @@ import javax.lang.model.type.*
 import javax.lang.model.util.AbstractTypeVisitor9
 
 fun toJson(typeMirror: TypeMirror): JsonValue {
-  val base = mutableMapOf(
-    "kind" to toJson(typeMirror.kind)
+  val base = mutableMapOf<String, Any?>(
+    "kind" to typeMirror.kind.name
   )
   base.putAll(JsonTypeVisitor().visit(typeMirror))
   return JsonValue(base)
-}
-
-fun toJson(typeKind: TypeKind): JsonValue {
-  return JsonValue(mapOf(
-    "name" to toJson(typeKind.name),
-    "isPrimitive" to toJson(typeKind.isPrimitive)
-  ))
 }
 
 fun toJson(list: Iterable<TypeMirror>): JsonValue {
@@ -46,30 +39,46 @@ class JsonTypeVisitor : AbstractTypeVisitor9<JsonObject, Void>() {
   }
 
   override fun visitError(t: ErrorType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf() // Nothing to add over base
   }
 
   override fun visitTypeVariable(t: TypeVariable, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "upperBound" to toJson(t.upperBound),
+      "lowerBound" to toJson(t.lowerBound)
+    )
   }
 
   override fun visitWildcard(t: WildcardType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "extendsBound" to toJson(t.extendsBound),
+      "superBound" to toJson(t.superBound)
+    )
   }
 
   override fun visitExecutable(t: ExecutableType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "typeVariables" to toJson(t.typeVariables),
+      "returnType" to toJson(t.returnType),
+      "parameterTypes" to toJson(t.parameterTypes),
+      "receiverType" to toJson(t.receiverType),
+      "thrownTypes" to toJson(t.thrownTypes)
+    )
   }
 
   override fun visitNoType(t: NoType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf() // Nothing to add over base
   }
 
   override fun visitUnion(t: UnionType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "alternatives" to toJson(t.alternatives)
+    )
   }
 
   override fun visitIntersection(t: IntersectionType, p: Void?): JsonObject {
-    return mapOf()
+    return mapOf(
+      "bounds" to toJson(t.bounds)
+    )
   }
 }
