@@ -273,7 +273,7 @@ class JsonDocTreeVisitor : DocTreeVisitor<JsonObject, Void> {
 
   override fun visitOther(node: DocTree, p: Void?): JsonObject {
     return mapOf(
-      "kind" to toJson(node.kind.name)
+      "kind" to node.kind.name
     )
   }
 }

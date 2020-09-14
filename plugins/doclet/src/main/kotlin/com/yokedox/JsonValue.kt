@@ -4,8 +4,6 @@ import com.beust.klaxon.Klaxon
 
 typealias JsonObject = Map<String, Any?>
 
-typealias JsonArray = List<JsonValue>
-
 fun toJson(b: Boolean): JsonValue {
   return JsonValue(b)
 }
@@ -24,15 +22,9 @@ fun toJson(list: Iterable<JsonValue>): JsonValue {
 class JsonValue {
   private val _value: Any?
 
-  constructor(other: JsonValue?) {
-    _value = other?._value
-  }
-
   constructor(value: Iterable<Any?>): this(value as Any?)
 
   constructor(value: Map<String, Any?>): this(value as Any?)
-
-  constructor(value: Number): this(value as Any?)
 
   constructor(value: Any?) {
     this._value = when(value) {
@@ -57,7 +49,7 @@ class JsonValue {
 
   operator fun get(key: String): JsonValue? {
     return when(_value) {
-      is Map<*, *> -> _value.get(key) as JsonValue?
+      is Map<*, *> -> _value[key] as JsonValue?
       else -> throw Error("get() called with string key on non-object type! (value=$_value)")
     }
   }
@@ -94,10 +86,15 @@ class JsonValue {
     return "[${(_value as Iterable<*>).joinToString { (it as JsonValue).toJsonString() }}]"
   }
 
+  @Suppress("UNCHECKED_CAST")
   private fun objectToString(): String {
-    val serialized = (_value as Map<*, *>).entries.joinToString {
-      "${JsonValue(it.key as String).toJsonString()}: ${(it.value as JsonValue).toJsonString()}"
+    val serialized = (_value as Map<String, JsonValue>).entries.joinToString {
+      "${JsonValue(it.key).toJsonString()}: ${it.value.toJsonString()}"
     }
     return "{$serialized}"
+  }
+
+  override fun hashCode(): Int {
+    return _value?.hashCode() ?: 0
   }
 }

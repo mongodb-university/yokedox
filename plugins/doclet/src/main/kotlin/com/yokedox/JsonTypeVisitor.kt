@@ -42,7 +42,11 @@ class JsonTypeVisitor : AbstractTypeVisitor9<JsonObject, Void>() {
   }
 
   override fun visitError(t: ErrorType, p: Void?): JsonObject {
-    return mapOf() // Nothing to add over base
+    return mapOf(
+      // TODO: asElement? or will that lead us in to circle?
+      "enclosingType" to toJson(t.enclosingType),
+      "typeArguments" to toJson(t.typeArguments)
+    )
   }
 
   override fun visitTypeVariable(t: TypeVariable, p: Void?): JsonObject {

@@ -44,6 +44,7 @@ abstract class MockTree(private val _kind: DocTree.Kind) : DocTree {
       is SinceTree -> visitor.visitSince(this, data)
       is StartElementTree -> visitor.visitStartElement(this, data)
       is SummaryTree -> visitor.visitSummary(this, data)
+      is SystemPropertyTree -> visitor.visitSystemProperty(this, data)
       is TextTree -> visitor.visitText(this, data)
       is ThrowsTree -> visitor.visitThrows(this, data)
       is UnknownBlockTagTree -> visitor.visitUnknownBlockTag(this, data)
@@ -655,6 +656,24 @@ class JsonDocTreeVisitorTest {
     assertEquals(result["kind"], "SUMMARY")
     assertEquals(result["tagName"], "summary")
     assertEquals(result["summary"], listOf<DocTree>())
+  }
+
+  @Test
+  fun visitSystemProperty() {
+    val node = object: MockTree(DocTree.Kind.SYSTEM_PROPERTY), SystemPropertyTree {
+      override fun getTagName(): String {
+        return "systemProperty"
+      }
+
+      override fun getPropertyName(): Name {
+        return makeName("some name")
+      }
+    }
+    val result = toJson(node)
+    assertEquals(result.size, 3)
+    assertEquals(result["kind"], "SYSTEM_PROPERTY")
+    assertEquals(result["tagName"], "systemProperty")
+    assertEquals(result["propertyName"], "some name")
   }
 
   @Test

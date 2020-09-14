@@ -8,7 +8,7 @@ fun toJson(element: Element?): JsonValue {
     return JsonValue(null)
   }
   val base = mutableMapOf<String, Any?>(
-    "kind" to element.kind.name,
+    "kind" to toJson(element.kind),
     "annotationMirrors" to toJson(element.annotationMirrors),
     "modifiers" to toJson(element.modifiers),
     "simpleName" to toJson(element.simpleName),

@@ -7,6 +7,15 @@ import jdk.javadoc.doclet.*
 
 lateinit var docTrees: DocTrees
 
+fun toJson(environment: DocletEnvironment): JsonValue {
+  return JsonValue(mapOf(
+    "includedElements" to toJson(environment.includedElements),
+    "specifiedElements" to toJson(environment.specifiedElements),
+    "sourceVersion" to toJson(environment.sourceVersion),
+    "moduleMode" to toJson(environment.moduleMode)
+  ))
+}
+
 /**
  * A doclet that outputs JSON.
  */
@@ -19,7 +28,7 @@ class JsonDoclet : Doclet {
   }
 
   override fun getSupportedOptions(): Set<Doclet.Option> {
-    return HashSet()
+    return setOf()
   }
 
   override fun getSupportedSourceVersion(): SourceVersion {

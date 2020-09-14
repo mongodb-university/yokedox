@@ -1,11 +1,10 @@
 package com.yokedox
 
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
-import javax.lang.model.element.AnnotationMirror
-import javax.lang.model.element.AnnotationValue
-import javax.lang.model.element.AnnotationValueVisitor
-import javax.lang.model.element.VariableElement
+import javax.lang.model.element.*
+import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
 
@@ -35,6 +34,11 @@ class MockAnnotationValue(private val _value: Any): AnnotationValue {
 }
 
 class JsonAnnotationValueVisitorTest {
+  @Before
+  @Test fun setUp() {
+    docTrees = MockDocTrees()
+  }
+
   @Test fun visitBoolean() {
     val result = toJson(MockAnnotationValue(false))
     assertEquals(result, false)
@@ -90,24 +94,57 @@ class JsonAnnotationValueVisitorTest {
     assertEquals("""{"kind": "NONE"}""", result.toJsonString())
   }
 
-  /*
   @Test fun visitEnumConstant() {
-    val result = toJson(MockAnnotationValue(object: VariableElement {
-
-    }))
-    assertEquals(result, value)
+    val result = toJson(MockAnnotationValue(MockVariableElement(ElementKind.LOCAL_VARIABLE, "SOME_CONSTANT_VALUE")))
+    assertEquals(result.size, 8)
+    assertEquals(result["kind"], "LOCAL_VARIABLE")
+    assertEquals(result["simpleName"], "LOCAL_VARIABLE")
+    assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
+    assertEquals(result["modifiers"], listOf<Modifier>())
+    assertEquals(result["enclosingElement"], JsonValue(null))
+    assertEquals(result["enclosedElements"], listOf<Element>())
+    assertEquals(result["docCommentTree"], JsonValue(null))
+    assertEquals(result["constantValue"], "SOME_CONSTANT_VALUE")
   }
 
   @Test fun visitAnnotation() {
-    val result = toJson(MockAnnotationValue(value));
-    assertEquals(result, value)
+    val result = toJson(MockAnnotationValue(object: AnnotationMirror {
+      override fun getAnnotationType(): DeclaredType {
+        return object: MockTypeMirror(TypeKind.DECLARED), DeclaredType {
+          override fun asElement(): Element {
+            TODO("Not yet implemented")
+          }
+
+          override fun getEnclosingType(): TypeMirror? {
+            return null
+          }
+
+          override fun getTypeArguments(): MutableList<out TypeMirror> {
+            return mutableListOf()
+          }
+        }
+      }
+
+      override fun getElementValues(): MutableMap<out ExecutableElement, out AnnotationValue> {
+        return mutableMapOf()
+      }
+    }))
+    assertEquals(result["annotationType"], mapOf(
+      "kind" to "DECLARED",
+      "enclosingType" to null,
+      "typeArguments" to listOf<Any>()
+    ))
   }
 
   @Test fun visitArray() {
-    val result = toJson(MockAnnotationValue(listOf(
-
+    val result = toJson(MockAnnotationValue(mutableListOf(
+      MockAnnotationValue(true),
+      MockAnnotationValue('a'),
+      MockAnnotationValue("some string"),
+      MockAnnotationValue(1234)
     )))
-    assertEquals(result, value)
+    assertEquals(result, listOf(
+      true, 'a', "some string", 1234
+    ))
   }
-   */
 }

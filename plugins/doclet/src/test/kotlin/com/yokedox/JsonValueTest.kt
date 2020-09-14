@@ -125,4 +125,38 @@ class JsonValueTest {
     ))
     assertEquals("""{"one": 1, "some string": "some \" string", "small number": 1.0E-13, "float": 1.02, "true": true, "null": null, "array": [1, 2, 3]}""", obj.toJsonString())
   }
+
+  @Test fun invalidValueFails() {
+    class SomeRandomClass
+    assertFails {
+      JsonValue(SomeRandomClass())
+    }
+  }
+
+  @Test fun invalidObjectKeyTypeFails() {
+    assertFails {
+      // Non-string keys
+      JsonValue(mapOf(
+        1 to 99
+      )).toString()
+    }
+  }
+
+  @Test fun invalidObjectValueTypeFails() {
+    assertFails {
+      class SomeRandomClass
+      JsonValue(mapOf(
+        "test" to SomeRandomClass()
+      )).toString()
+    }
+  }
+
+  @Test fun testHashCode() {
+    assertEquals(JsonValue(null).hashCode(), 0)
+    assertEquals(JsonValue("string").hashCode(), "string".hashCode())
+    assertEquals(JsonValue(1).hashCode(), 1.hashCode())
+    assertEquals(JsonValue(1.234).hashCode(), 1.234.hashCode())
+    assertEquals(JsonValue(JsonValue("something")).hashCode(), JsonValue("something").hashCode())
+    assertEquals(JsonValue(listOf(1, 2, 3)).hashCode(), mutableListOf(1, 2, 3).hashCode())
+  }
 }

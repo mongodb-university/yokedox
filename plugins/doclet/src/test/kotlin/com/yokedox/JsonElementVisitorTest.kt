@@ -77,6 +77,75 @@ class JsonElementVisitorTest {
     docTrees = MockDocTrees()
   }
 
+  @Test fun testBaseProperties() {
+    val element = object: MockElement(
+      ElementKind.PACKAGE,
+      makeName("some other simple name"),
+      mutableSetOf(
+        Modifier.DEFAULT,
+        Modifier.ABSTRACT,
+        Modifier.FINAL,
+        Modifier.TRANSIENT
+      ),
+      MockVariableElement(ElementKind.CLASS, "EnclosingClass"),
+      mutableListOf(
+        MockVariableElement(ElementKind.LOCAL_VARIABLE, "SOME_CONSTANT"),
+        MockVariableElement(ElementKind.ENUM, "SOME_OTHER_CONSTANT")
+      )
+    ), PackageElement {
+      override fun getQualifiedName(): Name {
+        return makeName("arbitrarily.chosen.type")
+      }
+
+      override fun isUnnamed(): Boolean {
+        return false
+      }
+    }
+    val result = toJson(element)
+    assertEquals(result.size, 9)
+    assertEquals(result["kind"], "PACKAGE")
+    assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
+    assertEquals(result["modifiers"], listOf(
+      "DEFAULT", "ABSTRACT", "FINAL", "TRANSIENT"
+    ))
+    assertEquals(result["simpleName"], "some other simple name")
+    assertEquals(result["enclosingElement"], mapOf(
+      "kind" to "CLASS",
+      "simpleName" to "CLASS",
+      "annotationMirrors" to listOf<Any>(),
+      "modifiers" to listOf<Any>(),
+      "enclosingElement" to null,
+      "enclosedElements" to listOf<Any>(),
+      "docCommentTree" to null,
+      "constantValue" to "EnclosingClass"
+    ))
+    assertEquals(result["enclosedElements"], listOf(
+      mapOf(
+        "kind" to "LOCAL_VARIABLE",
+        "simpleName" to "LOCAL_VARIABLE",
+        "annotationMirrors" to listOf<Any>(),
+        "modifiers" to listOf<Any>(),
+        "enclosingElement" to null,
+        "enclosedElements" to listOf<Any>(),
+        "docCommentTree" to null,
+        "constantValue" to "SOME_CONSTANT"
+      ),
+      mapOf(
+        "kind" to "ENUM",
+        "simpleName" to "ENUM",
+        "annotationMirrors" to listOf<Any>(),
+        "modifiers" to listOf<Any>(),
+        "enclosingElement" to null,
+        "enclosedElements" to listOf<Any>(),
+        "docCommentTree" to null,
+        "constantValue" to "SOME_OTHER_CONSTANT"
+      )
+    ))
+    assertEquals(result["docCommentTree"], JsonValue(null))
+    assertEquals(result["qualifiedName"], "arbitrarily.chosen.type")
+    assertEquals(result["isUnnamed"], false)
+  }
+
   @Test fun visitPackage() {
     val element = object: MockElement(ElementKind.PACKAGE), PackageElement {
       override fun getQualifiedName(): Name {

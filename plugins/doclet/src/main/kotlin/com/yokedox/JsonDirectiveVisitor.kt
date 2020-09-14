@@ -9,7 +9,7 @@ fun toJson(list: Iterable<ModuleElement.Directive>): JsonValue {
 
 fun toJson(directive: ModuleElement.Directive): JsonValue {
   val base = mutableMapOf<String, Any?>(
-    "kind" to directive.kind.name
+    "kind" to toJson(directive.kind)
   )
   base.putAll(JsonDirectiveVisitor().visit(directive))
   return JsonValue(base)

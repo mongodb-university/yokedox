@@ -29,8 +29,8 @@ abstract class MockTypeMirror(private val _kind: TypeKind): TypeMirror {
       is PrimitiveType -> visitor.visitPrimitive(this, data)
       is NullType -> visitor.visitNull(this, data)
       is ArrayType -> visitor.visitArray(this, data)
+      is ErrorType -> visitor.visitError(this, data) // Error extends Declared; must go before Declared in this list
       is DeclaredType -> visitor.visitDeclared(this, data)
-      is ErrorType -> visitor.visitError(this, data)
       is TypeVariable -> visitor.visitTypeVariable(this, data)
       is WildcardType -> visitor.visitWildcard(this, data)
       is ExecutableType -> visitor.visitExecutable(this, data)
@@ -126,7 +126,6 @@ class JsonTypeVisitorTest {
     ))
     assertEquals(result["typeArguments"], listOf<TypeMirror>())
   }
-
 
   @Test
   fun visitTypeVariable() {

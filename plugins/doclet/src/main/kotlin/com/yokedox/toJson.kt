@@ -14,10 +14,6 @@ fun toJson(kind: NestingKind): JsonValue {
   return toJson(kind.name)
 }
 
-fun toJson(modifier: Modifier): JsonValue {
-  return JsonValue(modifier.name)
-}
-
 fun toJson(sourceVersion: SourceVersion): JsonValue {
   return JsonValue(sourceVersion.name)
 }
@@ -28,14 +24,5 @@ fun toJson(moduleMode: DocletEnvironment.ModuleMode): JsonValue {
 
 @JvmName("toJsonIterableModifier")
 fun toJson(modifiers: Iterable<Modifier>): JsonValue {
-  return JsonValue(modifiers.map { toJson(it) })
-}
-
-fun toJson(environment: DocletEnvironment): JsonValue {
-  return JsonValue(mapOf(
-    "includedElements" to toJson(environment.includedElements),
-    "specifiedElements" to toJson(environment.specifiedElements),
-    "sourceVersion" to toJson(environment.sourceVersion),
-    "moduleMode" to toJson(environment.moduleMode)
-  ))
+  return JsonValue(modifiers.map { it.name })
 }
