@@ -11,7 +11,7 @@ fun toJson(directive: ModuleElement.Directive): JsonValue {
   val base = mutableMapOf<String, Any?>(
     "kind" to directive.kind.name
   )
-  base.putAll(JsonModuleDirectiveVisitor().visit(directive))
+  base.putAll(JsonDirectiveVisitor().visit(directive))
   return JsonValue(base)
 }
 
@@ -19,7 +19,7 @@ fun toJson(kind: ModuleElement.DirectiveKind): JsonValue {
   return JsonValue(kind.name)
 }
 
-class JsonModuleDirectiveVisitor : ModuleElement.DirectiveVisitor<JsonObject, Void> {
+class JsonDirectiveVisitor : ModuleElement.DirectiveVisitor<JsonObject, Void> {
   override fun visitRequires(d: ModuleElement.RequiresDirective, p: Void?): JsonObject {
     return mapOf(
       "dependency" to toJson(d.dependency),

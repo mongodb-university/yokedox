@@ -271,5 +271,4 @@ class JsonElementVisitorTest {
     assertEquals(result["isUnnamed"], false)
     assertEquals(result["directives"], listOf<Any>())
   }
-
 }
