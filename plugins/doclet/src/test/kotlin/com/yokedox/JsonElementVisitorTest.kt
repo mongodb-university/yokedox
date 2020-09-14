@@ -7,6 +7,7 @@ import javax.lang.model.AnnotatedConstruct
 import javax.lang.model.element.*
 import javax.lang.model.type.TypeKind
 import javax.lang.model.type.TypeMirror
+import kotlin.test.assertFails
 
 abstract class MockAnnotatedConstruct: AnnotatedConstruct {
   override fun getAnnotationMirrors(): MutableList<out AnnotationMirror> {
@@ -102,45 +103,13 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 9)
+    assertEquals(result.size, 8)
     assertEquals(result["kind"], "PACKAGE")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf(
       "DEFAULT", "ABSTRACT", "FINAL", "TRANSIENT"
     ))
     assertEquals(result["simpleName"], "some other simple name")
-    assertEquals(result["enclosingElement"], mapOf(
-      "kind" to "CLASS",
-      "simpleName" to "CLASS",
-      "annotationMirrors" to listOf<Any>(),
-      "modifiers" to listOf<Any>(),
-      "enclosingElement" to null,
-      "enclosedElements" to listOf<Any>(),
-      "docCommentTree" to null,
-      "constantValue" to "EnclosingClass"
-    ))
-    assertEquals(result["enclosedElements"], listOf(
-      mapOf(
-        "kind" to "LOCAL_VARIABLE",
-        "simpleName" to "LOCAL_VARIABLE",
-        "annotationMirrors" to listOf<Any>(),
-        "modifiers" to listOf<Any>(),
-        "enclosingElement" to null,
-        "enclosedElements" to listOf<Any>(),
-        "docCommentTree" to null,
-        "constantValue" to "SOME_CONSTANT"
-      ),
-      mapOf(
-        "kind" to "ENUM",
-        "simpleName" to "ENUM",
-        "annotationMirrors" to listOf<Any>(),
-        "modifiers" to listOf<Any>(),
-        "enclosingElement" to null,
-        "enclosedElements" to listOf<Any>(),
-        "docCommentTree" to null,
-        "constantValue" to "SOME_OTHER_CONSTANT"
-      )
-    ))
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["qualifiedName"], "arbitrarily.chosen.type")
     assertEquals(result["isUnnamed"], false)
@@ -157,12 +126,11 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 9)
+    assertEquals(result.size, 8)
     assertEquals(result["kind"], "PACKAGE")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
     assertEquals(result["simpleName"], "PACKAGE")
-    assertEquals(result["enclosingElement"], JsonValue(null))
     assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["qualifiedName"], "some.qualified.name")
@@ -192,12 +160,11 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 12)
+    assertEquals(result.size, 11)
     assertEquals(result["kind"], "CLASS")
     assertEquals(result["simpleName"], "CLASS")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
-    assertEquals(result["enclosingElement"], JsonValue(null))
     assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["qualifiedName"], "some.qualified.name")
@@ -208,13 +175,11 @@ class JsonElementVisitorTest {
   @Test fun visitVariable() {
     val element = MockVariableElement(ElementKind.LOCAL_VARIABLE, 1234)
     val result = toJson(element)
-    assertEquals(result.size, 8)
+    assertEquals(result.size, 7)
     assertEquals(result["kind"], "LOCAL_VARIABLE")
     assertEquals(result["simpleName"], "LOCAL_VARIABLE")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
-    assertEquals(result["enclosingElement"], JsonValue(null))
-    assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["constantValue"], 1234)
   }
@@ -254,13 +219,11 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 15)
+    assertEquals(result.size, 14)
     assertEquals(result["kind"], "METHOD")
     assertEquals(result["simpleName"], "METHOD")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
-    assertEquals(result["enclosingElement"], JsonValue(null))
-    assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["typeParameters"], listOf<Any>())
     assertEquals(result["returnType"], mapOf(
@@ -287,24 +250,13 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 9)
+    assertEquals(result.size, 7)
     assertEquals(result["kind"], "TYPE_PARAMETER")
     assertEquals(result["simpleName"], "TYPE_PARAMETER")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
-    assertEquals(result["enclosingElement"], JsonValue(null))
-    assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
-    assertEquals(result["genericElement"], mapOf(
-      "kind" to "LOCAL_VARIABLE",
-      "simpleName" to "LOCAL_VARIABLE",
-      "annotationMirrors" to listOf<Any>(),
-      "modifiers" to listOf<Any>(),
-      "enclosingElement" to null,
-      "enclosedElements" to listOf<Any>(),
-      "docCommentTree" to null,
-      "constantValue" to null
-    ))
+    assertEquals(result["enclosedElements"], listOf<Any>())
     assertEquals(result["bounds"], listOf<Any>())
   }
 
@@ -327,17 +279,53 @@ class JsonElementVisitorTest {
       }
     }
     val result = toJson(element)
-    assertEquals(result.size, 11)
+    assertEquals(result.size, 10)
     assertEquals(result["kind"], "MODULE")
     assertEquals(result["simpleName"], "MODULE")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
-    assertEquals(result["enclosingElement"], JsonValue(null))
-    assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["qualifiedName"], "some.qualified.name")
     assertEquals(result["isOpen"], true)
     assertEquals(result["isUnnamed"], false)
     assertEquals(result["directives"], listOf<Any>())
+    assertEquals(result["enclosedElements"], listOf<Any>())
   }
+
+  @Test fun typeParameterInfiniteLoop() {
+    val element = object: MockElement(ElementKind.CLASS), TypeElement {
+      override fun getTypeParameters(): MutableList<out TypeParameterElement> {
+        return mutableListOf(
+          object: MockElement(ElementKind.TYPE_PARAMETER), TypeParameterElement {
+            override fun getGenericElement(): Element {
+              return this // cyclical reference!
+            }
+
+            override fun getBounds(): MutableList<out TypeMirror> {
+              return mutableListOf()
+            }
+          }
+        )
+      }
+
+      override fun getQualifiedName(): Name {
+        return makeName("some.qualified.name")
+      }
+
+      override fun getNestingKind(): NestingKind {
+        return NestingKind.ANONYMOUS
+      }
+
+      override fun getSuperclass(): TypeMirror? {
+        return null
+      }
+
+      override fun getInterfaces(): MutableList<out TypeMirror> {
+        return mutableListOf()
+      }
+    }
+    val result = toJson(element)
+
+  }
+
 }

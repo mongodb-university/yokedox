@@ -26,6 +26,9 @@ javadoc \
   com.myorg.myproject
 ```
 
+**WARNING!** This doclet is a work in progress and may not be ready for your use.
+
+
 ## Testing
 
 ### Unit Tests

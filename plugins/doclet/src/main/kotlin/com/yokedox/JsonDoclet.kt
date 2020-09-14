@@ -28,7 +28,9 @@ class JsonDoclet : Doclet {
   }
 
   override fun getSupportedOptions(): Set<Doclet.Option> {
-    return setOf()
+    // TODO: For now, delegate and pretend we support these options
+    // that people have in their build scripts
+    return StandardDoclet().supportedOptions
   }
 
   override fun getSupportedSourceVersion(): SourceVersion {

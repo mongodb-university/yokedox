@@ -6,7 +6,10 @@ import javax.lang.model.element.VariableElement
 import javax.lang.model.type.TypeMirror
 import javax.lang.model.util.AbstractAnnotationValueVisitor9
 
-fun toJson(annotationValue: AnnotationValue): JsonValue {
+fun toJson(annotationValue: AnnotationValue?): JsonValue {
+  if (annotationValue == null) {
+    return JsonValue(null)
+  }
   return JsonAnnotationValueVisitor().visit(annotationValue);
 }
 

@@ -12,7 +12,7 @@ fun toJson(element: Element?): JsonValue {
     "annotationMirrors" to toJson(element.annotationMirrors),
     "modifiers" to toJson(element.modifiers),
     "simpleName" to toJson(element.simpleName),
-    "enclosingElement" to toJson(element.enclosingElement),
+    // "enclosingElement" to toJson(element.enclosingElement),
     "enclosedElements" to toJson(element.enclosedElements)
   )
   base["docCommentTree"] = toJson(docTrees.getDocCommentTree(element))
@@ -68,9 +68,9 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
 
   override fun visitTypeParameter(e: TypeParameterElement, p: Void?): JsonObject {
     return mapOf(
-      "bounds" to toJson(e.bounds),
-      "enclosingElement" to toJson(e.enclosingElement),
-      "genericElement" to toJson(e.genericElement)
+      "bounds" to toJson(e.bounds)
+      // "enclosingElement" to toJson(e.enclosingElement), // TODO: Cyclic references possible
+      // "genericElement" to toJson(e.genericElement) // TODO: Cyclic references possible
     )
   }
 
@@ -78,7 +78,7 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
     return mapOf(
       "directives" to toJson(t.directives),
       "enclosedElements" to toJson(t.enclosedElements),
-      //  "enclosingElement" to toJson(t.enclosingElement), // TODO: This can be null and will crash
+      // "enclosingElement" to toJson(t.enclosingElement), // TODO: Cyclic references possible
       "qualifiedName" to toJson(t.qualifiedName),
       "isOpen" to toJson(t.isOpen),
       "isUnnamed" to toJson(t.isUnnamed)

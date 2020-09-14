@@ -199,7 +199,6 @@ class JsonDocletTest {
 
     @Test
     fun getSupportedOptions() {
-      assertEquals(setOf<Doclet.Option>(), JsonDoclet().supportedOptions)
     }
 
     @Test
