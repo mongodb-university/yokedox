@@ -49,7 +49,10 @@ class JsonValue {
   }
 
   override operator fun equals(other: Any?): Boolean {
-    return _value == other
+    return when (other) {
+      is JsonValue -> _value == other._value
+      else -> _value == other
+    }
   }
 
   operator fun get(key: String): JsonValue? {

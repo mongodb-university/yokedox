@@ -8,7 +8,7 @@ import org.junit.Assert.*
 import kotlin.test.assertFails
 
 class JsonValueTest {
-  @Test fun testValueEquality() {
+  @Test fun testValueEquals() {
     assertEquals(JsonValue(null), null)
     assertEquals(JsonValue(1), 1)
     assertEquals(JsonValue(1.023), 1.023)
@@ -25,6 +25,13 @@ class JsonValueTest {
     assertEquals(JsonValue(listOf(
       1, "a", false
     )), listOf(1, "a", false))
+  }
+
+  @Test fun testJsonValueEquals() {
+    assertEquals(JsonValue(null), JsonValue(null))
+    assertEquals(JsonValue(1), JsonValue(1))
+    assertEquals(JsonValue("string"), JsonValue("string"))
+    assertNotEquals(JsonValue(null), JsonValue(1))
   }
 
   @Test fun testObjectGet() {

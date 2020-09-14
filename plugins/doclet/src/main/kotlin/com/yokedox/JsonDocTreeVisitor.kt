@@ -2,7 +2,10 @@ package com.yokedox
 
 import com.sun.source.doctree.*
 
-fun toJson(tree: DocTree): JsonValue {
+fun toJson(tree: DocTree?): JsonValue {
+  if (tree == null) {
+    return JsonValue(null)
+  }
   val base = mutableMapOf<String, Any?>(
     "kind" to tree.kind.name
   )

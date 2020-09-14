@@ -3,7 +3,10 @@ package com.yokedox
 import javax.lang.model.type.*
 import javax.lang.model.util.AbstractTypeVisitor9
 
-fun toJson(typeMirror: TypeMirror): JsonValue {
+fun toJson(typeMirror: TypeMirror?): JsonValue {
+  if (typeMirror == null) {
+    return JsonValue(null)
+  }
   val base = mutableMapOf<String, Any?>(
     "kind" to typeMirror.kind.name
   )

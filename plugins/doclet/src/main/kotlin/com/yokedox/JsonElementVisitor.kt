@@ -3,17 +3,19 @@ package com.yokedox
 import javax.lang.model.element.*
 import javax.lang.model.util.AbstractElementVisitor9
 
-fun toJson(element: Element): JsonValue {
-  val base = mutableMapOf(
-    "annotationMirrors" to element.annotationMirrors,
-    "kind" to element.kind.name,
-    "modifiers" to element.modifiers,
-    "simpleName" to element.simpleName
-  )
-  val docCommentTree = docTrees.getDocCommentTree(element)
-  if (docCommentTree != null) {
-    base["comments"] = toJson(docCommentTree)
+fun toJson(element: Element?): JsonValue {
+  if (element == null) {
+    return JsonValue(null)
   }
+  val base = mutableMapOf<String, Any?>(
+    "kind" to element.kind.name,
+    "annotationMirrors" to toJson(element.annotationMirrors),
+    "modifiers" to toJson(element.modifiers),
+    "simpleName" to toJson(element.simpleName),
+    "enclosingElement" to toJson(element.enclosingElement),
+    "enclosedElements" to toJson(element.enclosedElements)
+  )
+  base["docCommentTree"] = toJson(docTrees.getDocCommentTree(element))
   base.putAll(JsonElementVisitor().visit(element))
   return JsonValue(base)
 }
@@ -39,13 +41,15 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
     return mapOf(
       "nestingKind" to toJson(e.nestingKind),
       "qualifiedName" to toJson(e.qualifiedName),
-      "superclass" to toJson(e.superclass)
+      "superclass" to toJson(e.superclass),
+      "interfaces" to toJson(e.interfaces),
+      "typeParameters" to toJson(e.typeParameters)
     )
   }
 
   override fun visitVariable(e: VariableElement, p: Void?): JsonObject {
     return mapOf(
-      // "constantValue" to JsonValue(e.constantValue) // TODO: constantValue is type-erased 'Object'
+      "constantValue" to JsonValue(e.constantValue)
     )
   }
 
@@ -58,7 +62,7 @@ class JsonElementVisitor : AbstractElementVisitor9<JsonObject, Void>() {
       "thrownTypes" to toJson(e.thrownTypes),
       "typeParameters" to toJson(e.typeParameters),
       "isDefault" to toJson(e.isDefault),
-      "isVarargs" to toJson(e.isVarArgs)
+      "isVarArgs" to toJson(e.isVarArgs)
     )
   }
 

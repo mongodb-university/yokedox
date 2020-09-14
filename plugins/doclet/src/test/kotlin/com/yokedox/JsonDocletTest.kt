@@ -115,8 +115,8 @@ class MockDocTrees: DocTrees() {
     TODO("Not yet implemented")
   }
 
-  override fun getDocCommentTree(e: Element?): DocCommentTree {
-    TODO("Not yet implemented")
+  override fun getDocCommentTree(e: Element?): DocCommentTree? {
+    return null
   }
 
   override fun getDocCommentTree(fileObject: FileObject?): DocCommentTree {
