@@ -61,6 +61,9 @@ class JsonValue {
     }
   }
 
+  val value: Any?
+    get() = _value
+
   val size: Int
     get() = when(_value) {
       is Iterable<*> -> _value.count()
@@ -68,9 +71,10 @@ class JsonValue {
       else -> throw Error("`size` called on JsonValue that is not an object or array (value=$_value)")
     }
 
+  @Suppress("UNCHECKED_CAST")
   val keys: Set<String>
     get() = when(_value) {
-      is Map<*, *> -> (_value as Map<String, *>).keys
+      is Map<*, *> -> (_value as Map<String, JsonValue>).keys
       else -> throw Error("`keys` called on JsonValue that is not an object (value=$_value)")
     }
 
@@ -102,5 +106,38 @@ class JsonValue {
 
   override fun hashCode(): Int {
     return _value?.hashCode() ?: 0
+  }
+
+  // Returns true if the value can be discarded.
+  fun isDisposable(): Boolean {
+    return when (_value) {
+      null -> true
+      is String -> _value == ""
+      is Iterable<*> -> _value.count() == 0
+      is Map<*, *> -> _value.size == 0
+      is JsonValue -> _value.isDisposable()
+      else -> false
+    }
+  }
+
+  // Returns a copy with discards null fields and empty strings, objects, and arrays.
+  @Suppress("UNCHECKED_CAST")
+  fun compacted(): JsonValue {
+    return when (_value) {
+      is Iterable<*> -> JsonValue((_value as Iterable<JsonValue>)
+        .map {
+          it.compacted()
+        }
+        .filter {
+          !it.isDisposable()
+        })
+      is Map<*, *> -> JsonValue((_value as Map<String, JsonValue>)
+        .mapValues {
+          it.value.compacted()
+        }.filter {
+          !it.value.isDisposable()
+        })
+      else -> this
+    }
   }
 }

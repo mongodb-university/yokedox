@@ -181,4 +181,66 @@ class JsonValueTest {
     assertEquals(JsonValue(JsonValue("something")).hashCode(), JsonValue("something").hashCode())
     assertEquals(JsonValue(listOf(1, 2, 3)).hashCode(), mutableListOf(1, 2, 3).hashCode())
   }
+
+  @Test fun testCompactJson() {
+    assertEquals(JsonValue(null).compacted(), JsonValue(null))
+    assertEquals(JsonValue("string").compacted(), "string")
+    assertEquals(JsonValue(1).compacted(), 1)
+    assertEquals(JsonValue(1.234).compacted(), 1.234)
+    assertEquals(JsonValue(JsonValue("something")).compacted(), JsonValue("something"))
+    assertEquals(JsonValue(listOf(1, 2, 3)).compacted(), mutableListOf(1, 2, 3))
+    assertEquals(JsonValue(listOf(
+      1, null, 3, mapOf<String, Any?>(), 5, "", 7)).compacted(), mutableListOf(1, 3, 5, 7))
+    assertEquals(JsonValue(mapOf(
+      // nothing
+    )).compacted(), mapOf<String, Any?>())
+
+    assertEquals(JsonValue(mapOf(
+      "one" to 1,
+      "empty object" to mapOf<String, Any?>(),
+      "empty array" to listOf<Any?>(),
+      "array" to listOf(1, 2, 3),
+      "null" to null,
+      "zero" to 0,
+      "object" to mapOf(
+        "a" to 1
+      ),
+      "empty string" to "",
+      "string" to "some string"
+    )).compacted().keys, setOf(
+      "one",
+      "array",
+      "zero",
+      "object",
+      "string"
+    ))
+
+    assertEquals(JsonValue(mapOf(
+      "outer" to mapOf(
+        "inner1" to mapOf( // all of this object's entries are disposable, so it should be discarded
+          "empty array" to listOf<Any?>(),
+          "empty string" to "",
+          "null" to null,
+          "empty object" to mapOf<String, Any?>()
+        ),
+        "inner2" to 123
+      )
+    )).compacted(), mapOf(
+      "outer" to mapOf(
+        "inner2" to 123
+      )
+    ))
+
+    assertEquals(JsonValue(listOf(
+      listOf( // all of this array's entries are disposable, so it should be discarded
+        listOf<Any?>(),
+        "",
+        null,
+        mapOf<String, Any?>()
+      ),
+      123
+    )).compacted(), listOf(
+      123
+    ))
+  }
 }

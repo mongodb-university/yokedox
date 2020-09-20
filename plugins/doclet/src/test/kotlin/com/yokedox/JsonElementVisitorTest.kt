@@ -364,8 +364,7 @@ class JsonElementVisitorTest {
         return mutableListOf()
       }
     }
-    val result = toJson(element)
-
+    toJson(element)
   }
 
 }
