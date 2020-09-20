@@ -47,7 +47,7 @@ tasks.register("testDoclet") {
     mustRunAfter(shadowJar)
     doLast {
       project.exec {
-        commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox-all.jar -sourcepath test/src/main/java/ com.yokedox.test".split(" ")
+        commandLine = "javadoc -doclet com.yokedox.JsonDoclet -docletpath ./build/libs/yokedox-all.jar -sourcepath test/src/main/java/ --output-path tmp/com.yokedox.test.json -f com.yokedox.test".split(" ")
       }
     }
 }

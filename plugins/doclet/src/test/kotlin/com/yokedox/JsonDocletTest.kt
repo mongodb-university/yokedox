@@ -21,6 +21,7 @@ import javax.tools.Diagnostic
 import javax.tools.FileObject
 import javax.tools.JavaFileManager
 import javax.tools.JavaFileObject
+import kotlin.test.assertFails
 
 class MockDocTrees: DocTrees() {
   override fun getSourcePositions(): DocSourcePositions {
@@ -198,10 +199,6 @@ class JsonDocletTest {
     }
 
     @Test
-    fun getSupportedOptions() {
-    }
-
-    @Test
     fun getSupportedSourceVersion() {
       assertEquals(SourceVersion.RELEASE_0, JsonDoclet().supportedSourceVersion)
     }
@@ -210,10 +207,56 @@ class JsonDocletTest {
     fun run() {
       val _docTrees = MockDocTrees()
       val environment = MockDocletEnvironment(_docTrees)
-      assert(JsonDoclet().run(environment))
+
+      val doclet = JsonDoclet()
+
+      assertFails { doclet.run(environment) }
+
+      doclet.outputPath = "tmp/test.json"
+      doclet.force = true
+      assert(doclet.run(environment))
 
       // Global docTrees dependency set
       assertEquals(_docTrees, docTrees)
+    }
+
+    @Test
+    fun testDocletOptions() {
+      val options = JsonDoclet().supportedOptions
+      assertEquals(options.map { it.names.toSet() }.toSet(), setOf(
+        setOf("-d"),
+        setOf("-doctitle"),
+        setOf("-windowtitle"),
+        setOf("-f", "--force"),
+        setOf("-o", "--output-path"),
+        setOf("--no-compact")
+      ))
+    }
+
+    @Test
+    fun testDocletOptionsProcessors() {
+      val doclet = JsonDoclet()
+      assertEquals(doclet.outputPath, null)
+      assertEquals(doclet.compact, true)
+      assertEquals(doclet.force, false)
+
+      val o = doclet.getOption("-o")
+      o!!.process("-o", listOf("some path"))
+      assertEquals(doclet.outputPath, "some path") // Set to some path
+      assertEquals(doclet.compact, true)
+      assertEquals(doclet.force, false)
+
+      val noCompact = doclet.getOption("--no-compact")
+      noCompact!!.process("--no-compact", listOf())
+      assertEquals(doclet.outputPath, "some path")
+      assertEquals(doclet.compact, false) // Set to false
+      assertEquals(doclet.force, false)
+
+      val force = doclet.getOption("-f")
+      force!!.process("-f", listOf())
+      assertEquals(doclet.outputPath, "some path")
+      assertEquals(doclet.compact, false)
+      assertEquals(doclet.force, true) // Set to false
     }
 
     @Test
