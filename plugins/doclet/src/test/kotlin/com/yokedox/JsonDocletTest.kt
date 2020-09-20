@@ -6,10 +6,12 @@ import com.sun.source.tree.*
 import com.sun.source.util.*
 import jdk.javadoc.doclet.Doclet
 import jdk.javadoc.doclet.DocletEnvironment
+import jdk.javadoc.doclet.Reporter
 import org.junit.Test
 
 import org.junit.Assert.*
 import java.text.BreakIterator
+import java.util.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.*
 import javax.lang.model.type.DeclaredType
@@ -204,6 +206,25 @@ class JsonDocletTest {
     }
 
     @Test
+    fun testDocletInit() {
+      val locale = Locale("en")
+      val reporter = object: Reporter {
+        override fun print(kind: Diagnostic.Kind?, msg: String?) {
+          TODO("Not yet implemented")
+        }
+
+        override fun print(kind: Diagnostic.Kind?, path: DocTreePath?, msg: String?) {
+          TODO("Not yet implemented")
+        }
+
+        override fun print(kind: Diagnostic.Kind?, e: Element?, msg: String?) {
+          TODO("Not yet implemented")
+        }
+      }
+      JsonDoclet().init(locale, reporter)
+    }
+
+    @Test
     fun run() {
       val _docTrees = MockDocTrees()
       val environment = MockDocletEnvironment(_docTrees)
@@ -218,11 +239,16 @@ class JsonDocletTest {
 
       // Global docTrees dependency set
       assertEquals(_docTrees, docTrees)
+
+      // No overwrite without -f
+      doclet.force = false
+      assertFails { doclet.run(environment) }
     }
 
     @Test
     fun testDocletOptions() {
-      val options = JsonDoclet().supportedOptions
+      val doclet = JsonDoclet()
+      val options = doclet.supportedOptions
       assertEquals(options.map { it.names.toSet() }.toSet(), setOf(
         setOf("-d"),
         setOf("-doctitle"),
@@ -234,8 +260,53 @@ class JsonDocletTest {
     }
 
     @Test
+    fun testMakeOption() {
+      var processed = false
+      val o = makeOption(
+        listOf("-t", "--test"),
+        "It is a test option",
+        listOf()
+      ) {
+        processed = true
+      }
+      assertFalse(processed)
+      assertEquals(o.names, listOf("-t", "--test"))
+      assertEquals(o.description, "It is a test option")
+      assertEquals(o.parameters, "")
+      assertEquals(o.argumentCount, 0)
+      assertEquals(o.kind, Doclet.Option.Kind.STANDARD)
+      o.process("", listOf())
+      assertTrue(processed)
+
+      processed = false
+      val o2 = makeOption(
+        listOf("-t2", "--test2"),
+        "It is a test option with multiple arguments",
+        listOf("a", "b", "c")
+      ) {
+        processed = true
+      }
+      assertFalse(processed)
+      assertEquals(o2.names, listOf("-t2", "--test2"))
+      assertEquals(o2.description, "It is a test option with multiple arguments")
+      assertEquals(o2.parameters, "a b c")
+      assertEquals(o2.argumentCount, 3)
+      assertEquals(o2.kind, Doclet.Option.Kind.STANDARD)
+      o.process("", listOf("a", "b", "c"))
+      assertTrue(processed)
+    }
+
+    @Test
     fun testDocletOptionsProcessors() {
       val doclet = JsonDoclet()
+      assertEquals(doclet.outputPath, null)
+      assertEquals(doclet.compact, true)
+      assertEquals(doclet.force, false)
+
+      doclet.getOption("-d")!!.process("-d", listOf("some path"))
+      doclet.getOption("-doctitle")!!.process("-doctitle", listOf("some html"))
+      doclet.getOption("-windowtitle")!!.process("-windowtitle", listOf("some text"))
+      // The above options are ignored. There should be no change:
       assertEquals(doclet.outputPath, null)
       assertEquals(doclet.compact, true)
       assertEquals(doclet.force, false)

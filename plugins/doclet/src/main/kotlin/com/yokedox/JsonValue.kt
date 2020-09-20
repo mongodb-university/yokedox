@@ -17,8 +17,22 @@ fun toJson(list: Iterable<JsonValue>): JsonValue {
   return JsonValue(list)
 }
 
-// Klaxon (JSON library) did not do well with building up JSON value trees
-// so wrapping it here
+/*
+NOTE on custom JSON implementation:
+
+- Klaxon (JSON library) did not do well with building up JSON value trees for output.
+- GSON (2.8.6) failed to load custom Javadoc type serializers with the exception due to reflection:
+
+    Unable to make field public final jdk.javadoc.internal.tool.ElementsTable
+      jdk.javadoc.internal.tool.DocEnvImpl.etable accessible:
+      module jdk.javadoc does not "exports jdk.javadoc.internal.tool" to unnamed module @3e8c9981
+      at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:341)
+      ...
+
+  Could not figure out how to use --add-exports with Kotlin gradle project for internal classes.
+  Considered wrapping every Javadoc type in a wrapper and providing serializers for the wrappers, but at that point...
+ */
+
 class JsonValue {
   private val _value: Any?
 
@@ -60,9 +74,6 @@ class JsonValue {
       else -> throw Error("get() called with integer index on non-array type! (value=$_value)")
     }
   }
-
-  val value: Any?
-    get() = _value
 
   val size: Int
     get() = when(_value) {
