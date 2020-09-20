@@ -88,6 +88,28 @@ class JsonValueTest {
     assertEquals(objectValue.size, 4)
   }
 
+  @Test fun testObjectKeys() {
+    val nullValue = JsonValue(null)
+    val numberValue = JsonValue(1.234)
+    val boolValue = JsonValue(true)
+    val stringValue = JsonValue("string")
+    val objectValue = JsonValue(mapOf(
+      "d" to 4,
+      "a" to 1,
+      "b" to 2,
+      "c" to 3
+    ))
+    val arrayValue = JsonValue(listOf(100, 200, 300, 400))
+    assertFails { nullValue.keys }
+    assertFails { numberValue.keys }
+    assertFails { boolValue.keys }
+    assertFails { stringValue.keys }
+    assertFails { arrayValue.keys }
+    assertEquals(objectValue.keys, setOf(
+      "a", "b", "c", "d"
+    ))
+  }
+
   @Test fun testNumberToString() {
     assertEquals("123", JsonValue(123).toJsonString())
     assertEquals("123", JsonValue(123.toByte()).toJsonString())

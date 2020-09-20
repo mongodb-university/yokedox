@@ -68,6 +68,12 @@ class JsonValue {
       else -> throw Error("`size` called on JsonValue that is not an object or array (value=$_value)")
     }
 
+  val keys: Set<String>
+    get() = when(_value) {
+      is Map<*, *> -> (_value as Map<String, *>).keys
+      else -> throw Error("`keys` called on JsonValue that is not an object (value=$_value)")
+    }
+
   fun toJsonString(): String {
     return when (_value) {
       is Iterable<*> -> arrayToString()

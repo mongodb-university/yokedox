@@ -96,11 +96,12 @@ class JsonAnnotationValueVisitorTest {
 
   @Test fun visitEnumConstant() {
     val result = toJson(MockAnnotationValue(MockVariableElement(ElementKind.LOCAL_VARIABLE, "SOME_CONSTANT_VALUE")))
-    assertEquals(result.size, 7)
+    assertEquals(result.size, 8)
     assertEquals(result["kind"], "LOCAL_VARIABLE")
     assertEquals(result["simpleName"], "LOCAL_VARIABLE")
     assertEquals(result["annotationMirrors"], listOf<AnnotationMirror>())
     assertEquals(result["modifiers"], listOf<Modifier>())
+    assertEquals(result["enclosingElement"], JsonValue(null))
     assertEquals(result["enclosedElements"], listOf<Element>())
     assertEquals(result["docCommentTree"], JsonValue(null))
     assertEquals(result["constantValue"], "SOME_CONSTANT_VALUE")
