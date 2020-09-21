@@ -334,10 +334,9 @@ class JsonDocletTest {
     fun environmentToJson() {
       val docTrees = MockDocTrees()
       val result = toJson(MockDocletEnvironment(docTrees))
-      assertEquals(result.size, 4)
+      assertEquals(result.size, 3)
       assertEquals(result, mapOf(
         "includedElements" to listOf<Any>(),
-        "specifiedElements" to listOf<Any>(),
         "sourceVersion" to "RELEASE_0",
         "moduleMode" to "ALL"
       ))
