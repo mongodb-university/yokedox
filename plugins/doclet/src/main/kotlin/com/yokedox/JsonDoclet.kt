@@ -12,7 +12,6 @@ lateinit var docTrees: DocTrees
 fun toJson(environment: DocletEnvironment): JsonValue {
   return JsonValue(mapOf(
     "includedElements" to toJson(environment.includedElements),
-    "specifiedElements" to toJson(environment.specifiedElements),
     "sourceVersion" to toJson(environment.sourceVersion),
     "moduleMode" to toJson(environment.moduleMode)
   ))
@@ -72,12 +71,6 @@ class JsonDoclet : Doclet {
   }
 
   override fun getSupportedOptions(): Set<Doclet.Option> {
-    /*
-      Support the following StandardDoclet options:
-      -d <directory>
-      -doctitle
-      -windowtitle
-     */
     return setOf(
       makeOption(
         listOf("-d"),
