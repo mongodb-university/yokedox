@@ -39,6 +39,18 @@ tasks.build {
   finalizedBy(shadowJar)
 }
 
+tasks {
+  test {
+    exclude("**/JavadocTest*")
+
+    // Force kotlin build directory to front of classpath.
+    // The IDEA coverage runner with Java tests in a Kotlin project
+    // seems to produce classes for everything in the java/ directory,
+    // which then do not get updated upon subsequent runs of "test".
+    classpath = files("./build/classes/kotlin/test") + classpath
+  }
+}
+
 tasks.withType<JavaCompile> {
   options.compilerArgs = listOf(
     "--add-exports", "jdk.javadoc/jdk.javadoc.internal.tool=ALL-UNNAMED",
@@ -47,12 +59,14 @@ tasks.withType<JavaCompile> {
   )
 }
 
-tasks.withType<Test> {
+tasks.register<Test>("testJavadoc") {
   jvmArgs(
     "--add-exports", "jdk.javadoc/jdk.javadoc.internal.tool=ALL-UNNAMED",
     "--add-exports", "jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
     "--add-exports", "jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED"
   )
+
+  include("**/JavadocTest*")
 }
 
 tasks.register("testDoclet") {
