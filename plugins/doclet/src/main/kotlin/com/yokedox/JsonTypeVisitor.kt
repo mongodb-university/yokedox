@@ -8,7 +8,8 @@ fun toJson(typeMirror: TypeMirror?): JsonValue {
     return JsonValue(null)
   }
   val base = mutableMapOf<String, Any?>(
-    "kind" to typeMirror.kind.name
+    "kind" to typeMirror.kind.name,
+    "annotations" to toJson(typeMirror.annotationMirrors)
   )
   base.putAll(JsonTypeVisitor().visit(typeMirror))
   return JsonValue(base)

@@ -257,11 +257,13 @@ class JsonElementVisitorTest {
     assertEquals(result["enclosingElement"], JsonValue(null))
     assertEquals(result["typeParameters"], listOf<Any>())
     assertEquals(result["returnType"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["parameters"], listOf<Any>())
     assertEquals(result["receiverType"], mapOf(
-      "kind" to "BOOLEAN"
+      "kind" to "BOOLEAN",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["isVarArgs"], false)
     assertEquals(result["isDefault"], false)

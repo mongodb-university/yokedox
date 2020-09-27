@@ -51,8 +51,9 @@ class JsonTypeVisitorTest {
     val type = MockPrimitiveType(TypeKind.BOOLEAN)
     val result = toJson(type)
     // "Primitive" can represent boolean, byte, short, int, long, char, float, and double.
-    assertEquals(result.size, 1)
+    assertEquals(result.keys, setOf("kind", "annotations"))
     assertEquals(result["kind"], "BOOLEAN")
+    assertEquals(result["annotations"], listOf<Any>())
   }
 
   @Test
@@ -60,8 +61,9 @@ class JsonTypeVisitorTest {
     val type = object: MockTypeMirror(TypeKind.NULL), NullType {
     }
     val result = toJson(type)
-    assertEquals(result.size, 1)
+    assertEquals(result.keys, setOf("kind", "annotations"))
     assertEquals(result["kind"], "NULL")
+    assertEquals(result["annotations"], listOf<Any>())
   }
 
   @Test
@@ -72,10 +74,12 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 2)
+    assertEquals(result.size, 3)
     assertEquals(result["kind"], "ARRAY")
+    assertEquals(result["annotations"], listOf<Any>())
     assertEquals(result["componentType"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
   }
 
@@ -95,12 +99,14 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 3)
+    assertEquals(result.size, 4)
     assertEquals(result["kind"], "DECLARED")
+    assertEquals(result["annotations"], listOf<Any>())
     assertEquals(result["enclosingType"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
-    assertEquals(result["typeArguments"], listOf<TypeMirror>())
+    assertEquals(result["typeArguments"], listOf<Any>())
   }
 
   @Test
@@ -119,10 +125,12 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 3)
+    assertEquals(result.size, 4)
     assertEquals(result["kind"], "ERROR")
+    assertEquals(result["annotations"], listOf<Any>())
     assertEquals(result["enclosingType"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["typeArguments"], listOf<TypeMirror>())
   }
@@ -143,13 +151,16 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 3)
+    assertEquals(result.size, 4)
     assertEquals(result["kind"], "TYPEVAR")
+    assertEquals(result["annotations"], listOf<Any>())
     assertEquals(result["upperBound"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["lowerBound"], mapOf(
-      "kind" to "FLOAT"
+      "kind" to "FLOAT",
+      "annotations" to listOf<Any>()
     ))
   }
 
@@ -165,12 +176,14 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 3)
+    assertEquals(result.keys, setOf("extendsBound", "superBound", "annotations", "kind"))
     assertEquals(result["extendsBound"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["superBound"], mapOf(
-      "kind" to "FLOAT"
+      "kind" to "FLOAT",
+      "annotations" to listOf<Any>()
     ))
   }
 
@@ -202,18 +215,27 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 6)
+    assertEquals(result.keys, setOf(
+      "kind",
+      "typeVariables",
+      "returnType",
+      "parameterTypes",
+      "receiverType",
+      "thrownTypes",
+      "annotations"
+    ))
     assertEquals(result["kind"], "EXECUTABLE")
     assertEquals(result["typeVariables"], listOf<TypeVariable>())
     assertEquals(result["returnType"], mapOf(
-      "kind" to "INT"
+      "kind" to "INT",
+      "annotations" to listOf<Any>()
     ))
     assertEquals(result["parameterTypes"], listOf(
-      mapOf("kind" to "INT"),
-      mapOf("kind" to "FLOAT"),
-      mapOf("kind" to "BOOLEAN")
+      mapOf("kind" to "INT", "annotations" to listOf<Any>()),
+      mapOf("kind" to "FLOAT", "annotations" to listOf<Any>()),
+      mapOf("kind" to "BOOLEAN", "annotations" to listOf<Any>())
     ))
-    assertEquals(result["receiverType"], mapOf("kind" to "BYTE"))
+    assertEquals(result["receiverType"], mapOf("kind" to "BYTE", "annotations" to listOf<Any>()))
     assertEquals(result["thrownTypes"], listOf<TypeMirror>())
   }
 
@@ -222,8 +244,9 @@ class JsonTypeVisitorTest {
     val type = object: MockTypeMirror(TypeKind.NONE), NoType {
     }
     val result = toJson(type)
-    assertEquals(result.size, 1)
+    assertEquals(result.size, 2)
     assertEquals(result["kind"], "NONE")
+    assertEquals(result["annotations"], listOf<Any>())
   }
 
   @Test
@@ -238,12 +261,13 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 2)
+    assertEquals(result.size, 3)
     assertEquals(result["kind"], "UNION")
+    assertEquals(result["annotations"], listOf<Any>())
     assertEquals(result["alternatives"], listOf(
-      mapOf("kind" to "INT"),
-      mapOf("kind" to "FLOAT"),
-      mapOf("kind" to "BOOLEAN")
+      mapOf("kind" to "INT", "annotations" to listOf<Any>()),
+      mapOf("kind" to "FLOAT", "annotations" to listOf<Any>()),
+      mapOf("kind" to "BOOLEAN", "annotations" to listOf<Any>())
     ))
   }
 
@@ -259,7 +283,8 @@ class JsonTypeVisitorTest {
       }
     }
     val result = toJson(type)
-    assertEquals(result.size, 2)
+    assertEquals(result.keys, setOf("kind", "annotations", "bounds"))
     assertEquals(result["kind"], "INTERSECTION")
+    assertEquals(result["annotations"], listOf<Any>())
   }
 }

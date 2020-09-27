@@ -91,7 +91,7 @@ class JsonAnnotationValueVisitorTest {
 
   @Test fun visitType() {
     val result = toJson(MockAnnotationValue(MockPrimitiveType(TypeKind.NONE)))
-    assertEquals("""{"kind": "NONE"}""", result.toJsonString())
+    assertEquals("""{"kind": "NONE", "annotations": []}""", result.toJsonString())
   }
 
   @Test fun visitEnumConstant() {
@@ -131,6 +131,7 @@ class JsonAnnotationValueVisitorTest {
     }))
     assertEquals(result["annotationType"], mapOf(
       "kind" to "DECLARED",
+      "annotations" to listOf<Any>(),
       "enclosingType" to null,
       "typeArguments" to listOf<Any>()
     ))
