@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node",
+    "outDir": "./build",
+    "target": "ES5",
+    "lib": ["ES2020"],
+    "strictNullChecks": true,
+    "strict": true,
+    "downlevelIteration": true
+  },
+  "sourceMap": true,
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
