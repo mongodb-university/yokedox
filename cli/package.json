@@ -27,6 +27,7 @@
     "@babel/preset-typescript": "^7.13.0",
     "@types/jest": "^26.0.23",
     "@types/node": "^15.0.2",
+    "@types/tmp": "^0.2.0",
     "@typescript-eslint/eslint-plugin": "^4.23.0",
     "@typescript-eslint/parser": "^4.23.0",
     "eslint": "^7.26.0",
@@ -39,6 +40,7 @@
     "typescript": "^4.2.4"
   },
   "dependencies": {
+    "tmp-promise": "^3.0.2",
     "yargs": "^15.4.1"
   }
 }

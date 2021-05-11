@@ -1,6 +1,10 @@
 import child_process from "child_process";
+import tmp from "tmp-promise";
 import { ChildProcess } from "./ChildProcess";
+import { Diagnostic } from "./Diagnostic";
+import { Entity } from "./Entity";
 import { loadPlugin } from "./loadPlugin";
+import { Page } from "./Page";
 
 /**
   Arguments passed to the run command.
@@ -36,19 +40,42 @@ export interface RunArgs {
   Runs a given generator in the current working directory.
  */
 export const run = async (args: RunArgs): Promise<void> => {
-  // 0. Validate and open output location, set up writePage function
+  // Validate and open output location, set up output functions
+  const { onDiagnostic, onEntity, onPage } = await createOutputCallbacks(args);
 
-  // 1. Find plugin
+  // Load the plugin
   const plugin = await loadPlugin(args);
 
-  // 2. Set up temporary directory
+  // Create a self-cleaning temporary directory
+  const tempDir = await tmp.dir({
+    unsafeCleanup: true,
+    prefix: "yokedox",
+  });
 
-  // 3. Pass args, output interface, and child_process interface to plugin
-  const result = await plugin.run({
-    generator: args.generator,
-    generatorArgs: args.argsAfterOptions,
-    child_process: args.child_process ?? child_process,
-    tempDir: "", // TODO
+  try {
+    // Delegate to plugin
+    await plugin.run({
+      generator: args.generator,
+      generatorArgs: args.argsAfterOptions,
+      child_process: args.child_process ?? child_process,
+      tempDir: tempDir.path,
+      onDiagnostic,
+      onEntity,
+      onPage,
+    });
+  } finally {
+    // This should not be needed according the tmp-promise library README, but
+    // local testing indicates otherwise.
+    await tempDir.cleanup();
+  }
+};
+
+async function createOutputCallbacks({ out }: { out?: string }): Promise<{
+  onDiagnostic(diagnostic: Diagnostic): void;
+  onEntity(entity: Entity): void;
+  onPage(page: Page): void;
+}> {
+  return {
     onDiagnostic(diagnostic) {
       // TODO
     },
@@ -58,7 +85,5 @@ export const run = async (args: RunArgs): Promise<void> => {
     onPage(page) {
       // TODO
     },
-  });
-
-  // 4. Clean up temporary dir
-};
+  };
+}
