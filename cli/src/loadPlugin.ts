@@ -1,8 +1,6 @@
 import * as Path from "path";
 import { Plugin } from "./Plugin";
 
-const pluginsByGeneratorName = new Map<string, Plugin>();
-
 /**
   Loads the plugin corresponding to the given generator or from the specified
   path if a path is provided.
@@ -16,13 +14,8 @@ export const loadPlugin = async ({
 }): Promise<Plugin> => {
   if (plugin === undefined) {
     const generatorName = Path.basename(generator);
-    const result = pluginsByGeneratorName.get(generatorName);
-    if (result === undefined) {
-      throw new Error(
-        `Could not load plugin for generator '${generatorName}' (given generator path '${generator}'). Try specifying plugin path with --plugin.`
-      );
-    }
-    return result;
+    // Try to load from the built-in plugins directory.
+    return loadPluginAtPath(Path.join(__dirname, "plugins", generatorName));
   }
   return loadPluginAtPath(plugin);
 };
@@ -34,11 +27,18 @@ async function loadPluginAtPath(pluginPath: string): Promise<Plugin> {
   // Convert potentially relative path (from user's cwd) to absolute path -- as
   // import() expects relative paths from bin directory
   const absolutePath = Path.resolve(pluginPath);
-  const plugin = (await import(absolutePath)) as Plugin;
+
+  const plugin = (await import(absolutePath)).default as Plugin;
+
+  if (plugin === undefined) {
+    throw new Error(
+      `No default export found in plugin '${pluginPath}'. Did you default export the plugin object?`
+    );
+  }
 
   if (typeof plugin.run !== "function") {
     throw new Error(
-      `loading plugin '${pluginPath}': expected function run(args) to be exported`
+      `Failed to load plugin '${pluginPath}': expected function run(args) on exported default object, but no such function found.`
     );
   }
 
