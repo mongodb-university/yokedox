@@ -6,14 +6,11 @@
   "configurations": [
     {
       "name": "Run Tests",
-      "internalConsoleOptions": "neverOpen",
       "request": "launch",
       "runtimeArgs": ["run", "test"],
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
-      "type": "node",
-      "protocol": "inspector",
-      "console": "integratedTerminal"
+      "type": "pwa-node"
     }
   ]
 }
