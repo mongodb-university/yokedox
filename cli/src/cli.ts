@@ -33,7 +33,7 @@ export const cli = yargs
       run({
         generator: args.generator,
         plugin: args.plugin,
-        argsAfterOptions: args._.slice(1),
+        generatorArgs: args._.slice(1),
         out: args.out,
       });
     }

@@ -16,9 +16,9 @@ export interface RunArgs {
   generator: string;
 
   /**
-    Arguments after end-of-options flag (--)
+    Arguments after end-of-options flag (--) to be passed to the generator.
    */
-  argsAfterOptions: (string | number)[];
+  generatorArgs: (string | number)[];
 
   /**
     Path to plugin.
@@ -56,7 +56,7 @@ export const run = async (args: RunArgs): Promise<void> => {
     // Delegate to plugin
     await plugin.run({
       generator: args.generator,
-      generatorArgs: args.argsAfterOptions,
+      generatorArgs: args.generatorArgs,
       child_process: args.child_process ?? child_process,
       tempDir: tempDir.path,
       onDiagnostic,
