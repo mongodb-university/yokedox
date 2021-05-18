@@ -4,6 +4,7 @@ import com.sun.javadoc.DocErrorReporter
 import com.sun.javadoc.Doclet
 import com.sun.javadoc.LanguageVersion
 import com.sun.javadoc.RootDoc
+import java.io.File
 
 // For reference, see com.sun.javadoc.Doclet.
 // Kotlin does not allow override of static methods.
@@ -17,6 +18,12 @@ class JsonDoclet8 {
          */
         @JvmStatic
         fun start(root: RootDoc): Boolean {
+            root.classes().forEach {
+                val classJson = JsonValue(parse(it)).compacted()
+                File("${it.name()}.json").bufferedWriter().use { out ->
+                    out.write(classJson.toJsonString())
+                }
+            }
             return true
         }
 
