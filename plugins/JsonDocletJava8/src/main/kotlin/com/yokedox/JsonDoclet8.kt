@@ -18,8 +18,6 @@ class JsonDoclet8 {
         @JvmStatic
         fun start(root: RootDoc): Boolean {
             return true
-            val x = root.classes()[0]
-            x.
         }
 
         /**
