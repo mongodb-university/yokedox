@@ -70,20 +70,35 @@ fun parse(v: PackageDoc): JsonObject {
  * @see parse
  */
 fun toJson(v: ClassDoc?): JsonObject? {
-    // Return reference information only
+    if (v == null) {
+        return null
+    }
     return toJson(v as Type?)
 }
 
 /**
- * Converts the given Doc to a JsonObject. Note that this must be called with
- * the derived type to get the correct overload and all information for the
- * derived type.
+ * Converts the given Doc to a JsonObject.
+ *
+ * Dispatches to the appropriate moreJson() functions for the correct subtype.
+ * ClassDoc and PackageDoc are rendered as references rather than fully parsed
+ * to avoid endless circular parsing.
  */
 fun toJson(v: Doc?): JsonObject? {
     if (v == null) {
         return null
     }
-    return mapOf(
+    // Special case for ClassDoc and PackageDoc to avoid circular references.
+    if (v is ClassDoc) {
+        return toJson(v)
+    }
+    if (v is PackageDoc) {
+        return mapOf(
+            "_class" to "PackageDoc",
+            "name" to v.name()
+        )
+    }
+
+    val value = mutableMapOf<String, Any?>(
         "commentText" to v.commentText(),
         "tags" to v.tags().map { toJson(it) },
         "name" to v.name(),
@@ -102,15 +117,19 @@ fun toJson(v: Doc?): JsonObject? {
         "isIncluded" to v.isIncluded,
         "position" to toJson(v.position())
     )
+    when (v) {
+        is ProgramElementDoc ->
+            value.putAll(moreJson(v))
+    }
+    return value
 }
 
-fun toJson(v: ProgramElementDoc?): JsonObject? {
-    if (v == null) {
-        return null
-    }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as Doc) as JsonObject)
-    value.putAll(mapOf(
+/**
+ * Parses ProgramElementDoc properties (minus base class Doc properties) to JSON. Dispatches to
+ * other moreJson() functions for further subclasses.
+ */
+private fun moreJson(v: ProgramElementDoc): JsonObject {
+    val value = mutableMapOf(
         "_class" to "ProgramElementDoc",
         "containingClass" to (if (v.containingClass() == null) null else toJson(v.containingClass())),
         "containingPackage" to toJson(v.containingPackage()),
@@ -124,28 +143,34 @@ fun toJson(v: ProgramElementDoc?): JsonObject? {
         "isPackagePrivate" to v.isPackagePrivate,
         "isStatic" to v.isStatic,
         "isFinal" to v.isFinal,
-    ))
+    )
+    when (v) {
+        is MemberDoc ->
+            value.putAll(moreJson(v))
+    }
     return value
 }
 
-fun toJson(v: MemberDoc?): JsonObject? {
-    if (v == null) {
-        return null
+/**
+ * Parses MemberDoc properties (minus base class ProgramElementDoc properties) to JSON.
+ * Dispatches to other moreJson() functions for further subclasses.
+ */
+private fun moreJson(v: MemberDoc): JsonObject {
+    val value = mutableMapOf<String, Any?>(
+        "_class" to "MemberDoc",
+        "isSynthetic" to v.isSynthetic
+    )
+    when (v) {
+        is ExecutableMemberDoc ->
+            value.putAll(moreJson(v))
+        is FieldDoc ->
+            value.putAll(moreJson(v))
     }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
-    value["_class"] = "MemberDoc"
-    value["isSynthetic"] = v.isSynthetic
     return value
 }
 
-fun toJson(v: ExecutableMemberDoc?): JsonObject? {
-    if (v == null) {
-        return null
-    }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MemberDoc) as JsonObject)
-    value.putAll(mapOf(
+private fun moreJson(v: ExecutableMemberDoc): JsonObject {
+    val value = mutableMapOf<String, Any?>(
         "_class" to "ExecutableMemberDoc",
         "thrownExceptionTypes" to v.thrownExceptionTypes().map { toJson(it) },
         "isNative" to v.isNative,
@@ -160,17 +185,16 @@ fun toJson(v: ExecutableMemberDoc?): JsonObject? {
         "flatSignature" to v.flatSignature(),
         "typeParameters" to v.typeParameters().map { toJson(it) },
         "isConstructor" to (v is ConstructorDoc)
-    ))
+    )
+    when (v) {
+        is MethodDoc ->
+            value.putAll(moreJson(v))
+    }
     return value
 }
 
-fun toJson(v: MethodDoc?): JsonObject? {
-    if (v == null) {
-        return null
-    }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as ExecutableMemberDoc) as JsonObject)
-    value.putAll(mapOf(
+private fun moreJson(v: MethodDoc): JsonObject {
+    val value = mutableMapOf<String, Any?>(
         "_class" to "MethodDoc",
         "isAbstract" to v.isAbstract,
         "isDefault" to v.isDefault,
@@ -181,28 +205,23 @@ fun toJson(v: MethodDoc?): JsonObject? {
         "overriddenMethodContainingClass" to
                 (if (v.overriddenMethod() == null)
                     null else toJson(v.overriddenMethod().containingClass())),
-    ))
+    )
+    when (v) {
+        is AnnotationTypeElementDoc ->
+            value.putAll(moreJson(v))
+    }
     return value
 }
 
-fun toJson(v: AnnotationTypeElementDoc?): JsonObject? {
-    if (v == null) {
-        return null
-    }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MethodDoc) as JsonObject)
-    value["_class"] = "AnnotationTypeElementDoc"
-    value["defaultValue"] = toJson(v.defaultValue())
-    return value
+private fun moreJson(v: AnnotationTypeElementDoc): JsonObject {
+    return mapOf(
+        "_class" to "AnnotationTypeElementDoc",
+        "defaultValue" to toJson(v.defaultValue()),
+    )
 }
 
-fun toJson(v: FieldDoc?): JsonObject? {
-    if (v == null) {
-        return null
-    }
-    val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MemberDoc) as JsonObject)
-    value.putAll(mapOf(
+private fun moreJson(v: FieldDoc): JsonObject {
+    return mapOf(
         "_class" to "FieldDoc",
         "type" to toJson(v.type()),
         "isTransient" to v.isTransient,
@@ -210,15 +229,5 @@ fun toJson(v: FieldDoc?): JsonObject? {
         "serialFieldTags" to v.serialFieldTags().map { toJson(it) },
         "constantValue" to v.constantValue()?.toString(),
         "constantValueExpression" to v.constantValueExpression()
-    ))
-    return value
-}
-
-/**
- * Returns only the name of the package.
- *
- * @see parse
- */
-fun toJson(v: PackageDoc?): JsonValue? {
-    return JsonValue(v?.name())
+    )
 }

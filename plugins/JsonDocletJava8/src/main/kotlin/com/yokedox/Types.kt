@@ -2,11 +2,14 @@ package com.yokedox
 
 import com.sun.javadoc.*
 
+/**
+ * Parses the given Type to a JsonObject. Includes Type subclass information.
+ */
 fun toJson(v: Type?): JsonObject? {
     if (v == null) {
         return null
     }
-    val value = mutableMapOf<String, Any?>(
+    val value = mutableMapOf(
         "asString" to v.toString(),
         "typeName" to v.typeName(),
         "qualifiedTypeName" to v.typeName(),
@@ -36,7 +39,8 @@ fun toJson(v: Type?): JsonObject? {
             value.putAll(mapOf(
                 "_class" to "TypeVariable",
                 "bounds" to v.bounds().map { toJson(it) },
-                "owner" to toJson(v.owner()),
+                // Not included - back reference
+                // "owner" to toJson(v.owner()),
                 "annotations" to v.annotations().map { toJson(it) },
             ))
         is WildcardType ->
