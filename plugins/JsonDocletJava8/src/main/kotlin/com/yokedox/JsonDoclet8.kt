@@ -19,7 +19,7 @@ class JsonDoclet8 {
         @JvmStatic
         fun start(root: RootDoc): Boolean {
             root.classes().forEach {
-                val classJson = JsonValue(parse(it)).compacted()
+                val classJson = JsonValue(parse(it))
                 File("${it.name()}.json").bufferedWriter().use { out ->
                     out.write(classJson.toJsonString())
                 }

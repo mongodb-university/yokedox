@@ -7,6 +7,7 @@ import com.sun.javadoc.*
  */
 fun toJson(v: Tag, level: Int = 0): JsonObject {
     val value = mutableMapOf<String, Any?>(
+        "_class" to "Tag",
         "name" to v.name(),
         "kind" to v.kind(),
         "text" to v.text(),

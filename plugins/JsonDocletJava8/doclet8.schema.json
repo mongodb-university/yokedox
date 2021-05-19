@@ -43,7 +43,9 @@
               }
             },
             "definesSerializableFields": { "type": "boolean" },
-            "superclassType": { "$ref": "#/definitions/AnyType" },
+            "superclassType": {
+              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            },
             "interfaceTypes": {
               "type": "array",
               "items": {
@@ -105,8 +107,19 @@
     },
     "ParsedPackageDoc": {
       "type": "object",
-
+      "required": [
+        "_class",
+        "allClasses",
+        "ordinaryClasses",
+        "exceptions",
+        "errors",
+        "enums",
+        "interfaces",
+        "annotationTypes",
+        "annotations"
+      ],
       "properties": {
+        "_class": { "const": "ParsedPackageDoc" },
         "allClasses": {
           "type": "array",
           "items": {
@@ -159,6 +172,7 @@
     },
     "PackageDoc": {
       "type": "object",
+      "required": ["_class", "name"],
       "properties": {
         "_class": { "const": "PackageDoc" },
         "name": { "type": "string" }
@@ -166,6 +180,7 @@
     },
     "ClassDoc": {
       "type": "object",
+      "required": ["_class"],
       "allOf": [
         { "$ref": "#/definitions/Type" },
         { "properties": { "_class": { "const": "ClassDoc" } } }
@@ -174,8 +189,10 @@
     "AnyDoc": {
       "additionalProperties": false,
       "oneOf": [
+        { "$ref": "#/definitions/ParsedClassDoc" },
         { "$ref": "#/definitions/ClassDoc" },
         { "$ref": "#/definitions/PackageDoc" },
+        { "$ref": "#/definitions/ParsedPackageDoc" },
         { "$ref": "#/definitions/ProgramElementDoc" },
         { "$ref": "#/definitions/MemberDoc" },
         { "$ref": "#/definitions/ExecutableMemberDoc" },
@@ -186,12 +203,31 @@
     },
     "Doc": {
       "type": "object",
+      "required": [
+        "commentText",
+        "tags",
+        "name",
+        "isField",
+        "isEnumConstant",
+        "isConstructor",
+        "isMethod",
+        "isAnnotationTypeElement",
+        "isInterface",
+        "isException",
+        "isError",
+        "isEnum",
+        "isAnnotationType",
+        "isOrdinaryClass",
+        "isClass",
+        "isIncluded",
+        "position"
+      ],
       "properties": {
         "commentText": { "type": "string" },
         "tags": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Tag"
+            "$ref": "#/definitions/AnyTag"
           }
         },
         "name": { "type": "string" },
@@ -216,8 +252,26 @@
       "allOf": [
         { "$ref": "#/definitions/Doc" },
         {
+          "required": [
+            "containingPackage",
+            "qualifiedName",
+            "modifierSpecifier",
+            "modifiers",
+            "annotations",
+            "isPublic",
+            "isProtected",
+            "isPrivate",
+            "isPackagePrivate",
+            "isStatic",
+            "isFinal"
+          ],
           "properties": {
-            "containingClass": { "$ref": "#/definitions/ClassDoc" },
+            "containingClass": {
+              "oneOf": [
+                { "$ref": "#/definitions/ClassDoc" },
+                { "type": "null" }
+              ]
+            },
             "containingPackage": { "$ref": "#/definitions/PackageDoc" },
             "qualifiedName": { "type": "string" },
             "modifierSpecifier": { "type": "number" },
@@ -241,6 +295,7 @@
       "allOf": [
         { "$ref": "#/definitions/ProgramElementDoc" },
         {
+          "required": ["isSynthetic"],
           "properties": {
             "isSynthetic": { "type": "boolean" }
           }
@@ -252,6 +307,20 @@
       "allOf": [
         { "$ref": "#/definitions/MemberDoc" },
         {
+          "required": [
+            "thrownExceptionTypes",
+            "isNative",
+            "isSynchronized",
+            "isVarArgs",
+            "parameters",
+            "throwsTags",
+            "paramTags",
+            "typeParamTags",
+            "signature",
+            "flatSignature",
+            "typeParameters",
+            "isConstructor"
+          ],
           "properties": {
             "thrownExceptionTypes": {
               "type": "array",
@@ -264,7 +333,9 @@
               "type": "array",
               "items": { "$ref": "#/definitions/Parameter" }
             },
-            "receiverType": { "$ref": "#/definitions/AnyType" },
+            "receiverType": {
+              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            },
             "throwsTags": {
               "type": "array",
               "items": { "$ref": "#/definitions/ThrowsTag" }
@@ -293,13 +364,19 @@
       "allOf": [
         { "$ref": "#/definitions/ExecutableMemberDoc" },
         {
+          "required": ["isAbstract", "isDefault", "returnType"],
           "properties": {
             "isAbstract": { "type": "boolean" },
             "isDefault": { "type": "boolean" },
             "returnType": { "$ref": "#/definitions/AnyType" },
-            "overriddenType": { "$ref": "#/definitions/AnyType" },
+            "overriddenType": {
+              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            },
             "overriddenMethodContainingClass": {
-              "$ref": "#/definitions/ClassDoc"
+              "oneOf": [
+                { "$ref": "#/definitions/ClassDoc" },
+                { "type": "null" }
+              ]
             }
           }
         }
@@ -310,6 +387,7 @@
       "allOf": [
         { "$ref": "#/definitions/MethodDoc" },
         {
+          "required": ["defaultValue"],
           "properties": {
             "defaultValue": { "type": "string" }
           }
@@ -321,6 +399,14 @@
       "allOf": [
         { "$ref": "#/definitions/MemberDoc" },
         {
+          "required": [
+            "type",
+            "isTransient",
+            "isVolatile",
+            "serialFieldTags",
+            "constantValue",
+            "constantValueExpression"
+          ],
           "properties": {
             "type": { "$ref": "#/definitions/AnyType" },
             "isTransient": { "type": "boolean" },
@@ -336,27 +422,40 @@
       ]
     },
     "AnyTag": {
+      "type": "object",
       "oneOf": [
         { "$ref": "#/definitions/ParamTag" },
         { "$ref": "#/definitions/SeeTag" },
         { "$ref": "#/definitions/SerialFieldTag" },
-        { "$ref": "#/definitions/ThrowsTag" }
+        { "$ref": "#/definitions/ThrowsTag" },
+        {
+          "allOf": [
+            { "$ref": "#/definitions/Tag" },
+            {
+              "properties": { "_class": { "const": "Tag" } }
+            }
+          ]
+        }
       ]
     },
     "Tag": {
       "type": "object",
+      "required": ["_class", "name", "kind", "text", "position"],
       "properties": {
+        "_class": {
+          "enum": ["Tag", "ParamTag", "SeeTag", "SerialFieldTag", "ThrowsTag"]
+        },
         "name": { "type": "string" },
         "kind": { "type": "string" },
         "text": { "type": "string" },
         "position": { "$ref": "#/definitions/SourcePosition" },
         "inlineTags": {
           "type": "array",
-          "items": { "$ref": "#/definitions/Tag" }
+          "items": { "$ref": "#/definitions/AnyTag" }
         },
         "firstSentenceTags": {
           "type": "array",
-          "items": { "$ref": "#/definitions/Tag" }
+          "items": { "$ref": "#/definitions/AnyTag" }
         }
       }
     },
@@ -365,6 +464,12 @@
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
+          "required": [
+            "_class",
+            "parameterName",
+            "parameterComment",
+            "isTypeParameter"
+          ],
           "properties": {
             "_class": { "const": "ParamTag" },
             "parameterName": { "type": "string" },
@@ -379,13 +484,28 @@
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
+          "required": ["_class"],
           "properties": {
             "_class": { "const": "SeeTag" },
-            "label": { "type": "string" },
-            "referencedPackage": { "$ref": "#/definitions/PackageDoc" },
-            "referencedClassName": { "type": "string" },
-            "referencedClass": { "$ref": "#/definitions/ClassDoc" },
-            "referencedMemberName": { "type": "string" }
+            "label": { "oneOf": [{ "type": "string" }, { "type": "null" }] },
+            "referencedPackage": {
+              "oneOf": [
+                { "$ref": "#/definitions/PackageDoc" },
+                { "type": "null" }
+              ]
+            },
+            "referencedClassName": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            },
+            "referencedClass": {
+              "oneOf": [
+                { "$ref": "#/definitions/ClassDoc" },
+                { "type": "null" }
+              ]
+            },
+            "referencedMemberName": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            }
           }
         }
       ]
@@ -395,6 +515,13 @@
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
+          "required": [
+            "_class",
+            "fieldName",
+            "fieldType",
+            "fieldTypeDoc",
+            "description"
+          ],
           "properties": {
             "_class": { "const": "SerialFieldTag" },
             "fieldName": { "type": "string" },
@@ -410,6 +537,12 @@
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
+          "required": [
+            "_class",
+            "exceptionName",
+            "exceptionComment",
+            "exceptionType"
+          ],
           "properties": {
             "_class": { "const": "ThrowsTag" },
             "exceptionName": { "type": "string" },
@@ -440,6 +573,18 @@
     },
     "Type": {
       "type": "object",
+      "required": [
+        "_class",
+        "asString",
+        "typeName",
+        "qualifiedTypeName",
+        "simpleTypeName",
+        "dimension",
+        "isPrimitive",
+        "elementType",
+        "isClass",
+        "isAnnotationType"
+      ],
       "properties": {
         "_class": {
           "type": "string",
@@ -459,7 +604,9 @@
         "simpleTypeName": { "type": "string" },
         "dimension": { "type": "string" },
         "isPrimitive": { "type": "boolean" },
-        "elementType": { "$ref": "#/definitions/AnyType" },
+        "elementType": {
+          "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+        },
         "isClass": { "type": "boolean" },
         "isAnnotationType": { "type": "boolean" }
       }
@@ -469,18 +616,23 @@
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
+          "required": ["_class", "typeArguments", "interfaceTypes"],
           "properties": {
             "_class": { "const": "ParameterizedType" },
             "typeArguments": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
-            "superclassType": { "$ref": "#/definitions/AnyType" },
+            "superclassType": {
+              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            },
             "interfaceTypes": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
-            "containingType": { "$ref": "#/definitions/AnyType" }
+            "containingType": {
+              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            }
           }
         }
       ]
@@ -490,6 +642,7 @@
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
+          "required": ["_class", "bounds", "annotations"],
           "properties": {
             "_class": { "const": "TypeVariable" },
             "bounds": {
@@ -509,6 +662,7 @@
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
+          "required": ["_class", "extendsBounds", "superBounds"],
           "properties": {
             "_class": { "const": "WildcardType" },
             "extendsBounds": {
@@ -528,6 +682,7 @@
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
+          "required": ["_class", "annotations", "underlyingType"],
           "properties": {
             "_class": { "const": "AnnotatedType" },
             "annotations": {
@@ -542,6 +697,7 @@
     "SourcePosition": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["line", "column", "file"],
       "properties": {
         "line": { "type": "number" },
         "column": { "type": "number" },
@@ -554,13 +710,15 @@
     "AnnotationDesc": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["annotationType", "elementValues"],
       "properties": {
         "annotationType": { "$ref": "#/definitions/ClassDoc" },
         "elementValues": {
           "type": "array",
           "items": {
             "type": "object",
-
+            "additionalProperties": false,
+            "required": ["element", "value"],
             "properties": {
               "element": { "$ref": "#/definitions/ClassDoc" },
               "value": { "$ref": "#/definitions/AnnotationValue" }
@@ -573,6 +731,7 @@
     "Parameter": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["type", "name", "typeName", "asString", "annotations"],
       "properties": {
         "type": { "$ref": "#/definitions/AnyType" },
         "name": { "type": "string" },
@@ -585,5 +744,8 @@
       }
     }
   },
-  "oneOf": [{ "$ref": "#/definitions/ParsedClassDoc" }]
+  "oneOf": [
+    { "$ref": "#/definitions/ParsedClassDoc" },
+    { "$ref": "#/definitions/ParsedPackageDoc" }
+  ]
 }

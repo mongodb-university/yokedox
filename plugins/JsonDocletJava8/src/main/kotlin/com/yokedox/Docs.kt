@@ -8,7 +8,8 @@ import com.sun.javadoc.*
  */
 fun parse(v: ClassDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
+    value.putAll(toJson(v as Type) as JsonObject)
+    value.putAll(toJson(v as ProgramElementDoc, true) as JsonObject)
     value.putAll(mapOf(
         "_class" to "ParsedClassDoc",
         "isAbstract" to v.isAbstract,
@@ -76,18 +77,19 @@ fun toJson(v: ClassDoc?): JsonObject? {
  * Converts the given Doc to a JsonObject.
  *
  * Dispatches to the appropriate moreJson() functions for the correct subtype.
- * ClassDoc and PackageDoc are rendered as references rather than fully parsed
- * to avoid endless circular parsing.
+ *
+ * @param deepParse If true, ClassDoc and PackageDoc are rendered as references
+ *                  rather than fully parsed to avoid endless circular parsing.
  */
-fun toJson(v: Doc?): JsonObject? {
+fun toJson(v: Doc?, deepParse: Boolean = false): JsonObject? {
     if (v == null) {
         return null
     }
     // Special case for ClassDoc and PackageDoc to avoid circular references.
-    if (v is ClassDoc) {
+    if (!deepParse && v is ClassDoc) {
         return toJson(v)
     }
-    if (v is PackageDoc) {
+    if (!deepParse && v is PackageDoc) {
         return mapOf(
             "_class" to "PackageDoc",
             "name" to v.name()

@@ -6,7 +6,7 @@ fun toJson(v: SourcePosition): JsonObject {
     return mapOf(
         "line" to v.line(),
         "column" to v.column(),
-        "file" to v.file().name
+        "file" to v.file().path
     )
 }
 
