@@ -10,6 +10,7 @@ fun toJson(v: Type?): JsonObject? {
         return null
     }
     val value = mutableMapOf(
+        "_class" to "Type",
         "asString" to v.toString(),
         "typeName" to v.typeName(),
         "qualifiedTypeName" to v.typeName(),

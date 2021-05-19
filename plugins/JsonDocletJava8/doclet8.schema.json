@@ -3,83 +3,109 @@
   "definitions": {
     "ParsedClassDoc": {
       "type": "object",
-      "properties": {
-        "isAbstract": { "type": "boolean" },
-        "isSerializable": { "type": "boolean" },
-        "isExternalizable": { "type": "boolean" },
-        "serializationMethods": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MethodDoc"
-          }
-        },
-        "serializableFields": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FieldDoc"
-          }
-        },
-        "definesSerializableFields": { "type": "boolean" },
-        "superclassType": { "$ref": "#/definitions/AnyType" },
-        "interfaceTypes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/AnyType"
-          }
-        },
-        "typeParameters": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/AnyType"
-          }
-        },
-        "typeParamTags": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/AnyTag"
-          }
-        },
-        "fields": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FieldDoc"
-          }
-        },
-        "enumConstants": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FieldDoc"
-          }
-        },
-        "methods": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/MethodDoc"
-          }
-        },
-        "constructors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ExecutableMemberDoc"
-          }
-        },
-        "innerClasses": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClassDoc"
-          }
-        },
-        "isAnnotationType": { "type": "boolean" },
-        "elements": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/AnnotationTypeElementDoc"
+      "allOf": [
+        { "$ref": "#/definitions/Type" },
+        { "$ref": "#/definitions/ProgramElementDoc" },
+        {
+          "required": [
+            "_class",
+            "isAbstract",
+            "isSerializable",
+            "isExternalizable",
+            "serializationMethods",
+            "serializableFields",
+            "definesSerializableFields",
+            "interfaceTypes",
+            "typeParameters",
+            "typeParamTags",
+            "fields",
+            "enumConstants",
+            "methods",
+            "constructors",
+            "innerClasses",
+            "isAnnotationType"
+          ],
+          "properties": {
+            "_class": { "const": "ParsedClassDoc" },
+            "isAbstract": { "type": "boolean" },
+            "isSerializable": { "type": "boolean" },
+            "isExternalizable": { "type": "boolean" },
+            "serializationMethods": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MethodDoc"
+              }
+            },
+            "serializableFields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FieldDoc"
+              }
+            },
+            "definesSerializableFields": { "type": "boolean" },
+            "superclassType": { "$ref": "#/definitions/AnyType" },
+            "interfaceTypes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyType"
+              }
+            },
+            "typeParameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyType"
+              }
+            },
+            "typeParamTags": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyTag"
+              }
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FieldDoc"
+              }
+            },
+            "enumConstants": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FieldDoc"
+              }
+            },
+            "methods": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MethodDoc"
+              }
+            },
+            "constructors": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExecutableMemberDoc"
+              }
+            },
+            "innerClasses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClassDoc"
+              }
+            },
+            "isAnnotationType": { "type": "boolean" },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnnotationTypeElementDoc"
+              }
+            }
           }
         }
-      }
+      ]
     },
     "ParsedPackageDoc": {
       "type": "object",
+
       "properties": {
         "allClasses": {
           "type": "array",
@@ -131,14 +157,22 @@
         }
       }
     },
-    "PackageDoc": { "type": "string" },
+    "PackageDoc": {
+      "type": "object",
+      "properties": {
+        "_class": { "const": "PackageDoc" },
+        "name": { "type": "string" }
+      }
+    },
     "ClassDoc": {
+      "type": "object",
       "allOf": [
-        { "$ref": "#/definitions/AnyType" },
-        { "properties": { "_class": { "const": "ClassDoc" }}}
+        { "$ref": "#/definitions/Type" },
+        { "properties": { "_class": { "const": "ClassDoc" } } }
       ]
     },
     "AnyDoc": {
+      "additionalProperties": false,
       "oneOf": [
         { "$ref": "#/definitions/ClassDoc" },
         { "$ref": "#/definitions/PackageDoc" },
@@ -176,16 +210,6 @@
         "isIncluded": { "type": "boolean" },
         "position": { "$ref": "#/definitions/SourcePosition" }
       }
-    },
-    "AnyProgramElementDoc": {
-      "oneOf": [
-        { "$ref": "#/definitions/ClassDoc" },
-        { "$ref": "#/definitions/MemberDoc" },
-        { "$ref": "#/definitions/ExecutableMemberDoc" },
-        { "$ref": "#/definitions/MethodDoc" },
-        { "$ref": "#/definitions/AnnotationTypeElementDoc" },
-        { "$ref": "#/definitions/FieldDoc" }
-      ]
     },
     "ProgramElementDoc": {
       "type": "object",
@@ -229,33 +253,33 @@
         { "$ref": "#/definitions/MemberDoc" },
         {
           "properties": {
-            "thrownExceptionTypes": { 
+            "thrownExceptionTypes": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
             "isNative": { "type": "boolean" },
             "isSynchronized": { "type": "boolean" },
             "isVarArgs": { "type": "boolean" },
-            "parameters": { 
+            "parameters": {
               "type": "array",
               "items": { "$ref": "#/definitions/Parameter" }
             },
             "receiverType": { "$ref": "#/definitions/AnyType" },
-            "throwsTags": { 
+            "throwsTags": {
               "type": "array",
               "items": { "$ref": "#/definitions/ThrowsTag" }
             },
-            "paramTags": { 
+            "paramTags": {
               "type": "array",
               "items": { "$ref": "#/definitions/ParamTag" }
             },
-            "typeParamTags": { 
+            "typeParamTags": {
               "type": "array",
               "items": { "$ref": "#/definitions/ParamTag" }
             },
             "signature": { "type": "string" },
             "flatSignature": { "type": "string" },
-            "typeParameters": { 
+            "typeParameters": {
               "type": "array",
               "items": { "$ref": "#/definitions/TypeVariable" }
             },
@@ -274,7 +298,9 @@
             "isDefault": { "type": "boolean" },
             "returnType": { "$ref": "#/definitions/AnyType" },
             "overriddenType": { "$ref": "#/definitions/AnyType" },
-            "overriddenMethodContainingClass": { "$ref": "#/definitions/ClassDoc" }
+            "overriddenMethodContainingClass": {
+              "$ref": "#/definitions/ClassDoc"
+            }
           }
         }
       ]
@@ -299,7 +325,7 @@
             "type": { "$ref": "#/definitions/AnyType" },
             "isTransient": { "type": "boolean" },
             "isVolatile": { "type": "boolean" },
-            "serialFieldTags": { 
+            "serialFieldTags": {
               "type": "array",
               "items": { "$ref": "#/definitions/SerialFieldTag" }
             },
@@ -323,14 +349,24 @@
         "name": { "type": "string" },
         "kind": { "type": "string" },
         "text": { "type": "string" },
-        "position": { "$ref": "#/definitions/SourcePosition" }
+        "position": { "$ref": "#/definitions/SourcePosition" },
+        "inlineTags": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Tag" }
+        },
+        "firstSentenceTags": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Tag" }
+        }
       }
     },
     "ParamTag": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
           "properties": {
+            "_class": { "const": "ParamTag" },
             "parameterName": { "type": "string" },
             "parameterComment": { "type": "string" },
             "isTypeParameter": { "type": "boolean" }
@@ -339,10 +375,12 @@
       ]
     },
     "SeeTag": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
           "properties": {
+            "_class": { "const": "SeeTag" },
             "label": { "type": "string" },
             "referencedPackage": { "$ref": "#/definitions/PackageDoc" },
             "referencedClassName": { "type": "string" },
@@ -353,10 +391,12 @@
       ]
     },
     "SerialFieldTag": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
           "properties": {
+            "_class": { "const": "SerialFieldTag" },
             "fieldName": { "type": "string" },
             "fieldType": { "type": "string" },
             "fieldTypeDoc": { "$ref": "#/definitions/ClassDoc" },
@@ -366,10 +406,12 @@
       ]
     },
     "ThrowsTag": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
           "properties": {
+            "_class": { "const": "ThrowsTag" },
             "exceptionName": { "type": "string" },
             "exceptionComment": { "type": "string" },
             "exceptionType": { "$ref": "#/definitions/AnyType" }
@@ -378,16 +420,39 @@
       ]
     },
     "AnyType": {
+      "type": "object",
       "oneOf": [
         { "$ref": "#/definitions/ParameterizedType" },
         { "$ref": "#/definitions/TypeVariable" },
         { "$ref": "#/definitions/WildcardType" },
-        { "$ref": "#/definitions/AnnotatedType" }
+        { "$ref": "#/definitions/AnnotatedType" },
+        { "$ref": "#/definitions/ClassDoc" },
+        { "$ref": "#/definitions/ParsedClassDoc" },
+        {
+          "allOf": [
+            { "$ref": "#/definitions/Type" },
+            {
+              "properties": { "_class": { "const": "Type" } }
+            }
+          ]
+        }
       ]
     },
     "Type": {
       "type": "object",
       "properties": {
+        "_class": {
+          "type": "string",
+          "enum": [
+            "Type",
+            "ParameterizedType",
+            "TypeVariable",
+            "WildcardType",
+            "AnnotatedType",
+            "ClassDoc",
+            "ParsedClassDoc"
+          ]
+        },
         "asString": { "type": "string" },
         "typeName": { "type": "string" },
         "qualifiedTypeName": { "type": "string" },
@@ -400,16 +465,18 @@
       }
     },
     "ParameterizedType": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
           "properties": {
-            "typeArguments": { 
+            "_class": { "const": "ParameterizedType" },
+            "typeArguments": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
             "superclassType": { "$ref": "#/definitions/AnyType" },
-            "interfaceTypes": { 
+            "interfaceTypes": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
@@ -419,20 +486,17 @@
       ]
     },
     "TypeVariable": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
           "properties": {
-            "_class": {
-              "type": "string",
-              "const": "TypeVariable"
-            },
-            "bounds": { 
+            "_class": { "const": "TypeVariable" },
+            "bounds": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
-            "owner": { "$ref": "#/definitions/AnyProgramElementDoc" },
-            "annotations": { 
+            "annotations": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnnotationDesc" }
             }
@@ -441,19 +505,17 @@
       ]
     },
     "WildcardType": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
           "properties": {
-            "_class": {
-              "type": "string",
-              "const": "WildcardType"
-            },
-            "extendsBounds": { 
+            "_class": { "const": "WildcardType" },
+            "extendsBounds": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
-            "superBounds": { 
+            "superBounds": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             }
@@ -462,15 +524,13 @@
       ]
     },
     "AnnotatedType": {
+      "type": "object",
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
           "properties": {
-            "_class": {
-              "type": "string",
-              "const": "TypeVariable"
-            },
-            "annotations": { 
+            "_class": { "const": "AnnotatedType" },
+            "annotations": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnnotationDesc" }
             },
@@ -481,6 +541,7 @@
     },
     "SourcePosition": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "line": { "type": "number" },
         "column": { "type": "number" },
@@ -492,12 +553,14 @@
     },
     "AnnotationDesc": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "annotationType": { "$ref": "#/definitions/ClassDoc" },
         "elementValues": {
           "type": "array",
           "items": {
             "type": "object",
+
             "properties": {
               "element": { "$ref": "#/definitions/ClassDoc" },
               "value": { "$ref": "#/definitions/AnnotationValue" }
@@ -509,16 +572,18 @@
     },
     "Parameter": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "type": { "$ref": "#/definitions/AnyType" },
         "name": { "type": "string" },
         "typeName": { "type": "string" },
         "asString": { "type": "string" },
-        "annotations": { 
+        "annotations": {
           "type": "array",
           "items": { "$ref": "#/definitions/AnnotationDesc" }
         }
       }
     }
-  }
+  },
+  "oneOf": [{ "$ref": "#/definitions/ParsedClassDoc" }]
 }

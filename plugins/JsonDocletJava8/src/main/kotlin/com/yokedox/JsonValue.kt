@@ -124,24 +124,21 @@ class JsonValue {
     fun isDisposable(): Boolean {
         return when (_value) {
             null -> true
-            is String -> _value == ""
-            is Iterable<*> -> _value.count() == 0
-            is Map<*, *> -> _value.size == 0
+            // is String -> _value == ""
+            // is Iterable<*> -> _value.count() == 0
+            // is Map<*, *> -> _value.size == 0
             is JsonValue -> _value.isDisposable()
             else -> false
         }
     }
 
-    // Returns a copy with discards null fields and empty strings, objects, and arrays.
+    // Returns a copy with discarded null fields.
     @Suppress("UNCHECKED_CAST")
     fun compacted(): JsonValue {
         return when (_value) {
             is Iterable<*> -> JsonValue((_value as Iterable<JsonValue>)
                 .map {
                     it.compacted()
-                }
-                .filter {
-                    !it.isDisposable()
                 })
             is Map<*, *> -> JsonValue((_value as Map<String, JsonValue>)
                 .mapValues {

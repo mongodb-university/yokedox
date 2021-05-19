@@ -8,10 +8,6 @@ import com.sun.javadoc.*
  */
 fun parse(v: ClassDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
-    val type = toJson(v as Type)
-    if (type != null) {
-        value.putAll(type)
-    }
     value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
     value.putAll(mapOf(
         "_class" to "ParsedClassDoc",

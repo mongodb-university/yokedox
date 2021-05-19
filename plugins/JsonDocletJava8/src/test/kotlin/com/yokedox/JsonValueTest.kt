@@ -187,7 +187,7 @@ class JsonValueTest {
         assertEquals(JsonValue(JsonValue("something")).compacted(), JsonValue("something"))
         assertEquals(JsonValue(listOf(1, 2, 3)).compacted(), mutableListOf(1, 2, 3))
         assertEquals(JsonValue(listOf(
-            1, null, 3, mapOf<String, Any?>(), 5, "", 7)).compacted(), mutableListOf(1, 3, 5, 7))
+            1, null, 3, mapOf<String, Any?>(), 5, "", 7)).compacted(), mutableListOf(1, null, 3, mapOf<String, Any?>(), 5, "", 7))
         assertEquals(JsonValue(mapOf(
             // nothing
         )).compacted(), mapOf<String, Any?>())
@@ -206,15 +206,19 @@ class JsonValueTest {
             "string" to "some string"
         )).compacted().keys, setOf(
             "one",
+            "empty object",
+            "empty array",
             "array",
+            // not null
             "zero",
             "object",
+            "empty string",
             "string"
         ))
 
         assertEquals(JsonValue(mapOf(
             "outer" to mapOf(
-                "inner1" to mapOf( // all of this object's entries are disposable, so it should be discarded
+                "inner1" to mapOf(
                     "empty array" to listOf<Any?>(),
                     "empty string" to "",
                     "null" to null,
@@ -224,12 +228,18 @@ class JsonValueTest {
             )
         )).compacted(), mapOf(
             "outer" to mapOf(
+                "inner1" to mapOf(
+                    "empty array" to listOf<Any?>(),
+                    "empty string" to "",
+                    // no null
+                    "empty object" to mapOf<String, Any?>()
+                ),
                 "inner2" to 123
             )
         ))
 
         assertEquals(JsonValue(listOf(
-            listOf( // all of this array's entries are disposable, so it should be discarded
+            listOf(
                 listOf<Any?>(),
                 "",
                 null,
@@ -237,6 +247,12 @@ class JsonValueTest {
             ),
             123
         )).compacted(), listOf(
+            listOf(
+                listOf<Any?>(),
+                "",
+                null, // not discarded - positional
+                mapOf<String, Any?>()
+            ),
             123
         ))
     }
