@@ -2,7 +2,10 @@ package com.yokedox
 
 import com.sun.javadoc.*
 
-fun toJson(v: Type): JsonObject {
+fun toJson(v: Type?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>(
         "asString" to v.toString(),
         "typeName" to v.typeName(),

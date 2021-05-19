@@ -50,7 +50,7 @@ class JsonValue {
             is Iterable<*> -> value.map { JsonValue(it) }
             is Map<*, *> -> value.mapKeys { it.key as String }.mapValues { JsonValue(it.value) }
             is JsonValue -> value._value
-            else -> throw Error("Cannot convert type to JsonValue: $value")
+            else -> throw Error("Cannot convert type to JsonValue: $value (javaClass = ${value.javaClass})")
         }
     }
 

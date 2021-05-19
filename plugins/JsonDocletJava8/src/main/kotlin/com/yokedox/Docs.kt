@@ -8,8 +8,11 @@ import com.sun.javadoc.*
  */
 fun parse(v: ClassDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as Type))
-    value.putAll(toJson(v as ProgramElementDoc))
+    val type = toJson(v as Type)
+    if (type != null) {
+        value.putAll(type)
+    }
+    value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
     value.putAll(mapOf(
         "isAbstract" to v.isAbstract,
         "isSerializable" to v.isSerializable,
@@ -44,7 +47,7 @@ fun parse(v: ClassDoc): JsonObject {
  */
 fun parse(v: PackageDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as Doc))
+    value.putAll(toJson(v as Doc) as JsonObject)
     value.putAll(mapOf(
         "allClasses" to v.allClasses(true).map { toJson(it) },
         "ordinaryClasses" to v.ordinaryClasses().map { toJson(it) },
@@ -64,9 +67,9 @@ fun parse(v: PackageDoc): JsonObject {
  *
  * @see parse
  */
-fun toJson(v: ClassDoc): JsonObject {
+fun toJson(v: ClassDoc?): JsonObject? {
     // Return reference information only
-    return toJson(v as Type)
+    return toJson(v as Type?)
 }
 
 /**
@@ -74,7 +77,10 @@ fun toJson(v: ClassDoc): JsonObject {
  * the derived type to get the correct overload and all information for the
  * derived type.
  */
-fun toJson(v: Doc): JsonObject {
+fun toJson(v: Doc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     return mapOf(
         "commentText" to v.commentText(),
         "tags" to v.tags().map { toJson(it) },
@@ -92,15 +98,18 @@ fun toJson(v: Doc): JsonObject {
         "isOrdinaryClass" to v.isOrdinaryClass,
         "isClass" to v.isClass,
         "isIncluded" to v.isIncluded,
-        "position" to v.position()
+        "position" to toJson(v.position())
     )
 }
 
-fun toJson(v: ProgramElementDoc): JsonObject {
+fun toJson(v: ProgramElementDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as Doc))
+    value.putAll(toJson(v as Doc) as JsonObject)
     value.putAll(mapOf(
-        "containingClass" to toJson(v.containingClass()),
+        "containingClass" to (if (v.containingClass() == null) null else toJson(v.containingClass())),
         "containingPackage" to toJson(v.containingPackage()),
         "qualifiedName" to v.qualifiedName(),
         "modifierSpecifier" to v.modifierSpecifier(),
@@ -116,18 +125,24 @@ fun toJson(v: ProgramElementDoc): JsonObject {
     return value
 }
 
-fun toJson(v: MemberDoc): JsonObject {
+fun toJson(v: MemberDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as ProgramElementDoc))
+    value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
     value.putAll(mapOf(
         "isSynthetic" to v.isSynthetic
     ))
     return value
 }
 
-fun toJson(v: ExecutableMemberDoc): JsonObject {
+fun toJson(v: ExecutableMemberDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MemberDoc))
+    value.putAll(toJson(v as MemberDoc) as JsonObject)
     value.putAll(mapOf(
         "thrownExceptionTypes" to v.thrownExceptionTypes().map { toJson(it) },
         "isNative" to v.isNative,
@@ -145,9 +160,12 @@ fun toJson(v: ExecutableMemberDoc): JsonObject {
     return value
 }
 
-fun toJson(v: MethodDoc): JsonObject {
+fun toJson(v: MethodDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as ExecutableMemberDoc))
+    value.putAll(toJson(v as ExecutableMemberDoc) as JsonObject)
     value.putAll(mapOf(
         "isAbstract" to v.isAbstract,
         "isDefault" to v.isDefault,
@@ -162,18 +180,24 @@ fun toJson(v: MethodDoc): JsonObject {
     return value
 }
 
-fun toJson(v: AnnotationTypeElementDoc): JsonObject {
+fun toJson(v: AnnotationTypeElementDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MethodDoc))
+    value.putAll(toJson(v as MethodDoc) as JsonObject)
     value.putAll(mapOf(
         "defaultValue" to toJson(v.defaultValue()),
     ))
     return value
 }
 
-fun toJson(v: FieldDoc): JsonObject {
+fun toJson(v: FieldDoc?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as MemberDoc))
+    value.putAll(toJson(v as MemberDoc) as JsonObject)
     value.putAll(mapOf(
         "type" to toJson(v.type()),
         "isTransient" to v.isTransient,
@@ -190,6 +214,6 @@ fun toJson(v: FieldDoc): JsonObject {
  *
  * @see parse
  */
-fun toJson(v: PackageDoc): JsonValue {
-    return JsonValue(v.name())
+fun toJson(v: PackageDoc?): JsonValue? {
+    return JsonValue(v?.name())
 }

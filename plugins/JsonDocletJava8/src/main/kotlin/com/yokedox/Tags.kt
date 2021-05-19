@@ -7,9 +7,10 @@ fun toJson(v: Tag): JsonObject {
         "name" to v.name(),
         "kind" to v.kind(),
         "text" to v.text(),
-        "inlineTags" to v.inlineTags().map { toJson(it) },
-        "firstSentenceTags" to v.firstSentenceTags().map { toJson(it) },
-        "position" to toJson(v.position())
+        // TODO: The following lead to infinite recursion:
+        // "inlineTags" to v.inlineTags(),
+        // "firstSentenceTags" to v.firstSentenceTags().map { toJson(it) },
+        "position" to toJson(v.position()),
     )
     // Explicitly downcast to each type here as
     // the subtypes are not all directly used, so
@@ -27,24 +28,25 @@ fun toJson(v: Tag): JsonObject {
         is SeeTag ->
             value.putAll(mapOf(
                 "label" to v.label(),
-                "referencedPackage" to v.referencedPackage(),
+                "referencedPackage" to toJson(v.referencedPackage()),
                 "referencedClassName" to v.referencedClassName(),
-                "referencedClass" to v.referencedClass(),
+                "referencedClass" to toJson(v.referencedClass()),
                 "referencedMemberName" to v.referencedMemberName(),
-                "referencedMember" to v.referencedMember(),
+                // TODO: Infinite loop:
+                // "referencedMember" to toJson(v.referencedMember()),
             ))
         is SerialFieldTag ->
             value.putAll(mapOf(
                 "fieldName" to v.fieldName(),
-                "fieldType" to v.fieldType(),
-                "fieldTypeDoc" to v.fieldTypeDoc(),
+                "fieldType" to toJson(v.fieldType()),
+                "fieldTypeDoc" to toJson(v.fieldTypeDoc()),
                 "description" to v.description(),
             ))
         is ThrowsTag ->
             value.putAll(mapOf(
                 "exceptionName" to v.exceptionName(),
                 "exceptionComment" to v.exceptionComment(),
-                "exceptionType" to v.exceptionType(),
+                "exceptionType" to toJson(v.exceptionType()),
             ))
     }
     return value

@@ -10,8 +10,8 @@ fun toJson(v: SourcePosition): JsonObject {
     )
 }
 
-fun toJson(v: AnnotationValue): JsonValue {
-    return JsonValue(v.toString())
+fun toJson(v: AnnotationValue?): JsonValue {
+    return JsonValue(v?.toString())
 }
 
 fun toJson(v: AnnotationDesc): JsonObject {
@@ -29,7 +29,7 @@ fun toJson(v: AnnotationDesc): JsonObject {
 
 fun toJson(v: Parameter): JsonObject {
     return mapOf(
-        "type" to v.type(),
+        "type" to toJson(v.type()),
         "name" to v.name(),
         "typeName" to v.typeName(),
         "asString" to v.toString(),
