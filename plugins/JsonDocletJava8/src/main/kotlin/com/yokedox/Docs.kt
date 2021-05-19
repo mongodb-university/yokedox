@@ -14,6 +14,7 @@ fun parse(v: ClassDoc): JsonObject {
     }
     value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "ParsedClassDoc",
         "isAbstract" to v.isAbstract,
         "isSerializable" to v.isSerializable,
         "isExternalizable" to v.isExternalizable,
@@ -49,6 +50,7 @@ fun parse(v: PackageDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as Doc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "ParsedPackageDoc",
         "allClasses" to v.allClasses(true).map { toJson(it) },
         "ordinaryClasses" to v.ordinaryClasses().map { toJson(it) },
         "exceptions" to v.exceptions().map { toJson(it) },
@@ -109,6 +111,7 @@ fun toJson(v: ProgramElementDoc?): JsonObject? {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as Doc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "ProgramElementDoc",
         "containingClass" to (if (v.containingClass() == null) null else toJson(v.containingClass())),
         "containingPackage" to toJson(v.containingPackage()),
         "qualifiedName" to v.qualifiedName(),
@@ -131,9 +134,8 @@ fun toJson(v: MemberDoc?): JsonObject? {
     }
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as ProgramElementDoc) as JsonObject)
-    value.putAll(mapOf(
-        "isSynthetic" to v.isSynthetic
-    ))
+    value["_class"] = "MemberDoc"
+    value["isSynthetic"] = v.isSynthetic
     return value
 }
 
@@ -144,6 +146,7 @@ fun toJson(v: ExecutableMemberDoc?): JsonObject? {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as MemberDoc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "ExecutableMemberDoc",
         "thrownExceptionTypes" to v.thrownExceptionTypes().map { toJson(it) },
         "isNative" to v.isNative,
         "isSynchronized" to v.isSynchronized,
@@ -156,6 +159,7 @@ fun toJson(v: ExecutableMemberDoc?): JsonObject? {
         "signature" to v.signature(),
         "flatSignature" to v.flatSignature(),
         "typeParameters" to v.typeParameters().map { toJson(it) },
+        "isConstructor" to (v is ConstructorDoc)
     ))
     return value
 }
@@ -167,12 +171,13 @@ fun toJson(v: MethodDoc?): JsonObject? {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as ExecutableMemberDoc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "MethodDoc",
         "isAbstract" to v.isAbstract,
         "isDefault" to v.isDefault,
         "returnType" to toJson(v.returnType()),
         "overriddenType" to toJson(v.overriddenType()),
-        // Provide qualified class name for overridden method only
-        // because name and signature are implied in this method object
+        // Provide class for overridden method only because name and signature
+        // are implied in this method object
         "overriddenMethodContainingClass" to
                 (if (v.overriddenMethod() == null)
                     null else toJson(v.overriddenMethod().containingClass())),
@@ -186,9 +191,8 @@ fun toJson(v: AnnotationTypeElementDoc?): JsonObject? {
     }
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as MethodDoc) as JsonObject)
-    value.putAll(mapOf(
-        "defaultValue" to toJson(v.defaultValue()),
-    ))
+    value["_class"] = "AnnotationTypeElementDoc"
+    value["defaultValue"] = toJson(v.defaultValue())
     return value
 }
 
@@ -199,6 +203,7 @@ fun toJson(v: FieldDoc?): JsonObject? {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as MemberDoc) as JsonObject)
     value.putAll(mapOf(
+        "_class" to "FieldDoc",
         "type" to toJson(v.type()),
         "isTransient" to v.isTransient,
         "isVolatile" to v.isVolatile,

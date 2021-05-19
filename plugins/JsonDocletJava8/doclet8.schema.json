@@ -1,0 +1,524 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ParsedClassDoc": {
+      "type": "object",
+      "properties": {
+        "isAbstract": { "type": "boolean" },
+        "isSerializable": { "type": "boolean" },
+        "isExternalizable": { "type": "boolean" },
+        "serializationMethods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MethodDoc"
+          }
+        },
+        "serializableFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDoc"
+          }
+        },
+        "definesSerializableFields": { "type": "boolean" },
+        "superclassType": { "$ref": "#/definitions/AnyType" },
+        "interfaceTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnyType"
+          }
+        },
+        "typeParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnyType"
+          }
+        },
+        "typeParamTags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnyTag"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDoc"
+          }
+        },
+        "enumConstants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FieldDoc"
+          }
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MethodDoc"
+          }
+        },
+        "constructors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutableMemberDoc"
+          }
+        },
+        "innerClasses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "isAnnotationType": { "type": "boolean" },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnnotationTypeElementDoc"
+          }
+        }
+      }
+    },
+    "ParsedPackageDoc": {
+      "type": "object",
+      "properties": {
+        "allClasses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "ordinaryClasses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "enums": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "annotationTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClassDoc"
+          }
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AnnotationDesc"
+          }
+        }
+      }
+    },
+    "PackageDoc": { "type": "string" },
+    "ClassDoc": {
+      "allOf": [
+        { "$ref": "#/definitions/AnyType" },
+        { "properties": { "_class": { "const": "ClassDoc" }}}
+      ]
+    },
+    "AnyDoc": {
+      "oneOf": [
+        { "$ref": "#/definitions/ClassDoc" },
+        { "$ref": "#/definitions/PackageDoc" },
+        { "$ref": "#/definitions/ProgramElementDoc" },
+        { "$ref": "#/definitions/MemberDoc" },
+        { "$ref": "#/definitions/ExecutableMemberDoc" },
+        { "$ref": "#/definitions/MethodDoc" },
+        { "$ref": "#/definitions/AnnotationTypeElementDoc" },
+        { "$ref": "#/definitions/FieldDoc" }
+      ]
+    },
+    "Doc": {
+      "type": "object",
+      "properties": {
+        "commentText": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Tag"
+          }
+        },
+        "name": { "type": "string" },
+        "isField": { "type": "boolean" },
+        "isEnumConstant": { "type": "boolean" },
+        "isConstructor": { "type": "boolean" },
+        "isMethod": { "type": "boolean" },
+        "isAnnotationTypeElement": { "type": "boolean" },
+        "isInterface": { "type": "boolean" },
+        "isException": { "type": "boolean" },
+        "isError": { "type": "boolean" },
+        "isEnum": { "type": "boolean" },
+        "isAnnotationType": { "type": "boolean" },
+        "isOrdinaryClass": { "type": "boolean" },
+        "isClass": { "type": "boolean" },
+        "isIncluded": { "type": "boolean" },
+        "position": { "$ref": "#/definitions/SourcePosition" }
+      }
+    },
+    "AnyProgramElementDoc": {
+      "oneOf": [
+        { "$ref": "#/definitions/ClassDoc" },
+        { "$ref": "#/definitions/MemberDoc" },
+        { "$ref": "#/definitions/ExecutableMemberDoc" },
+        { "$ref": "#/definitions/MethodDoc" },
+        { "$ref": "#/definitions/AnnotationTypeElementDoc" },
+        { "$ref": "#/definitions/FieldDoc" }
+      ]
+    },
+    "ProgramElementDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/Doc" },
+        {
+          "properties": {
+            "containingClass": { "$ref": "#/definitions/ClassDoc" },
+            "containingPackage": { "$ref": "#/definitions/PackageDoc" },
+            "qualifiedName": { "type": "string" },
+            "modifierSpecifier": { "type": "number" },
+            "modifiers": { "type": "string" },
+            "annotations": {
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnnotationDesc" }
+            },
+            "isPublic": { "type": "boolean" },
+            "isProtected": { "type": "boolean" },
+            "isPrivate": { "type": "boolean" },
+            "isPackagePrivate": { "type": "boolean" },
+            "isStatic": { "type": "boolean" },
+            "isFinal": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "MemberDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/ProgramElementDoc" },
+        {
+          "properties": {
+            "isSynthetic": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "ExecutableMemberDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/MemberDoc" },
+        {
+          "properties": {
+            "thrownExceptionTypes": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            },
+            "isNative": { "type": "boolean" },
+            "isSynchronized": { "type": "boolean" },
+            "isVarArgs": { "type": "boolean" },
+            "parameters": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/Parameter" }
+            },
+            "receiverType": { "$ref": "#/definitions/AnyType" },
+            "throwsTags": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/ThrowsTag" }
+            },
+            "paramTags": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/ParamTag" }
+            },
+            "typeParamTags": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/ParamTag" }
+            },
+            "signature": { "type": "string" },
+            "flatSignature": { "type": "string" },
+            "typeParameters": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/TypeVariable" }
+            },
+            "isConstructor": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "MethodDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/ExecutableMemberDoc" },
+        {
+          "properties": {
+            "isAbstract": { "type": "boolean" },
+            "isDefault": { "type": "boolean" },
+            "returnType": { "$ref": "#/definitions/AnyType" },
+            "overriddenType": { "$ref": "#/definitions/AnyType" },
+            "overriddenMethodContainingClass": { "$ref": "#/definitions/ClassDoc" }
+          }
+        }
+      ]
+    },
+    "AnnotationTypeElementDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/MethodDoc" },
+        {
+          "properties": {
+            "defaultValue": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "FieldDoc": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/definitions/MemberDoc" },
+        {
+          "properties": {
+            "type": { "$ref": "#/definitions/AnyType" },
+            "isTransient": { "type": "boolean" },
+            "isVolatile": { "type": "boolean" },
+            "serialFieldTags": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/SerialFieldTag" }
+            },
+            "constantValue": { "type": "string" },
+            "constantValueExpression": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "AnyTag": {
+      "oneOf": [
+        { "$ref": "#/definitions/ParamTag" },
+        { "$ref": "#/definitions/SeeTag" },
+        { "$ref": "#/definitions/SerialFieldTag" },
+        { "$ref": "#/definitions/ThrowsTag" }
+      ]
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "kind": { "type": "string" },
+        "text": { "type": "string" },
+        "position": { "$ref": "#/definitions/SourcePosition" }
+      }
+    },
+    "ParamTag": {
+      "allOf": [
+        { "$ref": "#/definitions/Tag" },
+        {
+          "properties": {
+            "parameterName": { "type": "string" },
+            "parameterComment": { "type": "string" },
+            "isTypeParameter": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "SeeTag": {
+      "allOf": [
+        { "$ref": "#/definitions/Tag" },
+        {
+          "properties": {
+            "label": { "type": "string" },
+            "referencedPackage": { "$ref": "#/definitions/PackageDoc" },
+            "referencedClassName": { "type": "string" },
+            "referencedClass": { "$ref": "#/definitions/ClassDoc" },
+            "referencedMemberName": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "SerialFieldTag": {
+      "allOf": [
+        { "$ref": "#/definitions/Tag" },
+        {
+          "properties": {
+            "fieldName": { "type": "string" },
+            "fieldType": { "type": "string" },
+            "fieldTypeDoc": { "$ref": "#/definitions/ClassDoc" },
+            "description": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "ThrowsTag": {
+      "allOf": [
+        { "$ref": "#/definitions/Tag" },
+        {
+          "properties": {
+            "exceptionName": { "type": "string" },
+            "exceptionComment": { "type": "string" },
+            "exceptionType": { "$ref": "#/definitions/AnyType" }
+          }
+        }
+      ]
+    },
+    "AnyType": {
+      "oneOf": [
+        { "$ref": "#/definitions/ParameterizedType" },
+        { "$ref": "#/definitions/TypeVariable" },
+        { "$ref": "#/definitions/WildcardType" },
+        { "$ref": "#/definitions/AnnotatedType" }
+      ]
+    },
+    "Type": {
+      "type": "object",
+      "properties": {
+        "asString": { "type": "string" },
+        "typeName": { "type": "string" },
+        "qualifiedTypeName": { "type": "string" },
+        "simpleTypeName": { "type": "string" },
+        "dimension": { "type": "string" },
+        "isPrimitive": { "type": "boolean" },
+        "elementType": { "$ref": "#/definitions/AnyType" },
+        "isClass": { "type": "boolean" },
+        "isAnnotationType": { "type": "boolean" }
+      }
+    },
+    "ParameterizedType": {
+      "allOf": [
+        { "$ref": "#/definitions/Type" },
+        {
+          "properties": {
+            "typeArguments": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            },
+            "superclassType": { "$ref": "#/definitions/AnyType" },
+            "interfaceTypes": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            },
+            "containingType": { "$ref": "#/definitions/AnyType" }
+          }
+        }
+      ]
+    },
+    "TypeVariable": {
+      "allOf": [
+        { "$ref": "#/definitions/Type" },
+        {
+          "properties": {
+            "_class": {
+              "type": "string",
+              "const": "TypeVariable"
+            },
+            "bounds": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            },
+            "owner": { "$ref": "#/definitions/AnyProgramElementDoc" },
+            "annotations": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnnotationDesc" }
+            }
+          }
+        }
+      ]
+    },
+    "WildcardType": {
+      "allOf": [
+        { "$ref": "#/definitions/Type" },
+        {
+          "properties": {
+            "_class": {
+              "type": "string",
+              "const": "WildcardType"
+            },
+            "extendsBounds": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            },
+            "superBounds": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnyType" }
+            }
+          }
+        }
+      ]
+    },
+    "AnnotatedType": {
+      "allOf": [
+        { "$ref": "#/definitions/Type" },
+        {
+          "properties": {
+            "_class": {
+              "type": "string",
+              "const": "TypeVariable"
+            },
+            "annotations": { 
+              "type": "array",
+              "items": { "$ref": "#/definitions/AnnotationDesc" }
+            },
+            "underlyingType": { "$ref": "#/definitions/AnyType" }
+          }
+        }
+      ]
+    },
+    "SourcePosition": {
+      "type": "object",
+      "properties": {
+        "line": { "type": "number" },
+        "column": { "type": "number" },
+        "file": { "type": "string" }
+      }
+    },
+    "AnnotationValue": {
+      "type": "string"
+    },
+    "AnnotationDesc": {
+      "type": "object",
+      "properties": {
+        "annotationType": { "$ref": "#/definitions/ClassDoc" },
+        "elementValues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": { "$ref": "#/definitions/ClassDoc" },
+              "value": { "$ref": "#/definitions/AnnotationValue" }
+            }
+          }
+        },
+        "isSynthesized": { "type": "boolean" }
+      }
+    },
+    "Parameter": {
+      "type": "object",
+      "properties": {
+        "type": { "$ref": "#/definitions/AnyType" },
+        "name": { "type": "string" },
+        "typeName": { "type": "string" },
+        "asString": { "type": "string" },
+        "annotations": { 
+          "type": "array",
+          "items": { "$ref": "#/definitions/AnnotationDesc" }
+        }
+      }
+    }
+  }
+}

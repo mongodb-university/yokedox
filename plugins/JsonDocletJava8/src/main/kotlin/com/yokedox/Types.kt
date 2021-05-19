@@ -26,6 +26,7 @@ fun toJson(v: Type?): JsonObject? {
     when (v) {
         is ParameterizedType ->
             value.putAll(mapOf(
+                "_class" to "ParameterizedType",
                 "typeArguments" to v.typeArguments().map { toJson(it) },
                 "superclassType" to toJson(v.superclassType()),
                 "interfaceTypes" to v.interfaceTypes().map { toJson(it) },
@@ -33,20 +34,25 @@ fun toJson(v: Type?): JsonObject? {
             ))
         is TypeVariable ->
             value.putAll(mapOf(
+                "_class" to "TypeVariable",
                 "bounds" to v.bounds().map { toJson(it) },
                 "owner" to toJson(v.owner()),
                 "annotations" to v.annotations().map { toJson(it) },
             ))
         is WildcardType ->
             value.putAll(mapOf(
+                "_class" to "WildcardType",
                 "extendsBounds" to v.extendsBounds().map { toJson(it) },
                 "superBounds" to v.superBounds().map { toJson(it) },
             ))
         is AnnotatedType ->
             value.putAll(mapOf(
+                "_class" to "AnnotatedType",
                 "annotations" to v.annotations().map { toJson(it) },
                 "underlyingType" to toJson(v.underlyingType()),
             ))
+        is ClassDoc ->
+            value["_class"] = "ClassDoc"
     }
     return value
 }
