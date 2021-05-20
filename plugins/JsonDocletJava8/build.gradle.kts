@@ -50,3 +50,27 @@ tasks.build {
     val shadowJar = tasks.named("shadowJar")
     finalizedBy(shadowJar)
 }
+
+tasks.register("testDoclet") {
+    dependsOn(tasks.build)
+    mustRunAfter(tasks.build)
+    doLast {
+        project.exec {
+            // Run javadoc with this doclet against the ./test project
+            // and output json files in ./build/test
+            commandLine = listOf(
+                "javadoc", "-d", "./build/test",
+                "-docletpath", "./build/libs/JsonDocletJava8-all.jar",
+                "-doclet", "com.yokedox.JsonDoclet8",
+                "-sourcepath", "./test/src/main/java",
+                "com.yokedox.test"
+            )
+        }
+        project.exec {
+            // Quick & dirty: use ajv-cli (via npx) to validate output of above against the JSON schema
+            commandLine = listOf("bash", "-o", "pipefail", "-c",
+                "find ./build/test -iname '*.json' | xargs printf '\\-d %s ' | xargs npx ajv-cli validate -s ./doclet8.schema.json"
+            )
+        }
+    }
+}

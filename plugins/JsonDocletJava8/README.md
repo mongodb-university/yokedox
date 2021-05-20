@@ -75,3 +75,21 @@ library with minor exceptions:
   root of the resulting JSON. Inner instances are included by reference only.
 - Backlinks are not included. Again, this is to avoid endless cycles.
 
+## Tests
+
+A test Java project is located in the `test/` directory. These tests were
+shamelessly borrowed from Markus Bernhardt's
+[xml-doclet](https://github.com/MarkusBernhardt/xml-doclet) (who, according to
+their README, also shamelessly borrowed them from Seth Call.
+
+You can build and run the doclet against this test project with the following
+command:
+
+```bash
+./gradlew testDoclet
+```
+
+This will also validate the output against the JSON schema using
+[ajv-cli](https://www.npmjs.com/package/ajv-cli) via
+[npx](https://www.npmjs.com/package/npx).
+

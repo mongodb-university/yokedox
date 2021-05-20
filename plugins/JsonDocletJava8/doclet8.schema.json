@@ -643,18 +643,17 @@
       "allOf": [
         { "$ref": "#/definitions/Tag" },
         {
-          "required": [
-            "_class",
-            "fieldName",
-            "fieldType",
-            "fieldTypeDoc",
-            "description"
-          ],
+          "required": ["_class", "fieldName", "fieldType", "description"],
           "properties": {
             "_class": { "const": "SerialFieldTag" },
             "fieldName": { "type": "string" },
             "fieldType": { "type": "string" },
-            "fieldTypeDoc": { "$ref": "#/definitions/ClassDoc" },
+            "fieldTypeDoc": {
+              "oneOf": [
+                { "$ref": "#/definitions/ClassDoc" },
+                { "type": "null" }
+              ]
+            },
             "description": { "type": "string" }
           }
         }
