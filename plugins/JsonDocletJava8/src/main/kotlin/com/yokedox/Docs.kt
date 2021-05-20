@@ -98,6 +98,9 @@ fun toJson(v: Doc?, deepParse: Boolean = false): JsonObject? {
     val value = mutableMapOf<String, Any?>(
         "commentText" to v.commentText(),
         "tags" to v.tags().map { toJson(it) },
+        "seeTags" to v.seeTags().map { toJson(it) },
+        "inlineTags" to v.inlineTags().map { toJson(it) },
+        "firstSentenceTags" to v.firstSentenceTags().map { toJson(it) },
         "name" to v.name(),
         "isField" to v.isField,
         "isEnumConstant" to v.isEnumConstant,

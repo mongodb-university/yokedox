@@ -265,6 +265,9 @@
       "required": [
         "commentText",
         "tags",
+        "seeTags",
+        "inlineTags",
+        "firstSentenceTags",
         "name",
         "isField",
         "isEnumConstant",
@@ -303,6 +306,18 @@
           "items": {
             "$ref": "#/definitions/AnyTag"
           }
+        },
+        "seeTags": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/SeeTag" }
+        },
+        "inlineTags": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AnyTag" }
+        },
+        "firstSentenceTags": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AnyTag" }
         },
         "name": { "type": "string" },
         "isField": { "type": "boolean" },
@@ -554,7 +569,7 @@
     },
     "Tag": {
       "type": "object",
-      "required": ["_class", "name", "kind", "text", "position"],
+      "required": ["_class", "name", "kind", "text"],
       "properties": {
         "_class": {
           "enum": ["Tag", "ParamTag", "SeeTag", "SerialFieldTag", "ThrowsTag"]
@@ -562,7 +577,6 @@
         "name": { "type": "string" },
         "kind": { "type": "string" },
         "text": { "type": "string" },
-        "position": { "$ref": "#/definitions/SourcePosition" },
         "inlineTags": {
           "type": "array",
           "items": { "$ref": "#/definitions/AnyTag" }

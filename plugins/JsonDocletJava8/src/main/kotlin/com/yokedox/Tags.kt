@@ -11,7 +11,8 @@ fun toJson(v: Tag, level: Int = 0): JsonObject {
         "name" to v.name(),
         "kind" to v.kind(),
         "text" to v.text(),
-        "position" to toJson(v.position()),
+        // Position bloats up the file quite a bit and isn't really needed for tags
+        // "position" to toJson(v.position()),
     )
     if (level == 0) {
         // The following could lead to infinite recursion if unchecked
