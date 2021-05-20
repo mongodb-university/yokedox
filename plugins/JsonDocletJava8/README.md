@@ -1,6 +1,32 @@
 # Javadoc JSON Doclet for Java 1.8
 
-This doclet works with Javadoc 1.8 (and possibly earlier).
+This is a doclet (Javadoc plugin) that will transform raw Javadoc constructs to JSON according 
+to the [schema](./doclet8.schema.json).
+
+Works with Javadoc 1.8 (and possibly earlier). For later versions, see [doclet](../doclet).
+
+The following:
+
+```shell
+$ javadoc \
+  -d output \
+  -docletpath path/to/JsonDocletJava8/build/libs/JsonDocletJava8-all.jar \
+  -doclet com.yokedox.JsonDoclet8 \
+  -sourcepath ...
+  com.example.my.project
+```
+
+Will generate JSON files:
+
+```
+./output/com.example.my.project.json
+./output/com/example/my/project/MyClass1.json
+./output/com/example/my/project/MyClass2.json
+...
+```
+
+The JSON files contain the constructs of Javadoc. You can use these to re-skin, 
+analyze, mung, etc. without having to write a doclet yourself.
 
 ## Building the Doclet
 
