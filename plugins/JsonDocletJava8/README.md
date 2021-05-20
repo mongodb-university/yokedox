@@ -25,8 +25,8 @@ Will generate JSON files:
 ...
 ```
 
-The JSON files contain the constructs of Javadoc. You can use these to re-skin, 
-analyze, mung, etc. without having to write a doclet yourself.
+The JSON files contain the **complete** constructs of Javadoc. You can use
+these to re-skin, analyze, mung, etc. without having to write a doclet yourself.
 
 ## Building the Doclet
 
