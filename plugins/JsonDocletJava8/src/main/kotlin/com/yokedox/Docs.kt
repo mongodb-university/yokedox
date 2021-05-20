@@ -6,7 +6,7 @@ import com.sun.javadoc.*
  * Entrypoint to fully parse a ClassDoc. Subsequently discovered ClassDocs
  * in the tree are referenced by fully-qualified name only.
  */
-fun parse(v: ClassDoc): JsonObject {
+fun parse(v: ClassDoc): JsonValue {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as ProgramElementDoc, true) as JsonObject)
     value.putAll(mapOf(
@@ -34,7 +34,7 @@ fun parse(v: ClassDoc): JsonObject {
         is AnnotationTypeDoc ->
             value["elements"] = v.elements().map { toJson(it) }
     }
-    return value
+    return JsonValue(value)
 }
 
 /**
@@ -42,7 +42,7 @@ fun parse(v: ClassDoc): JsonObject {
  * inner ClassDocs by fully-qualified name rather than fully parsing out
  * the ClassDocs.
  */
-fun parse(v: PackageDoc): JsonObject {
+fun parse(v: PackageDoc): JsonValue {
     val value = mutableMapOf<String, Any?>()
     value.putAll(toJson(v as Doc) as JsonObject)
     value.putAll(mapOf(
@@ -56,7 +56,7 @@ fun parse(v: PackageDoc): JsonObject {
         "annotationTypes" to v.annotationTypes().map { toJson(it) },
         "annotations" to v.annotations().map { toJson(it) },
     ))
-    return value
+    return JsonValue(value)
 }
 
 /**

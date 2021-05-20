@@ -18,8 +18,14 @@ class JsonDoclet8 {
          */
         @JvmStatic
         fun start(root: RootDoc): Boolean {
+            root.specifiedPackages().forEach {
+                val packageJson = parse(it).compacted()
+                File("${it.name()}.json").bufferedWriter().use { out ->
+                    out.write(packageJson.toJsonString())
+                }
+            }
             root.classes().forEach {
-                val classJson = JsonValue(parse(it))
+                val classJson = parse(it).compacted()
                 File("${it.name()}.json").bufferedWriter().use { out ->
                     out.write(classJson.toJsonString())
                 }
