@@ -5,6 +5,10 @@ import com.sun.javadoc.Doclet
 import com.sun.javadoc.LanguageVersion
 import com.sun.javadoc.RootDoc
 import java.io.File
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
 // For reference, see com.sun.javadoc.Doclet.
 // Kotlin does not allow override of static methods.
@@ -16,17 +20,39 @@ class JsonDoclet8 {
          *
          * @return true on success.
          */
+        @ExperimentalPathApi
         @JvmStatic
         fun start(root: RootDoc): Boolean {
+            // Already validated by other methods below
+            val directoryPath = Path(root.options().find { it[0] == "-d" }!![1])
+            if (!directoryPath.exists()) {
+                // Create working directory
+                if (!directoryPath.toFile().mkdirs()) {
+                    root.printError("Failed to create directory: '${directoryPath}'")
+                    return false
+                }
+            } else if (!directoryPath.isDirectory()) {
+                root.printError("Path specified by -d is not a directory: '${directoryPath}'")
+                return false
+            }
+
             root.specifiedPackages().forEach {
                 val packageJson = parse(it).compacted()
-                File("${it.name()}.json").bufferedWriter().use { out ->
+                val path = directoryPath.resolve( "${it.name()}.json")
+                path.toFile().bufferedWriter().use { out ->
                     out.write(packageJson.toJsonString())
                 }
             }
+
             root.classes().forEach {
                 val classJson = parse(it).compacted()
-                File("${it.name()}.json").bufferedWriter().use { out ->
+                val path = directoryPath.resolve(it.containingPackage().name().split(".").joinToString("/"))
+                // Create directory if needed
+                if (!path.exists() && !path.toFile().mkdirs()) {
+                    root.printError("Could not create directory '${path}' for class ${it.name()}")
+                    return false
+                }
+                path.resolve("${it.name()}.json").toFile().bufferedWriter().use { out ->
                     out.write(classJson.toJsonString())
                 }
             }
@@ -48,7 +74,10 @@ class JsonDoclet8 {
         </P> */
         @JvmStatic
         fun optionLength(option: String): Int {
-            return 0 // default is option unknown
+            return when (option) {
+                "-d" -> 2 // directory
+                else -> 0 // default is option unknown
+            }
         }
 
         /**
@@ -69,7 +98,11 @@ class JsonDoclet8 {
             options: Array<Array<String>>,
             reporter: DocErrorReporter
         ): Boolean {
-            return true // default is options are valid
+            if (options.find { it[0] == "-d" } == null) {
+                reporter.printError("Missing required doclet option: -d <destination directory>")
+                return false
+            }
+            return true
         }
 
         /**
