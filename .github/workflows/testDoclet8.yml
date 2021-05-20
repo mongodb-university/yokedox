@@ -1,6 +1,9 @@
 name: JsonDoclet8
 
-on: [push]
+on:
+  pull_request:
+    paths:
+      - "plugins/JsonDocletJava8/**"
 
 jobs:
   build:
