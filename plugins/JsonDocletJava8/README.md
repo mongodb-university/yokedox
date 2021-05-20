@@ -25,13 +25,19 @@ Run Javadoc with the -doclet and -docletPath flags:
 
 ```shell
 $ javadoc \
+  -d path/to/desired/output/directory \
   -docletpath path/to/JsonDocletJava8/build/libs/JsonDocletJava8-all.jar \
   -doclet com.yokedox.JsonDoclet8 \
   -sourcepath ...
 ```
 
-**NOTE:** This doclet does not currently support Standard Doclet flags, so avoid
-using `-d`, etc.
+The `-d` option specifies the directory to output files into. The doclet
+produces one JSON file per included class and package. The class files will be
+in a subdirectory corresponding to the class's package name.
+
+>For example, the doclet renders `com.example.MyClass` to
+>`com/example/MyClass.json` within the destination directory specified by the
+>`-d` flag passed to `javadoc`.
 
 ## Using the JSON Schema
 
@@ -74,6 +80,16 @@ library with minor exceptions:
   or there would be endless cycles of docs. The fully parsed versions are at the
   root of the resulting JSON. Inner instances are included by reference only.
 - Backlinks are not included. Again, this is to avoid endless cycles.
+
+## Files of Interest
+
+- **doclet8.schema.json:** the JSON schema to validate everything.
+- **JsonDoclet8.kt:** the entrypoint for the doclet.
+- **toJson.kt:** miscellaneous Javadoc type to JSON converters.
+- **Docs.kt:** Javadoc "Doc" and "Doc" subclass JSON converters. Contains the parse() entrypoint for both ClassDoc and PackageDoc.
+- **Tags.kt:** Javadoc "Tag" and "Tag" subclass JSON converters.
+- **Types.kt:** Javadoc "Type" and "Type" subclass JSON converters.
+- **JsonValue.kt:** Klaxon JSON library helper (copied from ../doclet)
 
 ## Tests
 
