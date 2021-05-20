@@ -8,7 +8,6 @@ import com.sun.javadoc.*
  */
 fun parse(v: ClassDoc): JsonObject {
     val value = mutableMapOf<String, Any?>()
-    value.putAll(toJson(v as Type) as JsonObject)
     value.putAll(toJson(v as ProgramElementDoc, true) as JsonObject)
     value.putAll(mapOf(
         "_class" to "ParsedClassDoc",
@@ -143,6 +142,8 @@ private fun moreJson(v: ProgramElementDoc): JsonObject {
         "isFinal" to v.isFinal,
     )
     when (v) {
+        is ClassDoc ->
+            value.putAll(toJson(v) as JsonObject)
         is MemberDoc ->
             value.putAll(moreJson(v))
     }
