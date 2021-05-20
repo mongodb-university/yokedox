@@ -96,10 +96,15 @@
             },
             "isAnnotationType": { "type": "boolean" },
             "elements": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AnnotationTypeElementDoc"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/AnnotationTypeElementDoc"
+                  }
+                },
+                { "type": "null" }
+              ]
             }
           }
         }
@@ -180,25 +185,79 @@
     },
     "ClassDoc": {
       "type": "object",
-      "required": ["_class"],
       "allOf": [
         { "$ref": "#/definitions/Type" },
-        { "properties": { "_class": { "const": "ClassDoc" } } }
+        {
+          "required": ["_class"],
+          "properties": { "_class": { "const": "ClassDoc" } }
+        }
       ]
     },
     "AnyDoc": {
-      "additionalProperties": false,
+      "$comment": "Using 'allOf' with a specific _class because base and middle classes have all subclasses as options in the _class enum. This leads to ambiguity.",
+      "type": "object",
       "oneOf": [
-        { "$ref": "#/definitions/ParsedClassDoc" },
-        { "$ref": "#/definitions/ClassDoc" },
-        { "$ref": "#/definitions/PackageDoc" },
-        { "$ref": "#/definitions/ParsedPackageDoc" },
-        { "$ref": "#/definitions/ProgramElementDoc" },
-        { "$ref": "#/definitions/MemberDoc" },
-        { "$ref": "#/definitions/ExecutableMemberDoc" },
-        { "$ref": "#/definitions/MethodDoc" },
         { "$ref": "#/definitions/AnnotationTypeElementDoc" },
-        { "$ref": "#/definitions/FieldDoc" }
+        { "$ref": "#/definitions/ClassDoc" },
+        { "$ref": "#/definitions/FieldDoc" },
+        { "$ref": "#/definitions/PackageDoc" },
+        { "$ref": "#/definitions/ParsedClassDoc" },
+        { "$ref": "#/definitions/ParsedPackageDoc" },
+        {
+          "type": "object",
+          "allOf": [
+            { "$ref": "#/definitions/Doc" },
+            {
+              "properties": {
+                "_class": { "const": "Doc" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "allOf": [
+            { "$ref": "#/definitions/ExecutableMemberDoc" },
+            {
+              "properties": {
+                "_class": { "const": "ExecutableMemberDoc" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "allOf": [
+            { "$ref": "#/definitions/MemberDoc" },
+            {
+              "properties": {
+                "_class": { "const": "MemberDoc" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "allOf": [
+            { "$ref": "#/definitions/MethodDoc" },
+            {
+              "properties": {
+                "_class": { "const": "MethodDoc" }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "allOf": [
+            { "$ref": "#/definitions/ProgramElementDoc" },
+            {
+              "properties": {
+                "_class": { "const": "ProgramElementDoc" }
+              }
+            }
+          ]
+        }
       ]
     },
     "Doc": {
@@ -223,6 +282,21 @@
         "position"
       ],
       "properties": {
+        "_class": {
+          "enum": [
+            "Doc",
+            "ProgramElementDoc",
+            "ClassDoc",
+            "ParsedClassDoc",
+            "PackageDoc",
+            "ParsedPackageDoc",
+            "MemberDoc",
+            "ExecutableMemberDoc",
+            "MethodDoc",
+            "AnnotationTypeElementDoc",
+            "FieldDoc"
+          ]
+        },
         "commentText": { "type": "string" },
         "tags": {
           "type": "array",
@@ -253,6 +327,7 @@
         { "$ref": "#/definitions/Doc" },
         {
           "required": [
+            "_class",
             "containingPackage",
             "qualifiedName",
             "modifierSpecifier",
@@ -266,6 +341,18 @@
             "isFinal"
           ],
           "properties": {
+            "_class": {
+              "enum": [
+                "ProgramElementDoc",
+                "ClassDoc",
+                "ParsedClassDoc",
+                "MemberDoc",
+                "ExecutableMemberDoc",
+                "MethodDoc",
+                "AnnotationTypeElementDoc",
+                "FieldDoc"
+              ]
+            },
             "containingClass": {
               "oneOf": [
                 { "$ref": "#/definitions/ClassDoc" },
@@ -295,8 +382,17 @@
       "allOf": [
         { "$ref": "#/definitions/ProgramElementDoc" },
         {
-          "required": ["isSynthetic"],
+          "required": ["_class", "isSynthetic"],
           "properties": {
+            "_class": {
+              "enum": [
+                "MemberDoc",
+                "ExecutableMemberDoc",
+                "MethodDoc",
+                "AnnotationTypeElementDoc",
+                "FieldDoc"
+              ]
+            },
             "isSynthetic": { "type": "boolean" }
           }
         }
@@ -308,6 +404,7 @@
         { "$ref": "#/definitions/MemberDoc" },
         {
           "required": [
+            "_class",
             "thrownExceptionTypes",
             "isNative",
             "isSynchronized",
@@ -322,6 +419,13 @@
             "isConstructor"
           ],
           "properties": {
+            "_class": {
+              "enum": [
+                "ExecutableMemberDoc",
+                "MethodDoc",
+                "AnnotationTypeElementDoc"
+              ]
+            },
             "thrownExceptionTypes": {
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
@@ -364,8 +468,11 @@
       "allOf": [
         { "$ref": "#/definitions/ExecutableMemberDoc" },
         {
-          "required": ["isAbstract", "isDefault", "returnType"],
+          "required": ["_class", "isAbstract", "isDefault", "returnType"],
           "properties": {
+            "_class": {
+              "enum": ["MethodDoc", "AnnotationTypeElementDoc"]
+            },
             "isAbstract": { "type": "boolean" },
             "isDefault": { "type": "boolean" },
             "returnType": { "$ref": "#/definitions/AnyType" },
@@ -387,9 +494,12 @@
       "allOf": [
         { "$ref": "#/definitions/MethodDoc" },
         {
-          "required": ["defaultValue"],
+          "required": ["_class"],
           "properties": {
-            "defaultValue": { "type": "string" }
+            "_class": { "const": "AnnotationTypeElementDoc" },
+            "defaultValue": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            }
           }
         }
       ]
@@ -400,14 +510,14 @@
         { "$ref": "#/definitions/MemberDoc" },
         {
           "required": [
+            "_class",
             "type",
             "isTransient",
             "isVolatile",
-            "serialFieldTags",
-            "constantValue",
-            "constantValueExpression"
+            "serialFieldTags"
           ],
           "properties": {
+            "_class": { "const": "FieldDoc" },
             "type": { "$ref": "#/definitions/AnyType" },
             "isTransient": { "type": "boolean" },
             "isVolatile": { "type": "boolean" },
@@ -415,8 +525,12 @@
               "type": "array",
               "items": { "$ref": "#/definitions/SerialFieldTag" }
             },
-            "constantValue": { "type": "string" },
-            "constantValueExpression": { "type": "string" }
+            "constantValue": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            },
+            "constantValueExpression": {
+              "oneOf": [{ "type": "string" }, { "type": "null" }]
+            }
           }
         }
       ]
@@ -581,7 +695,6 @@
         "simpleTypeName",
         "dimension",
         "isPrimitive",
-        "elementType",
         "isClass",
         "isAnnotationType"
       ],
@@ -720,7 +833,7 @@
             "additionalProperties": false,
             "required": ["element", "value"],
             "properties": {
-              "element": { "$ref": "#/definitions/ClassDoc" },
+              "element": { "$ref": "#/definitions/AnyDoc" },
               "value": { "$ref": "#/definitions/AnnotationValue" }
             }
           }

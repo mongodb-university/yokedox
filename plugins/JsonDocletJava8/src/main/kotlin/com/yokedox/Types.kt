@@ -13,7 +13,7 @@ fun toJson(v: Type?): JsonObject? {
         "_class" to "Type",
         "asString" to v.toString(),
         "typeName" to v.typeName(),
-        "qualifiedTypeName" to v.typeName(),
+        "qualifiedTypeName" to v.qualifiedTypeName(),
         "simpleTypeName" to v.simpleTypeName(),
         "dimension" to v.dimension(),
         "isPrimitive" to v.isPrimitive,
