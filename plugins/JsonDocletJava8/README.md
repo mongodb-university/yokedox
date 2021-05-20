@@ -67,7 +67,7 @@ in a subdirectory corresponding to the class's package name.
 
 ## Using the JSON Schema
 
-The output of the doclet should match the JSON schema at `./doclet8.schema.json`.
+The output of the doclet should match the JSON schema at [./doclet8.schema.json](./doclet8.schema.json).
 
 To test, use your JSON Schema validator of choice. For example, try this:
 
