@@ -1,6 +1,4 @@
-import child_process from "child_process";
 import tmp from "tmp-promise";
-import { ChildProcess } from "./ChildProcess";
 import { Diagnostic } from "./Diagnostic";
 import { Entity } from "./Entity";
 import { loadPlugin } from "./loadPlugin";
@@ -29,11 +27,6 @@ export interface RunArgs {
     Output path.
    */
   out?: string;
-
-  /**
-    The child process interface to use.
-   */
-  child_process?: ChildProcess;
 }
 
 /**
@@ -57,7 +50,6 @@ export const run = async (args: RunArgs): Promise<void> => {
     await plugin.run({
       generator: args.generator,
       generatorArgs: args.generatorArgs,
-      child_process: args.child_process ?? child_process,
       tempDir: tempDir.path,
       onDiagnostic,
       onEntity,
