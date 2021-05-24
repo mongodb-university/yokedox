@@ -21,14 +21,16 @@ describe("loadPlugin", () => {
   });
 
   it("loads plugins from path", async () => {
-    await expect(loadPlugin({
-      generator: "test",
-      plugin: Path.join(__dirname, "test", "nonExistentPlugin"),
-    })).rejects.toThrow("Cannot find module");
+    await expect(
+      loadPlugin({
+        generator: "test",
+        plugin: Path.join(__dirname, "test", "nonExistentPlugin"),
+      })
+    ).rejects.toThrow("Cannot find module");
     const plugin = await loadPlugin({
       generator: "test",
       plugin: Path.join(__dirname, "test", "testPlugin"),
-    })
+    });
     expect(plugin).toStrictEqual(TestPlugin);
   });
 });

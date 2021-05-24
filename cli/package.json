@@ -43,6 +43,8 @@
   },
   "dependencies": {
     "exec-sh": "^0.4.0",
+    "glob": "^7.1.7",
+    "glob-promise": "^3.4.0",
     "tmp-promise": "^3.0.2",
     "yargs": "^15.4.1"
   }
