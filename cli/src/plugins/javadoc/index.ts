@@ -1,6 +1,6 @@
 import execSh from "exec-sh";
 import * as Path from "path";
-import { Plugin, PluginArgs } from "..";
+import { Plugin, PluginArgs } from "../..";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
