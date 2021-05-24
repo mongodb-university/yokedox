@@ -1,4 +1,3 @@
-import { ChildProcess } from "./ChildProcess";
 import { Diagnostic } from "./Diagnostic";
 import { Entity } from "./Entity";
 import { Page } from "./Page";
@@ -30,12 +29,6 @@ export type PluginArgs = {
     necessary.
    */
   tempDir: string;
-
-  /**
-    The interface to the shell. Plugins should use this instead of their own
-    imports of child_process.
-   */
-  child_process: ChildProcess;
 
   /**
     Additional CLI arguments to be forwarded to the generator. Plugins may
