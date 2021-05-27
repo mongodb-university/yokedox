@@ -1,9 +1,13 @@
 import execSh from "exec-sh";
 import glob from "glob-promise";
 import * as Path from "path";
+import * as md from "mdast-builder";
+import * as unist from "unist";
+import stringify from "remark-stringify";
+import unified from "unified";
 import { promises as fs } from "fs";
 import { Plugin, PluginArgs } from "../..";
-import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8";
+import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -42,13 +46,12 @@ async function execJavadoc({
     "-doclet com.yokedox.JsonDoclet8",
     ...generatorArgs,
   ].join(" ");
-  console.log("Command:", commandLine);
 
   try {
     await execSh.promise(commandLine);
   } catch (error) {
     console.error("Exit code:", error.code);
-    throw error;
+    // throw error;
   }
   return { jsonPath };
 }
@@ -79,11 +82,42 @@ async function processJson(
   await Promise.all(promises);
 }
 
+const processor = unified().use(stringify, {
+  bullet: "-",
+  fence: "`",
+  fences: true,
+  incrementListMarker: false,
+});
+
 async function processClassDoc(
   { onEntity, onPage }: PluginArgs,
   doc: ParsedClassDoc
 ): Promise<void> {
-  // TODO
+  const mdast = md.root([
+    md.heading(1, md.text(doc.asString)),
+    md.paragraph(md.text(doc.commentText)),
+    md.heading(2, md.text("Constructors")),
+    md.list(
+      "unordered",
+      doc.constructors.map((doc) =>
+        md.listItem([md.text(doc.qualifiedName), md.text(doc.flatSignature)])
+      )
+    ),
+    md.heading(2, md.text("Public Methods")),
+    md.list(
+      "unordered",
+      doc.methods
+        .filter((doc) => doc.isPublic)
+        .map((doc) =>
+          md.listItem([
+            md.text(doc.name),
+            md.text(doc.flatSignature),
+            md.paragraph(md.text(doc.commentText)),
+          ])
+        )
+    ),
+  ]);
+  console.log(processor.stringify(mdast));
 }
 
 async function processPackageDoc(
@@ -92,3 +126,5 @@ async function processPackageDoc(
 ): Promise<void> {
   // TODO
 }
+
+function makeMethodDetailNode(doc: MethodDoc): unist.Node {}

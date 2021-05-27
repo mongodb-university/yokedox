@@ -1,5 +1,5 @@
 /**
-  Any documentable object.
+  Any uniquely-identifiable, documentable object.
  */
 export type Entity = {
   id: string;

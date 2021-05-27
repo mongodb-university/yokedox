@@ -1,6 +1,4 @@
-import { Diagnostic } from "./Diagnostic";
-import { Entity } from "./Entity";
-import { Page } from "./Page";
+import { Project } from "./Project";
 
 /**
   Converts docs generator tool output to Yokedox-friendly output.
@@ -17,7 +15,7 @@ export type Plugin = {
 /**
   Passed to a plugin's run() function.
  */
-export type PluginArgs = {
+export type PluginArgs = Project & {
   /**
     The generator executable path.
    */
@@ -35,20 +33,4 @@ export type PluginArgs = {
     modify these arguments as needed.
    */
   generatorArgs: (string | number)[];
-
-  /**
-    To be called when an entity is discovered.
-   */
-  onEntity(entity: Entity): void;
-
-  /**
-    To be called when a page is complete and ready to be committed to the
-    output.
-   */
-  onPage(page: Page): void;
-
-  /**
-    To be called when a non-fatal warning or error is encountered.
-   */
-  onDiagnostic(diagnostic: Diagnostic): void;
 };
