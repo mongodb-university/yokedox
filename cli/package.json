@@ -45,7 +45,10 @@
     "exec-sh": "^0.4.0",
     "glob": "^7.1.7",
     "glob-promise": "^3.4.0",
+    "mdast-builder": "^1.1.1",
+    "remark-stringify": "^9.0.1",
     "tmp-promise": "^3.0.2",
+    "unified": "^9.2.1",
     "yargs": "^15.4.1"
   }
 }
