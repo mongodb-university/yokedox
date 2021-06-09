@@ -3,6 +3,7 @@ import { Diagnostic } from "./Diagnostic";
 import { Entity } from "./Entity";
 import { loadPlugin } from "./loadPlugin";
 import { Page } from "./Page";
+import { Project } from "./Project";
 
 /**
   Arguments passed to the run command.
@@ -34,7 +35,7 @@ export interface RunArgs {
  */
 export const run = async (args: RunArgs): Promise<void> => {
   // Validate and open output location, set up output functions
-  const { onDiagnostic, onEntity, onPage } = await createOutputCallbacks(args);
+  const project = await makeProject(args);
 
   // Load the plugin
   const plugin = await loadPlugin(args);
@@ -51,9 +52,7 @@ export const run = async (args: RunArgs): Promise<void> => {
       generator: args.generator,
       generatorArgs: args.generatorArgs,
       tempDir: tempDir.path,
-      onDiagnostic,
-      onEntity,
-      onPage,
+      ...project,
     });
   } finally {
     // This should not be needed according the tmp-promise library README, but
@@ -61,21 +60,3 @@ export const run = async (args: RunArgs): Promise<void> => {
     await tempDir.cleanup();
   }
 };
-
-async function createOutputCallbacks({ out }: { out?: string }): Promise<{
-  onDiagnostic(diagnostic: Diagnostic): void;
-  onEntity(entity: Entity): void;
-  onPage(page: Page): void;
-}> {
-  return {
-    onDiagnostic(diagnostic) {
-      // TODO
-    },
-    onEntity(entity) {
-      // TODO
-    },
-    onPage(page) {
-      // TODO
-    },
-  };
-}
