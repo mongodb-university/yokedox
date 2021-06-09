@@ -8,6 +8,7 @@ import unified from "unified";
 import { promises as fs } from "fs";
 import { Plugin, PluginArgs } from "../..";
 import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8";
+import { Project } from "../../Project";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -90,7 +91,7 @@ const processor = unified().use(stringify, {
 });
 
 async function processClassDoc(
-  { onEntity, onPage }: PluginArgs,
+  project: Project,
   doc: ParsedClassDoc
 ): Promise<void> {
   const mdast = md.root([
@@ -121,10 +122,13 @@ async function processClassDoc(
 }
 
 async function processPackageDoc(
-  args: PluginArgs,
+  project: Project,
   doc: ParsedPackageDoc
 ): Promise<void> {
   // TODO
 }
 
-function makeMethodDetailNode(doc: MethodDoc): unist.Node {}
+function makeMethodDetailNode(doc: MethodDoc): unist.Node {
+
+
+}}

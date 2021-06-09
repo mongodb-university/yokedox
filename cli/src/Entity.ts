@@ -3,4 +3,5 @@
  */
 export type Entity = {
   id: string;
+  uri: string;
 };
