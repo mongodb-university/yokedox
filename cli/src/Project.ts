@@ -16,6 +16,11 @@ export type Project = {
   addEntity(entity: Entity): void;
 
   /**
+    Returns the entity with the given id if it has been added.
+   */
+  getEntity(id: string): Entity | undefined;
+
+  /**
     Creates a link node for the given entity if it has been registered. If the
     entity does not exist, issues a warning and creates a broken link node.
    */

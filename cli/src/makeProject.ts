@@ -12,7 +12,7 @@ export async function makeProject({
   fs = promises,
 }: {
   out?: string;
-  fs: typeof promises;
+  fs?: typeof promises;
 }): Promise<Project> {
   // Use the current working directy if no output directory was provided
   const outputDirectory = Path.resolve(out ?? "");
@@ -24,20 +24,35 @@ export async function makeProject({
 
   const writePromises: Promise<void>[] = [];
   const entitiesById = new Map<string, Entity>();
+  const getUriForEntity = (entityId: string): string => {
+    const entity = entitiesById.get(entityId);
+    if (entity === undefined) {
+      throw new Error(`unknown entity id '${entityId}'`);
+    }
+    // TODO: every entity will eventually exist at a specific location. Whether
+    // that location is determined by the plugin is TBD.
+    return "this part needs work";
+  };
   return {
     addEntity(entity) {
       entitiesById.set(entity.id, entity);
     },
+    getEntity(id) {
+      return entitiesById.get(id);
+    },
     makeLink({ fromUri, toEntityId, title }) {
-      const toEntity = entitiesById.get(toEntityId);
-      if (toEntity === undefined) {
-        const error = new Error(
-          `cannot make link to entity id '${toEntityId}' from uri '${fromUri}': unknown entity`
+      try {
+        const toUri = getUriForEntity(toEntityId);
+        return md.link(toUri, title);
+      } catch (error) {
+        console.warn(
+          new Error(
+            `cannot make link to entity id '${toEntityId}' from uri '${fromUri}': ${error.message}`
+          )
         );
-        console.warn(error);
+        // TODO
         return md.link("FIXME", title);
       }
-      return md.link(toEntity.uri, title);
     },
     writePage(page) {
       const json = JSON.stringify(page);

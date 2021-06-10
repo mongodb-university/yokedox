@@ -1,9 +1,6 @@
 import tmp from "tmp-promise";
-import { Diagnostic } from "./Diagnostic";
-import { Entity } from "./Entity";
 import { loadPlugin } from "./loadPlugin";
-import { Page } from "./Page";
-import { Project } from "./Project";
+import { makeProject } from "./makeProject";
 
 /**
   Arguments passed to the run command.
@@ -35,7 +32,7 @@ export interface RunArgs {
  */
 export const run = async (args: RunArgs): Promise<void> => {
   // Validate and open output location, set up output functions
-  const project = await makeProject(args);
+  const project = await makeProject({ ...args });
 
   // Load the plugin
   const plugin = await loadPlugin(args);
