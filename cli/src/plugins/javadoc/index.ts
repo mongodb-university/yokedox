@@ -128,7 +128,7 @@ async function processPackageDoc(
   // TODO
 }
 
+/*
 function makeMethodDetailNode(doc: MethodDoc): unist.Node {
-
-
 }}
+*/
