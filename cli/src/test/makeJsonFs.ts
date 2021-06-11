@@ -11,7 +11,7 @@ import { promises } from "fs";
       { "/path/to/foo.txt": "this is the content of foo.txt" }
 
  */
-export function makeJsonFs(directoryJson: DirectoryJSON): typeof promises {
+export function makeJsonFs(directoryJson: DirectoryJSON = {}): typeof promises {
   const fsFromVolume = createFsFromVolume(Volume.fromJSON(directoryJson));
   return fsFromVolume.promises as unknown as typeof promises;
 }
