@@ -2,12 +2,22 @@
   Convenience export of mdast builder.
  */
 export * as md from "mdast-builder";
-import { link, root, rootWithTitle } from "mdast-builder";
+export { Node } from "unist";
+import { html, link, root, rootWithTitle } from "mdast-builder";
 
 /**
-  Represents a link in mdast.
+  Represents a link within the project in mdast.
  */
-export type LinkNode = ReturnType<typeof link>;
+export type InternalLinkNode = ReturnType<typeof link> & {
+  isInternalLink: true;
+};
+
+/**
+  Represents an anchor (subsection link target) in mdast.
+ */
+export type AnchorNode = ReturnType<typeof html> & {
+  anchorName: string;
+};
 
 /**
   Represents a root (page) node in mdast.

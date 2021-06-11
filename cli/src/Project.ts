@@ -1,9 +1,31 @@
 import { Page } from "./Page";
+import { Node, AnchorNode, InternalLinkNode } from "./mdast";
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.
  */
 export type Project = {
+  /**
+    Create an anchor node for the given name.
+
+    Use this method to create anchors to sections. Anchors are not official node
+    types in mdast. Using this method ensures consistency and enables link
+    validation. Anchors made without this function may not be validated.
+   */
+  makeAnchor(name: string): AnchorNode;
+
+  /**
+    Create an internal link.
+
+    Using this function for internal links enables link validation. Links made
+    without this function may not be validated.
+   */
+  makeInternalLink(
+    uri: string,
+    title?: string,
+    kids?: Node | Node[] | (() => Node | Node[]) | undefined
+  ): InternalLinkNode;
+
   /**
     To be called when a page is complete and ready to be committed to the
     output.
