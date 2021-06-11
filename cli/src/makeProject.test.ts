@@ -33,16 +33,4 @@ describe("makeProject", () => {
       )}'`
     );
   });
-
-  it("makes links for registered entities", async () => {
-    const fs = makeJsonFs({
-      "/file.txt": "this is the only file on the system",
-    });
-    const project = await makeProject({ out: "/", fs });
-    expect(project.getEntity("some.entity")).toBeUndefined();
-    project.addEntity({
-      id: "some.entity",
-    });
-    expect(project.getEntity("some.entity")?.id).toBe("some.entity");
-  });
 });
