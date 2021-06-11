@@ -21,7 +21,7 @@ export type Project = {
     without this function may not be validated.
    */
   makeInternalLink(
-    uri: string,
+    path: string,
     title?: string,
     kids?: Node | Node[] | (() => Node | Node[]) | undefined
   ): InternalLinkNode;
@@ -32,15 +32,17 @@ export type Project = {
 
     Before writing to disk, we validate any links to other pages. A link is
     "resolvable" if the target page was already passed to `writePage()`. If the
-    link has a fragment in the URI (i.e. a link to an 'anchor' or subsection
-    within a page), the link is only resolvable if that specific anchor was
-    added on that page.
+    link has a fragment (i.e. a link to an 'anchor' or subsection within a
+    page), the link is only resolvable if that specific anchor was added on that
+    page.
 
     If all links on the page are resolvable, the page gets written to disk.
     Otherwise, the page is held until you call `finalize()`, at which point we
     make a final attempt to resolve the links.
+
+    You do not need to await this.
    */
-  writePage(page: Page): void;
+  writePage(page: Page): Promise<void> | void;
 
   /**
     Flushes any remaining page writes after a final attempt to resolve any links
