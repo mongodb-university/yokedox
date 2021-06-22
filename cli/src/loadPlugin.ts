@@ -1,5 +1,5 @@
 import * as Path from "path";
-import { Plugin } from "./Plugin";
+import { Plugin } from "./Plugin.js";
 
 /**
   Loads the plugin corresponding to the given generator or from the specified

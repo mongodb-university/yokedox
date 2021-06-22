@@ -1,4 +1,4 @@
-import { Project } from "./Project";
+import { Project } from "./Project.js";
 
 /**
   Converts docs generator tool output to Yokedox-friendly output.

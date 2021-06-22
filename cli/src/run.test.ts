@@ -1,4 +1,4 @@
-import { run } from "./run";
+import { run } from "./run.js";
 
 describe("run", () => {
   it("throws on unknown generator", async () => {
