@@ -46,10 +46,10 @@ export const run = async (args: RunArgs): Promise<void> => {
   try {
     // Delegate to plugin
     await plugin.run({
+      project,
       generator: args.generator,
       generatorArgs: args.generatorArgs,
       tempDir: tempDir.path,
-      ...project,
     });
   } finally {
     // This should not be needed according the tmp-promise library README, but
