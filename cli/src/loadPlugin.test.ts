@@ -1,5 +1,5 @@
 import * as Path from "path";
-import { loadPlugin } from "./loadPlugin";
+import { loadPlugin } from "./loadPlugin.js";
 import Javadoc from "./plugins/javadoc";
 import TestPlugin from "./test/testPlugin";
 
