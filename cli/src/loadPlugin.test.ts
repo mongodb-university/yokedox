@@ -1,7 +1,7 @@
 import * as Path from "path";
 import { loadPlugin } from "./loadPlugin.js";
-import Javadoc from "./plugins/javadoc";
-import TestPlugin from "./test/testPlugin";
+import Javadoc from "./plugins/javadoc/index.js";
+import TestPlugin from "./test/testPlugin.js";
 
 describe("loadPlugin", () => {
   it("loads built-in plugins", async () => {

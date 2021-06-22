@@ -1,6 +1,6 @@
 import tmp from "tmp-promise";
-import { loadPlugin } from "./loadPlugin";
-import { makeProject } from "./makeProject";
+import { loadPlugin } from "./loadPlugin.js";
+import { makeProject } from "./makeProject.js";
 
 /**
   Arguments passed to the run command.

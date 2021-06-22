@@ -1,3 +1,3 @@
-export * from "./Plugin";
-export * from "./cli";
-export * from "./run";
+export * from "./Plugin.js";
+export * from "./cli.js";
+export * from "./run.js";

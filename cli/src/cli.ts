@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
 import yargs from "yargs";
-import { run } from "./run";
+import { run } from "./run.js";
 
 /**
   cli is a function that processes command line arguments. Without args, uses

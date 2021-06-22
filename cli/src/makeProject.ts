@@ -1,9 +1,9 @@
 import * as Path from "path";
 import { visit } from "unist-util-visit";
 import { promises } from "fs";
-import { Project } from "./Project";
-import { Page } from "./Page";
-import { AnchorNode, InternalLinkNode, md } from "./mdast";
+import { Project } from "./Project.js";
+import { Page } from "./Page.js";
+import { AnchorNode, InternalLinkNode, md } from "./mdast.js";
 
 /**
   Creates a project object, which is a collection of documentation pages.
