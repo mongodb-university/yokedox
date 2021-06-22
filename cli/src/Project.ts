@@ -1,5 +1,5 @@
-import { Page } from "./Page";
-import { Node, AnchorNode, InternalLinkNode } from "./mdast";
+import { Page } from "./Page.js";
+import { Node, AnchorNode, InternalLinkNode } from "./mdast.js";
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.

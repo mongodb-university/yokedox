@@ -6,10 +6,10 @@ import * as md from "mdast-builder";
 import stringify from "remark-stringify";
 import unified from "unified";
 import { promises as fs } from "fs";
-import { Plugin, PluginArgs } from "../..";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8";
-import { Project } from "../../Project";
-import { Node } from "../../mdast";
+import { Plugin, PluginArgs } from "../../index.js";
+import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
+import { Project } from "../../Project.js";
+import { Node } from "../../mdast.js";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
