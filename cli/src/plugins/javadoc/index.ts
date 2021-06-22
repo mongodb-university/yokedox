@@ -1,14 +1,15 @@
+import { strict as assert } from "assert";
 import execSh from "exec-sh";
 import glob from "glob-promise";
 import * as Path from "path";
 import * as md from "mdast-builder";
-import * as unist from "unist";
 import stringify from "remark-stringify";
 import unified from "unified";
 import { promises as fs } from "fs";
 import { Plugin, PluginArgs } from "../..";
 import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8";
 import { Project } from "../../Project";
+import { Node } from "../../mdast";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -63,7 +64,7 @@ async function execJavadoc({
 async function processJson(
   args: PluginArgs & ExecJavadocResult
 ): Promise<void> {
-  const { jsonPath } = args;
+  const { jsonPath, project } = args;
   // Glob files in jsonPath and open them
   const paths = await glob(Path.join(jsonPath, "/") + "**/*.json");
   const promises = paths.map(async (path) => {
@@ -73,14 +74,15 @@ async function processJson(
     const { _class } = data;
     switch (_class) {
       case "ParsedClassDoc":
-        return processClassDoc(args, data as ParsedClassDoc);
+        return processClassDoc(project, data as ParsedClassDoc);
       case "ParsedPackageDoc":
-        return processPackageDoc(args, data as ParsedPackageDoc);
+        return processPackageDoc(project, data as ParsedPackageDoc);
       default:
         throw new Error(`Unexpected _class type: ${_class}`);
     }
   });
   await Promise.all(promises);
+  await project.finalize();
 }
 
 const processor = unified().use(stringify, {
@@ -104,6 +106,22 @@ async function processClassDoc(
         md.listItem([md.text(doc.qualifiedName), md.text(doc.flatSignature)])
       )
     ),
+
+    // Field Summary
+    makeTable(
+      ["Modifier and Type", "Field and Description"],
+      doc.fields.map((fieldDoc) => [
+        md.paragraph([
+          md.text(fieldDoc.modifiers),
+          md.text(fieldDoc.type.asString),
+        ]),
+        md.paragraph([
+          md.text(fieldDoc.qualifiedName),
+          md.text(fieldDoc.commentText),
+        ]),
+      ])
+    ),
+
     md.heading(2, md.text("Public Methods")),
     md.list(
       "unordered",
@@ -126,6 +144,22 @@ async function processPackageDoc(
   doc: ParsedPackageDoc
 ): Promise<void> {
   // TODO
+}
+
+function makeTable(labels: string[], rows: Node[][]) {
+  return md.table(
+    Array(labels.length).map(() => "left"),
+    [
+      md.tableRow(labels.map((label) => md.tableCell([md.text(label)]))),
+      ...rows.map((row) => {
+        assert(
+          row.length === labels.length,
+          "expected row and label length to match"
+        );
+        return md.tableRow(row.map((cell) => md.tableCell(cell)));
+      }),
+    ]
+  );
 }
 
 /*

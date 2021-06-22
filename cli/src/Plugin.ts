@@ -15,7 +15,12 @@ export type Plugin = {
 /**
   Passed to a plugin's run() function.
  */
-export type PluginArgs = Project & {
+export type PluginArgs = {
+  /**
+    The project to write to.
+   */
+  project: Project;
+
   /**
     The generator executable path.
    */
