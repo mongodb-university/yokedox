@@ -3,14 +3,13 @@ import execSh from "exec-sh";
 import glob from "glob-promise";
 import * as Path from "path";
 import * as md from "mdast-builder";
-import stringify from "remark-stringify";
-import unified from "unified";
 import { promises as fs } from "fs";
 import { cliSourceDirectory } from "../../cliSourceDirectory.js";
 import { Plugin, PluginArgs } from "../../index.js";
 import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../mdast.js";
+import { Page } from "../../Page.js";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -86,18 +85,11 @@ async function processJson(
   await project.finalize();
 }
 
-const processor = unified().use(stringify, {
-  bullet: "-",
-  fence: "`",
-  fences: true,
-  incrementListMarker: false,
-});
-
 async function processClassDoc(
   project: Project,
   doc: ParsedClassDoc
 ): Promise<void> {
-  const mdast = md.root([
+  const root = md.root([
     md.heading(1, md.text(doc.asString)),
     md.paragraph(md.text(doc.commentText)),
     md.heading(2, md.text("Constructors")),
@@ -106,6 +98,15 @@ async function processClassDoc(
       doc.constructors.map((doc) =>
         md.listItem([md.text(doc.qualifiedName), md.text(doc.flatSignature)])
       )
+    ),
+
+    // Nested Class Summary
+    makeTable(
+      ["Modifier and Type", "Class and Description"],
+      doc.innerClasses.map((classDoc) => [
+        md.text(classDoc.asString),
+        md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
+      ])
     ),
 
     // Field Summary
@@ -137,7 +138,8 @@ async function processClassDoc(
         )
     ),
   ]);
-  console.log(processor.stringify(mdast));
+  const path = `/${doc.asString}`;
+  project.writePage(new Page(path, root));
 }
 
 async function processPackageDoc(
