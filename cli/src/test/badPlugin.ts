@@ -1,1 +1,1 @@
-// This plugin does not export default
+// This plugin does not export anything

@@ -1,4 +1,5 @@
 import * as Path from "path";
+import { cliSourceDirectory } from "./cliSourceDirectory.js";
 import { loadPlugin } from "./loadPlugin.js";
 import Javadoc from "./plugins/javadoc/index.js";
 import TestPlugin from "./test/testPlugin.js";
@@ -13,23 +14,21 @@ describe("loadPlugin", () => {
     await expect(
       loadPlugin({
         generator: "test",
-        plugin: Path.join(__dirname, "test", "badPlugin"),
+        plugin: Path.join(cliSourceDirectory, "test", "badPlugin"),
       })
-    ).rejects.toThrow(
-      "expected function run(args) on exported default object, but no such function found."
-    );
+    ).rejects.toThrow("No default export found in plugin");
   });
 
   it("loads plugins from path", async () => {
     await expect(
       loadPlugin({
         generator: "test",
-        plugin: Path.join(__dirname, "test", "nonExistentPlugin"),
+        plugin: Path.join(cliSourceDirectory, "test", "nonExistentPlugin"),
       })
     ).rejects.toThrow("Cannot find module");
     const plugin = await loadPlugin({
       generator: "test",
-      plugin: Path.join(__dirname, "test", "testPlugin"),
+      plugin: Path.join(cliSourceDirectory, "test", "testPlugin"),
     });
     expect(plugin).toStrictEqual(TestPlugin);
   });

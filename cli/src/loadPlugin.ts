@@ -1,4 +1,5 @@
 import * as Path from "path";
+import { cliSourceDirectory } from "./cliSourceDirectory.js";
 import { Plugin } from "./Plugin.js";
 
 /**
@@ -15,7 +16,9 @@ export const loadPlugin = async ({
   if (plugin === undefined) {
     const generatorName = Path.basename(generator);
     // Try to load from the built-in plugins directory.
-    return loadPluginAtPath(Path.join(__dirname, "plugins", generatorName));
+    return loadPluginAtPath(
+      Path.join(cliSourceDirectory, "plugins", generatorName, "index.js")
+    );
   }
   return loadPluginAtPath(plugin);
 };
