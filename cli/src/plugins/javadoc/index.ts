@@ -6,8 +6,9 @@ import * as md from "mdast-builder";
 import stringify from "remark-stringify";
 import unified from "unified";
 import { promises as fs } from "fs";
+import { cliSourceDirectory } from "../../cliSourceDirectory.js";
 import { Plugin, PluginArgs } from "../../index.js";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
+import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../mdast.js";
 
@@ -35,9 +36,9 @@ async function execJavadoc({
   tempDir,
 }: PluginArgs): Promise<ExecJavadocResult> {
   const docletPath = Path.resolve(
-    __dirname,
+    cliSourceDirectory,
     // TODO: Source from build directory
-    "../../../../plugins/JsonDocletJava8/build/libs/JsonDocletJava8-all.jar"
+    "../../plugins/JsonDocletJava8/build/libs/JsonDocletJava8-all.jar"
   );
 
   const jsonPath = Path.resolve(tempDir, "javadoc");

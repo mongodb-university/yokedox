@@ -7,6 +7,6 @@ describe("run", () => {
         generatorArgs: [],
         generator: "unknown",
       })
-    ).rejects.toThrow("Cannot find module");
+    ).rejects.toThrow("Could not locate module");
   });
 });
