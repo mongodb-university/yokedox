@@ -8,7 +8,7 @@ import { cliSourceDirectory } from "../../cliSourceDirectory.js";
 import { Plugin, PluginArgs } from "../../index.js";
 import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { Project } from "../../Project.js";
-import { Node } from "../../mdast.js";
+import { Node, Parent } from "../../mdast.js";
 import { Page } from "../../Page.js";
 
 const Javadoc: Plugin = {
@@ -104,7 +104,7 @@ async function processClassDoc(
     makeTable(
       ["Modifier and Type", "Class and Description"],
       doc.innerClasses.map((classDoc) => [
-        md.text(classDoc.asString),
+        md.text(classDoc.modifiers),
         md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
       ])
     ),
@@ -115,28 +115,31 @@ async function processClassDoc(
       doc.fields.map((fieldDoc) => [
         md.paragraph([
           md.text(fieldDoc.modifiers),
+          md.text(" "),
           md.text(fieldDoc.type.asString),
         ]),
-        md.paragraph([
-          md.text(fieldDoc.qualifiedName),
-          md.text(fieldDoc.commentText),
-        ]),
+        [md.paragraph(md.text(fieldDoc.name)), md.text(fieldDoc.commentText)],
       ])
     ),
 
-    md.heading(2, md.text("Public Methods")),
-    md.list(
-      "unordered",
-      doc.methods
-        .filter((doc) => doc.isPublic)
-        .map((doc) =>
-          md.listItem([
+    md.heading(2, md.text("Method Summary")),
+    makeTable(
+      ["Modifier and Type", "Method and Description"],
+      doc.methods.map((doc) => [
+        [md.text(doc.modifiers), md.text(doc.returnType.typeName)],
+        [
+          md.paragraph([
             md.text(doc.name),
-            md.text(doc.flatSignature),
-            md.paragraph(md.text(doc.commentText)),
-          ])
-        )
+            ...doc.parameters.map((parameter) => md.text(parameter.asString)),
+          ]),
+          md.paragraph(md.text(doc.commentText)),
+        ],
+      ])
     ),
+
+    md.heading(2, md.text("Method Detail")),
+
+    ...doc.methods.map((doc) => [md.heading(3, md.text(doc.name))]).flat(1),
   ]);
   const path = `/${doc.asString}`;
   project.writePage(new Page(path, root));
@@ -149,7 +152,7 @@ async function processPackageDoc(
   // TODO
 }
 
-function makeTable(labels: string[], rows: Node[][]) {
+function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   return md.table(
     Array(labels.length).map(() => "left"),
     [
