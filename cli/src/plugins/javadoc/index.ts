@@ -100,7 +100,7 @@ async function processClassDoc(
       )
     ),
 
-    // Nested Class Summary
+    md.heading(2, md.text("Nested Class Summary")),
     makeTable(
       ["Modifier and Type", "Class and Description"],
       doc.innerClasses.map((classDoc) => [
@@ -109,7 +109,7 @@ async function processClassDoc(
       ])
     ),
 
-    // Field Summary
+    md.heading(2, md.text("Field Summary")),
     makeTable(
       ["Modifier and Type", "Field and Description"],
       doc.fields.map((fieldDoc) => [

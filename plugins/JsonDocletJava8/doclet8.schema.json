@@ -188,8 +188,11 @@
       "allOf": [
         { "$ref": "#/definitions/Type" },
         {
-          "required": ["_class"],
-          "properties": { "_class": { "const": "ClassDoc" } }
+          "required": ["_class", "modifiers"],
+          "properties": {
+            "_class": { "const": "ClassDoc" },
+            "modifiers": { "type": "string" }
+          }
         }
       ]
     },
