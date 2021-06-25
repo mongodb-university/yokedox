@@ -69,7 +69,13 @@ fun toJson(v: ClassDoc?): JsonObject? {
     if (v == null) {
         return null
     }
-    return toJson(v as Type?)
+    val value = mutableMapOf<String, Any?>()
+    value.putAll(toJson(v as Type?) as JsonObject)
+    // Include the useful and non-recursive 'modifiers' field
+    value.putAll(mapOf(
+      "modifiers" to v.modifiers(),
+    ))
+    return value
 }
 
 /**
