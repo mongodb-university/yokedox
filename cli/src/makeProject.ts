@@ -1,4 +1,7 @@
 import * as Path from "path";
+import { strict as assert } from "assert";
+import { toMarkdown } from "mdast-util-to-markdown";
+import { gfmTableToMarkdown } from "mdast-util-gfm-table";
 import { visit } from "unist-util-visit";
 import { promises } from "fs";
 import { Project } from "./Project.js";
@@ -11,9 +14,13 @@ import { AnchorNode, InternalLinkNode, md } from "./mdast.js";
 export async function makeProject({
   out,
   fs = promises,
+  outputMdastJson = false,
+  outputMarkdown = true,
 }: {
   out?: string;
   fs?: typeof promises;
+  outputMdastJson?: boolean;
+  outputMarkdown?: boolean;
 }): Promise<Project> {
   // Use the current working directy if no output directory was provided
   const outputDirectory = Path.resolve(out ?? "");
@@ -24,10 +31,27 @@ export async function makeProject({
   }
 
   const flushPage = async (page: Page): Promise<void> => {
-    const json = JSON.stringify(page);
-    const outputPath = Path.join(outputDirectory, `${page.path}.json`);
-    await fs.mkdir(Path.dirname(outputPath), { recursive: true });
-    await fs.writeFile(outputPath, json, "utf8");
+    await fs.mkdir(outputDirectory, { recursive: true });
+    const files: { outputPath: string; data: string }[] = [];
+    assert(
+      outputMarkdown || outputMdastJson,
+      "expected at least one option: outputMarkdown, outputMdastJson"
+    );
+    if (outputMdastJson) {
+      const data = JSON.stringify(page);
+      const outputPath = Path.join(outputDirectory, `${page.path}.json`);
+      files.push({ outputPath, data });
+    }
+    if (outputMarkdown) {
+      const data = toMarkdown(page.root, {
+        extensions: [gfmTableToMarkdown()],
+      });
+      const outputPath = Path.join(outputDirectory, `${page.path}.md`);
+      files.push({ outputPath, data });
+    }
+    await Promise.all(
+      files.map((file) => fs.writeFile(file.outputPath, file.data, "utf8"))
+    );
   };
 
   const pendingPages: Page[] = [];
