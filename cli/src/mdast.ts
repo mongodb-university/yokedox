@@ -2,7 +2,7 @@
   Convenience export of mdast builder.
  */
 export * as md from "mdast-builder";
-export { Node } from "unist";
+export { Node, Parent } from "unist";
 import { html, link, root, rootWithTitle } from "mdast-builder";
 
 /**
