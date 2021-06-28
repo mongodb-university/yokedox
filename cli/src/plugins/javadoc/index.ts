@@ -8,8 +8,9 @@ import { cliSourceDirectory } from "../../cliSourceDirectory.js";
 import { Plugin, PluginArgs } from "../../index.js";
 import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { Project } from "../../Project.js";
-import { Node, Parent } from "../../mdast.js";
+import { Node } from "../../mdast.js";
 import { Page } from "../../Page.js";
+import { mdFromTags } from "./mdFromTags.js";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -91,7 +92,7 @@ async function processClassDoc(
 ): Promise<void> {
   const root = md.root([
     md.heading(1, md.text(doc.asString)),
-    md.paragraph(md.text(doc.commentText)),
+    ...mdFromTags(project, doc.inlineTags),
     md.heading(2, md.text("Constructors")),
     md.list(
       "unordered",
@@ -167,8 +168,3 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
     ]
   );
 }
-
-/*
-function makeMethodDetailNode(doc: MethodDoc): unist.Node {
-}}
-*/
