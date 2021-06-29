@@ -92,7 +92,7 @@ async function processClassDoc(
 ): Promise<void> {
   const root = md.root([
     md.heading(1, md.text(doc.asString)),
-    ...tagsToMdast(project, doc.inlineTags),
+    tagsToMdast(project, doc.inlineTags),
     md.heading(2, md.text("Constructors")),
     md.list(
       "unordered",
