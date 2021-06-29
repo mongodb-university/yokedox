@@ -1,6 +1,7 @@
 import { strict as assert } from "assert";
 import * as md from "mdast-builder";
 import { Node, Parent } from "../../mdast.js";
+import { phrasing as isPhrasing } from "mdast-util-phrasing";
 import { Project } from "../../Project.js";
 import {
   AnyTag,
@@ -22,24 +23,35 @@ export function tagsToMdast(project: Project, tags: AnyTag[]): Node[] {
       return (visit as (t: AnyTag, i: Project) => Node[])(tag, project);
     })
     .flat(1);
-  // All nodes should be in a paragraph, so scoop them into paragraphs.
-  const paragraphs: Node[] = [];
+
+  // All unwrapped 'phrasing' nodes should be in a paragraph, so scoop them into
+  // paragraphs. See mdast's content model for details on 'phrasing'.
+  const result: Node[] = [];
   let paragraph: Parent | undefined;
   nodes.forEach((node) => {
     if (node.type === "paragraph") {
-      // Start scooping subsequent non-paragraph nodes into this paragraph
+      // Start scooping subsequent non-phrasing nodes into this paragraph
       paragraph = node as Parent;
-      paragraphs.push(paragraph);
+      result.push(paragraph);
+      return;
+    }
+    if (!isPhrasing(node)) {
+      // Non-phrasing nodes go after the current paragraph.
+      paragraph = undefined;
+      result.push(node);
       return;
     }
     if (paragraph === undefined) {
-      // All non-paragraph nodes will be in a paragraph
+      // All phrasing nodes will be in a paragraph
       paragraph = md.paragraph();
-      paragraphs.push(paragraph);
+      result.push(paragraph);
+    } else if (node.type !== "text" || /^[A-z]/.test(node.value)) {
+      // Ensure separation between elements in the paragraph.
+      paragraph.children.push(md.text(" "));
     }
     paragraph.children.push(node);
   });
-  return paragraphs;
+  return result;
 }
 
 type TagVisitor<In = void, Out = void> = {
@@ -58,16 +70,16 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
         const mdast = parseHtmlToMdast(tag.text);
         // Don't return "root" node
         assert(mdast.type === "root");
-        return [...mdast.children, md.text(" ")];
+        return mdast.children;
       }
       case "@code":
-        return [md.inlineCode(tag.text), md.text(" ")];
+        return md.inlineCode(tag.text);
       default:
-        return [md.text(tag.text), md.text(" ")];
+        return md.text(tag.text);
     }
   },
   SeeTag(tag) {
     // TODO: Turn this into an actual link
-    return [md.strong(md.text(tag.text)), md.text(" ")];
+    return md.strong(md.text(tag.text));
   },
 };
