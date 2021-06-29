@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import unified from "unified";
 import * as md from "mdast-builder";
 import { Node } from "../../mdast.js";
 import { Project } from "../../Project.js";
@@ -11,7 +12,6 @@ import {
   ThrowsTag,
 } from "./doclet8.js";
 import { parseHtmlToMdast } from "./parseHtmlToMdast.js";
-import unified from "unified";
 import { scoopPhrasingNodesIntoParagraph } from "./scoopPhrasingNodesIntoParagraph.js";
 
 export function tagsToMdast(project: Project, tags: AnyTag[]): Node {
@@ -51,8 +51,11 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
         return md.text(tag.text);
     }
   },
-  SeeTag(tag) {
-    // TODO: Turn this into an actual link
-    return md.strong(md.text(tag.text));
+  SeeTag({ referencedMemberName, referencedClassName, text }, project) {
+    let target = `${referencedClassName}.md`; // TODO: Avoid using explicit filenames (.md)
+    if (referencedMemberName !== undefined) {
+      target = `${target}#${referencedMemberName}`;
+    }
+    return project.makeInternalLink(target, text, md.text(text));
   },
 };

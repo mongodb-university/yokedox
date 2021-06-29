@@ -97,18 +97,7 @@ export async function makeProject({
       );
 
       // Find all internal link nodes and check for invalid anchors
-      const missingLinks: string[] = [];
-      visit(
-        page.root,
-        (node) => node.type === "link" && node.isInternalLink === true,
-        (node) => {
-          const link = node as InternalLinkNode;
-          const { url } = link;
-          if (!validPaths.has(url)) {
-            missingLinks.push(url);
-          }
-        }
-      );
+      const missingLinks = findMissingLinks({ page, validPaths });
 
       // If any links are missing, hold page
       if (missingLinks.length !== 0) {
@@ -150,7 +139,16 @@ export async function makeProject({
       // and flush the pages.
       writePromises.push(
         ...pendingPages.map((page) => {
-          console.warn(`page ${page.path} has unresolved internal links!`);
+          console.warn(
+            `page ${
+              page.path
+            } has unresolved internal links:\n${findMissingLinks({
+              page,
+              validPaths,
+            })
+              .map((link) => `  ${link}`)
+              .join("\n")}`
+          );
           return flushPage(page);
         })
       );
@@ -171,4 +169,26 @@ export async function makeProject({
       return project.writePage(page);
     },
   };
+}
+
+function findMissingLinks({
+  page,
+  validPaths,
+}: {
+  page: Page;
+  validPaths: Set<string>;
+}): string[] {
+  const missingLinks: string[] = [];
+  visit(
+    page.root,
+    (node) => node.type === "link" && node.isInternalLink === true,
+    (node) => {
+      const link = node as InternalLinkNode;
+      const { url } = link;
+      if (!validPaths.has(url)) {
+        missingLinks.push(url);
+      }
+    }
+  );
+  return missingLinks;
 }
