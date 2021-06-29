@@ -55,7 +55,7 @@ export type TypeVariable = Type & {
 };
 export type ClassDoc = Type & {
   _class: "ClassDoc";
-  modifiers: string;
+  modifiers?: string;
   [k: string]: unknown;
 };
 export type AnyDoc =

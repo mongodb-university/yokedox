@@ -105,7 +105,7 @@ async function processClassDoc(
     makeTable(
       ["Modifier and Type", "Class and Description"],
       doc.innerClasses.map((classDoc) => [
-        md.text(classDoc.modifiers),
+        md.text(classDoc.modifiers ?? ""),
         md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
       ])
     ),
