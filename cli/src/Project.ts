@@ -23,7 +23,7 @@ export type Project = {
   makeInternalLink(
     path: string,
     title?: string,
-    kids?: Node | Node[] | (() => Node | Node[]) | undefined
+    kids?: Node | Node[] | (() => Node | Node[])
   ): InternalLinkNode;
 
   /**
