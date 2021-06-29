@@ -31,7 +31,6 @@ export async function makeProject({
   }
 
   const flushPage = async (page: Page): Promise<void> => {
-    await fs.mkdir(outputDirectory, { recursive: true });
     const files: { outputPath: string; data: string }[] = [];
     assert(
       outputMarkdown || outputMdastJson,
@@ -50,7 +49,11 @@ export async function makeProject({
       files.push({ outputPath, data });
     }
     await Promise.all(
-      files.map((file) => fs.writeFile(file.outputPath, file.data, "utf8"))
+      files.map(async (file) => {
+        const { outputPath } = file;
+        await fs.mkdir(Path.dirname(outputPath), { recursive: true });
+        fs.writeFile(outputPath, file.data, "utf8");
+      })
     );
   };
 
