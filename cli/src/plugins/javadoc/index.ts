@@ -140,7 +140,15 @@ async function processClassDoc(
 
     md.heading(2, md.text("Method Detail")),
 
-    ...doc.methods.map((doc) => [md.heading(3, md.text(doc.name))]).flat(1),
+    ...doc.methods
+      .map((doc) => [
+        project.makeAnchor(
+          `${doc.name}${doc.flatSignature.replace(/\s/g, "")}`
+        ),
+        md.heading(3, md.text(doc.name)),
+        tagsToMdast(project, doc.inlineTags),
+      ])
+      .flat(1),
   ]);
   const path = `/${doc.asString}`;
   project.writePage(new Page(path, root));
