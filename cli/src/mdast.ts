@@ -3,7 +3,7 @@
  */
 export * as md from "mdast-builder";
 export { Node, Parent } from "unist";
-import { html, link, root, rootWithTitle } from "mdast-builder";
+import { code, html, link, root, rootWithTitle } from "mdast-builder";
 
 /**
   Represents a link within the project in mdast.
@@ -25,3 +25,5 @@ export type AnchorNode = ReturnType<typeof html> & {
 export type RootNode =
   | ReturnType<typeof root>
   | ReturnType<typeof rootWithTitle>;
+
+export type CodeNode = ReturnType<typeof code>;
