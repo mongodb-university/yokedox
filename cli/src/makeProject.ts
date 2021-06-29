@@ -14,7 +14,7 @@ import { AnchorNode, InternalLinkNode, md } from "./mdast.js";
 export async function makeProject({
   out,
   fs = promises,
-  outputMdastJson = false,
+  outputMdastJson = true,
   outputMarkdown = true,
 }: {
   out?: string;

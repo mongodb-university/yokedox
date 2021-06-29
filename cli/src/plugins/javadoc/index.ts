@@ -10,7 +10,7 @@ import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../mdast.js";
 import { Page } from "../../Page.js";
-import { mdFromTags } from "./mdFromTags.js";
+import { tagsToMdast } from "./tagsToMdast.js";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {
@@ -92,7 +92,7 @@ async function processClassDoc(
 ): Promise<void> {
   const root = md.root([
     md.heading(1, md.text(doc.asString)),
-    ...mdFromTags(project, doc.inlineTags),
+    ...tagsToMdast(project, doc.inlineTags),
     md.heading(2, md.text("Constructors")),
     md.list(
       "unordered",
@@ -133,7 +133,7 @@ async function processClassDoc(
             md.text(doc.name),
             ...doc.parameters.map((parameter) => md.text(parameter.asString)),
           ]),
-          md.paragraph(md.text(doc.commentText)),
+          md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
         ],
       ])
     ),
