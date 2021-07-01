@@ -267,12 +267,21 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
           doc.methods.map((doc) => [
             [md.text(doc.modifiers), md.text(doc.returnType.typeName)],
             [
-              md.paragraph([
-                md.text(doc.name),
-                ...doc.parameters.map((parameter) =>
-                  md.text(parameter.asString)
-                ),
-              ]),
+              md.paragraph(
+                project.makeInternalLink(`#${doc.name}`, `#${doc.name}`, [
+                  md.text(doc.name),
+                  md.text("("),
+                  ...doc.parameters
+                    .map((parameter, i) => [
+                      md.text(parameter.asString),
+                      i === doc.parameters.length - 1
+                        ? md.text("")
+                        : md.text(", "),
+                    ])
+                    .flat(1),
+                  md.text(")\n\n"),
+                ])
+              ),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
           ])
