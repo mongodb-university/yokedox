@@ -292,7 +292,24 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       project,
       doc,
       depth,
+      title: "Field Detail",
+      shouldMakeSection: () => doc.fields.length !== 0,
+      makeBody: () =>
+        doc.fields
+          .map((doc) => [
+            project.makeAnchor(`${doc.name}${doc.name.replace(/\s/g, "")}`),
+            md.heading(3, md.text(doc.name)),
+            tagsToMdast(project, doc.inlineTags),
+          ])
+          .flat(1),
+    }),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
       title: "Method Detail",
+      shouldMakeSection: () => doc.methods.length !== 0,
       makeBody: () =>
         doc.methods
           .map((doc) => [
