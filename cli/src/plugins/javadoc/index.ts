@@ -92,7 +92,13 @@ async function processClassDoc(
 ): Promise<void> {
   const root = md.root([
     md.heading(1, md.text(doc.asString)),
+
+    // Class hierarchy
+    ...makeSuperclassList(doc),
+
+    // Comment body
     tagsToMdast(project, doc.inlineTags),
+
     md.heading(2, md.text("Constructors")),
     md.list(
       "unordered",
@@ -175,4 +181,16 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
       }),
     ]
   );
+}
+
+function makeSuperclassList(doc: ParsedClassDoc) {
+  const { superclassType } = doc;
+  if (superclassType == null) {
+    return [];
+  }
+
+  return [
+    md.paragraph(md.emphasis(md.text("Superclass:"))),
+    md.list("unordered", [md.listItem(md.text(superclassType.asString))]),
+  ];
 }
