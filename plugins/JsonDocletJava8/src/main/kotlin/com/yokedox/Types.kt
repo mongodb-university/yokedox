@@ -9,9 +9,15 @@ fun toJson(v: Type?): JsonObject? {
     if (v == null) {
         return null
     }
+
     val value = mutableMapOf(
         "_class" to "Type",
-        "asString" to v.toString(),
+        "asString" to try {
+            v.toString()
+        } catch (e: NullPointerException) {
+            // This might fail on some types for some reason.
+            "${v.qualifiedTypeName()} (toString() failed)"
+        },
         "typeName" to v.typeName(),
         "qualifiedTypeName" to v.qualifiedTypeName(),
         "simpleTypeName" to v.simpleTypeName(),

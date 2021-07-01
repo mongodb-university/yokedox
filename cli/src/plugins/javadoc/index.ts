@@ -94,7 +94,10 @@ async function processClassDoc(
     md.heading(1, md.text(doc.asString)),
 
     // Class hierarchy
-    ...makeSuperclassList(doc),
+    ...makeSuperclassList(project, doc),
+
+    // Implemented interfaces
+    ...makeImplementedInterfacesList(project, doc),
 
     // Comment body
     tagsToMdast(project, doc.inlineTags),
@@ -183,14 +186,41 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   );
 }
 
-function makeSuperclassList(doc: ParsedClassDoc) {
+function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   const { superclassType } = doc;
   if (superclassType == null) {
     return [];
   }
 
+  const { qualifiedTypeName } = superclassType;
   return [
     md.paragraph(md.emphasis(md.text("Superclass:"))),
-    md.list("unordered", [md.listItem(md.text(superclassType.asString))]),
+    md.list("unordered", [
+      md.listItem(
+        project.makeInternalLink(qualifiedTypeName, qualifiedTypeName, [
+          md.text(qualifiedTypeName),
+        ])
+      ),
+    ]),
+  ];
+}
+
+function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
+  const { interfaceTypes } = doc;
+  if (interfaceTypes.length === 0) {
+    return [];
+  }
+  return [
+    md.paragraph(md.emphasis(md.text("Implemented interfaces:"))),
+    md.list(
+      "unordered",
+      interfaceTypes.map(({ qualifiedTypeName }) =>
+        md.listItem(
+          project.makeInternalLink(qualifiedTypeName, qualifiedTypeName, [
+            md.text(qualifiedTypeName),
+          ])
+        )
+      )
+    ),
   ];
 }
