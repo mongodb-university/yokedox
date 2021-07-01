@@ -90,75 +90,15 @@ async function processClassDoc(
   project: Project,
   doc: ParsedClassDoc
 ): Promise<void> {
-  const root = md.root([
-    md.heading(1, md.text(doc.asString)),
-
-    // Class hierarchy
-    ...makeSuperclassList(project, doc),
-
-    // Implemented interfaces
-    ...makeImplementedInterfacesList(project, doc),
-
-    // Comment body
-    tagsToMdast(project, doc.inlineTags),
-
-    md.heading(2, md.text("Constructors")),
-    md.list(
-      "unordered",
-      doc.constructors.map((doc) =>
-        md.listItem([md.text(doc.qualifiedName), md.text(doc.flatSignature)])
-      )
-    ),
-
-    md.heading(2, md.text("Nested Class Summary")),
-    makeTable(
-      ["Modifier and Type", "Class and Description"],
-      doc.innerClasses.map((classDoc) => [
-        md.text(classDoc.modifiers ?? ""),
-        md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
-      ])
-    ),
-
-    md.heading(2, md.text("Field Summary")),
-    makeTable(
-      ["Modifier and Type", "Field and Description"],
-      doc.fields.map((fieldDoc) => [
-        md.paragraph([
-          md.text(fieldDoc.modifiers),
-          md.text(" "),
-          md.text(fieldDoc.type.asString),
-        ]),
-        [md.paragraph(md.text(fieldDoc.name)), md.text(fieldDoc.commentText)],
-      ])
-    ),
-
-    md.heading(2, md.text("Method Summary")),
-    makeTable(
-      ["Modifier and Type", "Method and Description"],
-      doc.methods.map((doc) => [
-        [md.text(doc.modifiers), md.text(doc.returnType.typeName)],
-        [
-          md.paragraph([
-            md.text(doc.name),
-            ...doc.parameters.map((parameter) => md.text(parameter.asString)),
-          ]),
-          md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
-        ],
-      ])
-    ),
-
-    md.heading(2, md.text("Method Detail")),
-
-    ...doc.methods
-      .map((doc) => [
-        project.makeAnchor(
-          `${doc.name}${doc.flatSignature.replace(/\s/g, "")}`
-        ),
-        md.heading(3, md.text(doc.name)),
-        tagsToMdast(project, doc.inlineTags),
-      ])
-      .flat(1),
-  ]);
+  const root = md.root(
+    makeSection({
+      project,
+      doc,
+      depth: 1,
+      title: md.text(doc.asString),
+      makeBody: makeClassDocPageBody,
+    })
+  );
   const path = `/${doc.asString}`;
   project.writePage(new Page(path, root));
 }
@@ -222,5 +162,138 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
         )
       )
     ),
+  ];
+}
+
+type MakeSectionArgs = {
+  project: Project;
+  doc: ParsedClassDoc;
+  title: string | Node | Node[];
+  depth: number;
+  shouldMakeSection?(args: MakeSectionArgs): boolean;
+  makeBody(args: MakeSectionArgs): Node[] | Node;
+};
+
+function makeSection(args: MakeSectionArgs): Node[] {
+  const { shouldMakeSection, depth, title, makeBody } = args;
+  if (shouldMakeSection !== undefined && !shouldMakeSection(args)) {
+    return [];
+  }
+  return [
+    md.heading(depth, typeof title === "string" ? md.text(title) : title),
+    ...[makeBody(args)].flat(1),
+  ];
+}
+
+function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
+  const { project, doc } = args;
+  const depth = args.depth + 1;
+  return [
+    // Class hierarchy
+    ...makeSuperclassList(project, doc),
+
+    // Implemented interfaces
+    ...makeImplementedInterfacesList(project, doc),
+
+    // Comment body
+    tagsToMdast(project, doc.inlineTags),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
+      title: "Constructors",
+      shouldMakeSection: () => doc.constructors.length !== 0,
+      makeBody: () =>
+        md.list(
+          "unordered",
+          doc.constructors.map((doc) =>
+            md.listItem([
+              md.text(doc.qualifiedName),
+              md.text(doc.flatSignature),
+            ])
+          )
+        ),
+    }),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
+      title: "Nested Class Summary",
+      shouldMakeSection: () => doc.innerClasses.length !== 0,
+      makeBody: () =>
+        makeTable(
+          ["Modifier and Type", "Class and Description"],
+          doc.innerClasses.map((classDoc) => [
+            md.text(classDoc.modifiers ?? ""),
+            md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
+          ])
+        ),
+    }),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
+      title: "Field Summary",
+      shouldMakeSection: () => doc.fields.length !== 0,
+      makeBody: () =>
+        makeTable(
+          ["Modifier and Type", "Field and Description"],
+          doc.fields.map((fieldDoc) => [
+            md.paragraph([
+              md.text(fieldDoc.modifiers),
+              md.text(" "),
+              md.text(fieldDoc.type.asString),
+            ]),
+            [
+              md.paragraph(md.text(fieldDoc.name)),
+              md.text(fieldDoc.commentText),
+            ],
+          ])
+        ),
+    }),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
+      title: "Method Summary",
+      shouldMakeSection: () => doc.methods.length !== 0,
+      makeBody: () =>
+        makeTable(
+          ["Modifier and Type", "Method and Description"],
+          doc.methods.map((doc) => [
+            [md.text(doc.modifiers), md.text(doc.returnType.typeName)],
+            [
+              md.paragraph([
+                md.text(doc.name),
+                ...doc.parameters.map((parameter) =>
+                  md.text(parameter.asString)
+                ),
+              ]),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
+          ])
+        ),
+    }),
+
+    ...makeSection({
+      project,
+      doc,
+      depth,
+      title: "Method Detail",
+      makeBody: () =>
+        doc.methods
+          .map((doc) => [
+            project.makeAnchor(
+              `${doc.name}${doc.flatSignature.replace(/\s/g, "")}`
+            ),
+            md.heading(3, md.text(doc.name)),
+            tagsToMdast(project, doc.inlineTags),
+          ])
+          .flat(1),
+    }),
   ];
 }
