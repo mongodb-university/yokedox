@@ -265,7 +265,11 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         makeTable(
           ["Modifier and Type", "Method and Description"],
           doc.methods.map((doc) => [
-            [md.text(doc.modifiers), md.text(doc.returnType.typeName)],
+            [
+              md.text(doc.modifiers),
+              md.text(" "),
+              md.text(doc.returnType.typeName),
+            ],
             [
               md.paragraph(
                 project.makeInternalLink(`#${doc.name}`, `#${doc.name}`, [
