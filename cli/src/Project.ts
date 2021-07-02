@@ -1,30 +1,35 @@
 import { Page } from "./Page.js";
-import { Node, AnchorNode, InternalLinkNode } from "./mdast.js";
+import { Node, AnchorNode, LinkToEntityNode } from "./mdast.js";
+
+export type Entity = {
+  canonicalName: string;
+  pageUri: string;
+  anchorName: string;
+};
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.
  */
 export type Project = {
   /**
-    Create an anchor node for the given name.
+    Create an anchor node for the given entity.
 
     Use this method to create anchors to sections. Anchors are not official node
     types in mdast. Using this method ensures consistency and enables link
     validation. Anchors made without this function may not be validated.
    */
-  makeAnchor(name: string): AnchorNode;
+  declareEntity(entity: Entity): AnchorNode;
 
   /**
-    Create an internal link.
+    Create a link to a specific entity.
 
-    Using this function for internal links enables link validation. Links made
-    without this function may not be validated.
+    Using this function enables link validation. Links made without this
+    function may not be validated.
    */
-  makeInternalLink(
-    path: string,
-    title?: string,
-    kids?: Node | Node[] | (() => Node | Node[])
-  ): InternalLinkNode;
+  linkToEntity(
+    entityCanonicalName: string,
+    linkText?: string
+  ): LinkToEntityNode;
 
   /**
     To be called when a page is complete and ready to be committed to the

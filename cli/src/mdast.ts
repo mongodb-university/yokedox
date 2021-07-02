@@ -3,13 +3,17 @@
  */
 export * as md from "mdast-builder";
 export { Node, Parent } from "unist";
-import { code, html, link, root, rootWithTitle } from "mdast-builder";
+import { Parent } from "unist";
+import { code, html, root, rootWithTitle } from "mdast-builder";
 
 /**
   Represents a link within the project in mdast.
  */
-export type InternalLinkNode = ReturnType<typeof link> & {
-  isInternalLink: true;
+export type LinkToEntityNode = Parent & {
+  type: "linkToEntity" | "link" | "strong";
+  targetCanonicalName: string;
+  isPending: boolean;
+  linkText: string;
 };
 
 /**

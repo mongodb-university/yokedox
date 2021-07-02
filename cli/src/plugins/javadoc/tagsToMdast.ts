@@ -51,11 +51,12 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
         return md.text(tag.text);
     }
   },
-  SeeTag({ referencedMemberName, referencedClassName, text }, project) {
-    let target = `${referencedClassName}.md`; // TODO: Avoid using explicit filenames (.md)
-    if (referencedMemberName !== undefined) {
-      target = `${target}#${referencedMemberName}`;
-    }
-    return project.makeInternalLink(target, text, md.text(text));
+  SeeTag(tag, project) {
+    return project.linkToEntity(
+      [tag.referencedClassName, tag.referencedMemberName]
+        .filter((e) => e !== null)
+        .join("."),
+      tag.text
+    );
   },
 };
