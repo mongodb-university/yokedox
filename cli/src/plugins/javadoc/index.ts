@@ -90,17 +90,18 @@ async function processClassDoc(
   project: Project,
   doc: ParsedClassDoc
 ): Promise<void> {
+  const pageUri = `/${doc.qualifiedTypeName}`;
   const root = md.root(
     makeSection({
       project,
+      pageUri,
       doc,
       depth: 1,
       title: md.text(doc.asString),
       makeBody: makeClassDocPageBody,
     })
   );
-  const path = `/${doc.asString}`;
-  project.writePage(new Page(path, root));
+  project.writePage(new Page(pageUri, root));
 }
 
 async function processPackageDoc(
@@ -136,11 +137,7 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   return [
     md.paragraph(md.emphasis(md.text("Superclass:"))),
     md.list("unordered", [
-      md.listItem(
-        project.makeInternalLink(qualifiedTypeName, qualifiedTypeName, [
-          md.text(qualifiedTypeName),
-        ])
-      ),
+      md.listItem(project.linkToEntity(qualifiedTypeName)),
     ]),
   ];
 }
@@ -155,11 +152,7 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
     md.list(
       "unordered",
       interfaceTypes.map(({ qualifiedTypeName }) =>
-        md.listItem(
-          project.makeInternalLink(qualifiedTypeName, qualifiedTypeName, [
-            md.text(qualifiedTypeName),
-          ])
-        )
+        md.listItem(project.linkToEntity(qualifiedTypeName))
       )
     ),
   ];
@@ -167,6 +160,7 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
 
 type MakeSectionArgs = {
   project: Project;
+  pageUri: string;
   doc: ParsedClassDoc;
   title: string | Node | Node[];
   depth: number;
@@ -186,7 +180,7 @@ function makeSection(args: MakeSectionArgs): Node[] {
 }
 
 function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
-  const { project, doc } = args;
+  const { project, doc, pageUri } = args;
   const depth = args.depth + 1;
   return [
     // Class hierarchy
@@ -199,8 +193,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     tagsToMdast(project, doc.inlineTags),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Constructors",
       shouldMakeSection: () => doc.constructors.length !== 0,
@@ -217,8 +210,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     }),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Nested Class Summary",
       shouldMakeSection: () => doc.innerClasses.length !== 0,
@@ -233,8 +225,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     }),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Field Summary",
       shouldMakeSection: () => doc.fields.length !== 0,
@@ -256,8 +247,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     }),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Method Summary",
       shouldMakeSection: () => doc.methods.length !== 0,
@@ -272,19 +262,12 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
             ],
             [
               md.paragraph(
-                project.makeInternalLink(`#${doc.name}`, `#${doc.name}`, [
-                  md.text(doc.name),
-                  md.text("("),
-                  ...doc.parameters
-                    .map((parameter, i) => [
-                      md.text(parameter.asString),
-                      i === doc.parameters.length - 1
-                        ? md.text("")
-                        : md.text(", "),
-                    ])
-                    .flat(1),
-                  md.text(")\n\n"),
-                ])
+                project.linkToEntity(
+                  doc.qualifiedName,
+                  `${doc.name}(${doc.parameters
+                    .map((parameter) => parameter.typeName)
+                    .join(", ")})`
+                )
               ),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
@@ -293,15 +276,18 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     }),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Field Detail",
       shouldMakeSection: () => doc.fields.length !== 0,
       makeBody: () =>
         doc.fields
           .map((doc) => [
-            project.makeAnchor(`${doc.name}${doc.name.replace(/\s/g, "")}`),
+            project.declareEntity({
+              canonicalName: doc.qualifiedName,
+              anchorName: doc.qualifiedName,
+              pageUri,
+            }),
             md.heading(3, md.text(doc.name)),
             tagsToMdast(project, doc.inlineTags),
           ])
@@ -309,17 +295,18 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     }),
 
     ...makeSection({
-      project,
-      doc,
+      ...args,
       depth,
       title: "Method Detail",
       shouldMakeSection: () => doc.methods.length !== 0,
       makeBody: () =>
         doc.methods
           .map((doc) => [
-            project.makeAnchor(
-              `${doc.name}${doc.flatSignature.replace(/\s/g, "")}`
-            ),
+            project.declareEntity({
+              canonicalName: doc.qualifiedName,
+              anchorName: doc.qualifiedName,
+              pageUri,
+            }),
             md.heading(3, md.text(doc.name)),
             tagsToMdast(project, doc.inlineTags),
           ])

@@ -4,9 +4,9 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import { gfmTableToMarkdown } from "mdast-util-gfm-table";
 import { visit } from "unist-util-visit";
 import { promises } from "fs";
-import { Project } from "./Project.js";
+import { Entity, Project } from "./Project.js";
 import { Page } from "./Page.js";
-import { AnchorNode, InternalLinkNode, md } from "./mdast.js";
+import { AnchorNode, LinkToEntityNode, md } from "./mdast.js";
 
 /**
   Creates a project object, which is a collection of documentation pages.
@@ -57,13 +57,40 @@ export async function makeProject({
     );
   };
 
-  const pendingPages: Page[] = [];
   const writePromises: Promise<void>[] = [];
-  const validPaths = new Set<string>();
+  const entities = new Map<string /* canonical name */, Entity>();
+
+  // A waiting list of sorts
+  const pendingPagesByEntity = new Map<string /* canonical name */, Page[]>();
+
+  const onEntityDeclared = (project: Project, entity: Entity) => {
+    const { canonicalName } = entity;
+    const pagesPendingOnEntity = pendingPagesByEntity.get(canonicalName) ?? [];
+    pendingPagesByEntity.delete(canonicalName);
+    // writePage() will resolve links
+    pagesPendingOnEntity.forEach((page) => {
+      project.writePage(page);
+    });
+  };
+
   let isFinalized = false;
 
   const project: Project = {
-    makeAnchor(anchorName) {
+    declareEntity(entity) {
+      const { canonicalName } = entity;
+      if (entities.has(canonicalName)) {
+        // Users should fix this, but it's not a fatal error.
+        console.warn(
+          new Error(
+            `duplicate entity: ${entity.canonicalName} (${entity.pageUri})`
+          )
+        );
+      } else {
+        entities.set(canonicalName, entity);
+        // We can now resolve any pages that were waiting for this entity
+        onEntityDeclared(this, entity);
+      }
+      const { anchorName } = entity;
       if (anchorName.length === 0 || /["\s]/.test(anchorName)) {
         throw new Error(
           `anchorName '${anchorName}' must contain at least one character and must not include doublequotes or whitespace`
@@ -75,36 +102,48 @@ export async function makeProject({
         anchorName,
       };
     },
-    makeInternalLink(path, title, kids) {
-      return {
-        ...md.link(path, title, kids),
-        isInternalLink: true,
-      };
+
+    linkToEntity(
+      targetCanonicalName,
+      linkText = targetCanonicalName
+    ): LinkToEntityNode {
+      const entity = entities.get(targetCanonicalName);
+      if (entity === undefined) {
+        return {
+          ...md.strong([md.text(linkText), md.text(" (?)")]),
+          type: "linkToEntity",
+          targetCanonicalName,
+          isPending: true,
+          linkText,
+        };
+      }
+      return resolvedLinkToEntity(entity, linkText);
     },
+
     writePage(page) {
-      // Add page path to project lookup table
-      const { path } = page;
-      validPaths.add(path);
+      // Before writing, make sure links are resolved
+      const pendingLinks = findPendingLinks(page);
 
-      // Find all anchors and add them to the project lookup table
-      visit(
-        page.root,
-        // Filter out nodes that don't conform to makeAnchor() return value above
-        (node) => node.type === "html" && node.anchorName !== undefined,
-        // Visit each anchor node
-        (node) => {
-          const anchor = node as AnchorNode;
-          const newPath = `${path}#${anchor.anchorName}`;
-          validPaths.add(newPath);
-        }
-      );
-
-      // Find all internal link nodes and check for invalid anchors
-      const missingLinks = findMissingLinks({ page, validPaths });
-
-      // If any links are missing, hold page
-      if (missingLinks.length !== 0) {
-        pendingPages.push(page);
+      const resolvedLinks = resolveLinks(pendingLinks, entities);
+      // If any links are still missing, hold page
+      assert(resolvedLinks.length <= pendingLinks.length);
+      if (pendingLinks.length - resolvedLinks.length !== 0) {
+        new Set(
+          pendingLinks.map(({ targetCanonicalName }) => targetCanonicalName)
+        ).forEach((targetCanonicalName) => {
+          const pendingPages =
+            pendingPagesByEntity.get(targetCanonicalName) ?? [];
+          if (
+            pendingPages.find((pendingPage) => page.path === pendingPage.path)
+          ) {
+            // Page is already on the waiting list
+            return;
+          }
+          pendingPagesByEntity.set(targetCanonicalName, [
+            ...pendingPages,
+            page,
+          ]);
+        });
         return;
       }
 
@@ -113,45 +152,37 @@ export async function makeProject({
       writePromises.push(promise);
       return promise;
     },
+
     async finalize() {
       isFinalized = true;
-      // Final link validation
-      const runThroughPendingPages = () => {
-        const pages = [...pendingPages];
-        // Clear pending pages
-        pendingPages.length = 0;
-        pages.forEach(project.writePage);
-      };
 
-      // Run through pending pages once to ensure that all available page paths
-      // and anchors are in fact registered.
-      runThroughPendingPages();
-
-      // Continue this until there is no decrease in the length of pending
-      // pages. At that point, all links that can be resolved have been
-      // resolved, and the remaining links cannot be resolved.
-      for (
-        let pendingBefore = pendingPages.length;
-        pendingPages.length !== 0 && pendingPages.length !== pendingBefore;
-        pendingBefore = pendingPages.length
-      ) {
-        runThroughPendingPages();
-      }
+      // Convert pendingPagesByEntity lookup table into an array of unique pages.
+      const pendingPages = Array.from(
+        new Map(
+          Array.from(pendingPagesByEntity.values())
+            .flat(1)
+            .map((page) => [page.path, page]) // Map entries are [key, value] tuples
+        )
+      ).map((entry) => entry[1]); // Extract only the page
 
       // If there are still pending pages (with unresolved links), report error
       // and flush the pages.
       writePromises.push(
         ...pendingPages.map((page) => {
+          const pendingLinks = findPendingLinks(page);
           console.warn(
-            `page ${
-              page.path
-            } has unresolved internal links:\n${findMissingLinks({
-              page,
-              validPaths,
-            })
-              .map((link) => `  ${link}`)
+            `page ${page.path} has unresolved internal links:\n${pendingLinks
+              .map((link) => `  ${link.targetCanonicalName}`)
               .join("\n")}`
           );
+
+          // Fossilize any broken links as true mdast nodes.
+          pendingLinks.forEach((link) =>
+            Object.assign(link, {
+              type: "strong",
+            })
+          );
+
           return flushPage(page);
         })
       );
@@ -174,24 +205,53 @@ export async function makeProject({
   };
 }
 
-function findMissingLinks({
-  page,
-  validPaths,
-}: {
-  page: Page;
-  validPaths: Set<string>;
-}): string[] {
-  const missingLinks: string[] = [];
+function resolvedLinkToEntity(
+  entity: Entity,
+  linkText: string
+): LinkToEntityNode {
+  const { pageUri, anchorName } = entity;
+  const path = [pageUri, anchorName].filter((s) => s !== "").join("#");
+  return {
+    ...md.link(path, linkText, md.text(linkText)),
+    type: "link",
+    linkText,
+    targetCanonicalName: entity.canonicalName,
+    isPending: false,
+  };
+}
+
+function findPendingLinks(page: Page): LinkToEntityNode[] {
+  const pendingLinks: LinkToEntityNode[] = [];
   visit(
     page.root,
-    (node) => node.type === "link" && node.isInternalLink === true,
+    (node) => node.type === "linkToEntity",
     (node) => {
-      const link = node as InternalLinkNode;
-      const { url } = link;
-      if (!validPaths.has(url)) {
-        missingLinks.push(url);
+      const link = node as LinkToEntityNode;
+      if (link.isPending) {
+        pendingLinks.push(link);
       }
     }
   );
-  return missingLinks;
+  return pendingLinks;
+}
+
+/**
+  Resolve any pending links.
+
+  @return The resolved links.
+ */
+function resolveLinks(
+  links: LinkToEntityNode[],
+  entities: Map<string, Entity>
+): LinkToEntityNode[] {
+  return links
+    .map((link) => {
+      // Still pending?
+      const entity = entities.get(link.targetCanonicalName);
+      if (entity !== undefined) {
+        Object.assign(link, { ...resolvedLinkToEntity(entity, link.linkText) });
+      }
+      return link;
+    })
+    .filter((link) => link.isPending === false);
 }
