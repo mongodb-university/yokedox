@@ -1,12 +1,12 @@
-import * as Path from "path";
 import { strict as assert } from "assert";
-import { toMarkdown } from "mdast-util-to-markdown";
-import { gfmTableToMarkdown } from "mdast-util-gfm-table";
-import { visit } from "unist-util-visit";
 import { promises } from "fs";
-import { Entity, Project } from "./Project.js";
+import { gfmTableToMarkdown } from "mdast-util-gfm-table";
+import { toMarkdown } from "mdast-util-to-markdown";
+import * as Path from "path";
+import { visit } from "unist-util-visit";
+import { LinkToEntityNode, md } from "./mdast.js";
 import { Page } from "./Page.js";
-import { AnchorNode, LinkToEntityNode, md } from "./mdast.js";
+import { Entity, Project } from "./Project.js";
 
 /**
   Creates a project object, which is a collection of documentation pages.
