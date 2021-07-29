@@ -1,5 +1,5 @@
+import { AnchorNode, LinkToEntityNode } from "./mdast.js";
 import { Page } from "./Page.js";
-import { Node, AnchorNode, LinkToEntityNode } from "./mdast.js";
 
 export type Entity = {
   canonicalName: string;

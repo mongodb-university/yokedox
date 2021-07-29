@@ -1,7 +1,7 @@
-import { phrasing as isPhrasing } from "mdast-util-phrasing";
 import * as md from "mdast-builder";
-import { Node, Parent } from "../../mdast.js";
+import { phrasing as isPhrasing } from "mdast-util-phrasing";
 import { Plugin, Transformer } from "unified";
+import { Node, Parent } from "../../mdast.js";
 
 /**
   All unwrapped 'phrasing' nodes should be in a paragraph, so scoop them into

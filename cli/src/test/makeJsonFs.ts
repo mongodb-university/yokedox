@@ -1,5 +1,5 @@
-import { createFsFromVolume, DirectoryJSON, Volume } from "memfs";
 import { promises } from "fs";
+import { createFsFromVolume, DirectoryJSON, Volume } from "memfs";
 
 /**
   Convenience function to make an fs.promises-compatible fs from a JSON

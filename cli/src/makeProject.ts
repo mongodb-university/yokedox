@@ -1,11 +1,16 @@
 import { strict as assert } from "assert";
 import { promises } from "fs";
-import { gfmTableToMarkdown } from "mdast-util-gfm-table";
-import { toMarkdown } from "mdast-util-to-markdown";
 import * as Path from "path";
 import { visit } from "unist-util-visit";
 import { LinkToEntityNode, md } from "./mdast.js";
 import { Page } from "./Page.js";
+import {
+  flushPage as _flushPage,
+  markdownPageStringifier,
+  mdastJsonPageStringifier,
+  PageStringifier,
+  rstPageStringifier,
+} from "./PageFlusher.js";
 import { Entity, Project } from "./Project.js";
 
 /**
@@ -15,46 +20,38 @@ export async function makeProject({
   out,
   fs = promises,
   outputMdastJson = true,
-  outputMarkdown = true,
+  outputMarkdown = false,
+  outputRst = true,
 }: {
   out?: string;
   fs?: typeof promises;
   outputMdastJson?: boolean;
   outputMarkdown?: boolean;
+  outputRst?: boolean;
 }): Promise<Project> {
   // Use the current working directy if no output directory was provided
-  const outputDirectory = Path.resolve(out ?? "");
+  const outputDirectoryPath = Path.resolve(out ?? "");
 
   // Throw if path does not exist or is not a directory
-  if (!(await fs.lstat(outputDirectory)).isDirectory()) {
-    throw new Error(`output path '${outputDirectory}' is not a directory!`);
+  if (!(await fs.lstat(outputDirectoryPath)).isDirectory()) {
+    throw new Error(`output path '${outputDirectoryPath}' is not a directory!`);
   }
 
-  const flushPage = async (page: Page): Promise<void> => {
-    const files: { outputPath: string; data: string }[] = [];
-    assert(
-      outputMarkdown || outputMdastJson,
-      "expected at least one option: outputMarkdown, outputMdastJson"
-    );
-    if (outputMdastJson) {
-      const data = JSON.stringify(page);
-      const outputPath = Path.join(outputDirectory, `${page.path}.json`);
-      files.push({ outputPath, data });
-    }
-    if (outputMarkdown) {
-      const data = toMarkdown(page.root, {
-        extensions: [gfmTableToMarkdown()],
-      });
-      const outputPath = Path.join(outputDirectory, `${page.path}.md`);
-      files.push({ outputPath, data });
-    }
-    await Promise.all(
-      files.map(async (file) => {
-        const { outputPath } = file;
-        await fs.mkdir(Path.dirname(outputPath), { recursive: true });
-        fs.writeFile(outputPath, file.data, "utf8");
-      })
-    );
+  const stringifiers: PageStringifier[] = [];
+  outputMdastJson && stringifiers.push(mdastJsonPageStringifier);
+  outputMarkdown && stringifiers.push(markdownPageStringifier);
+  outputRst && stringifiers.push(rstPageStringifier);
+  assert(
+    stringifiers.length > 0,
+    "expected at least one: outputMdastJson, outputMarkdown, outputRst"
+  );
+
+  const flushPage = (page: Page) => {
+    return _flushPage({
+      page,
+      outputDirectoryPath,
+      stringifiers,
+    });
   };
 
   const writePromises: Promise<void>[] = [];
