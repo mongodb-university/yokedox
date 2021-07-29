@@ -11,7 +11,7 @@ export type ToRstOptions = {
  */
 export const toRst = (root: RootNode, options?: ToRstOptions): string => {
   const context = new RstContext(options);
-  context.addNode(root);
+  context.add(root);
   return context.rstString();
 };
 
@@ -32,23 +32,19 @@ class RstContext {
   rstString(): string {
     return this.rst
       .map(({ indent, lines }) => {
-        const indentString = new Array(indent).fill(" ").join();
-        return lines.join().replace(/\n/g, `\n${indentString}`);
+        const indentString = new Array(indent).fill(" ").join("");
+        return lines.join("").replace(/\n/g, `\n${indentString}`);
       })
-      .join();
+      .join("");
   }
 
   indent(): void {
     this.indentationLevel += 3;
   }
 
-  indented(nodesOrText: Node[] | string): void {
+  indented(nodesOrText: Node | Node[] | string): void {
     this.indent();
-    if (typeof nodesOrText === "string") {
-      this.addText(nodesOrText);
-    } else {
-      this.addNodes(nodesOrText);
-    }
+    this.add(nodesOrText);
     this.deindent();
   }
 
@@ -58,22 +54,27 @@ class RstContext {
   }
 
   addNewline(): void {
-    this.addText("\n");
+    this.add("\n");
   }
 
   addDoubleNewline(): void {
-    this.addText("\n\n");
+    this.add("\n\n");
   }
 
-  addText(...text: string[]): void {
-    this.rst.push({ indent: this.indentationLevel, lines: text });
-  }
-
-  addNodes(nodes: Node[], escaper?: Escaper): void {
-    nodes.forEach((node) => this.addNode(node, escaper));
-  }
-
-  addNode(node: Node, escaper?: Escaper): void {
+  add(textOrNodeOrNodes: string | Node | Node[], escaper?: Escaper): void {
+    if (typeof textOrNodeOrNodes === "string") {
+      this.rst.push({
+        indent: this.indentationLevel,
+        lines: [textOrNodeOrNodes],
+      });
+      return;
+    }
+    const nodeOrNodes = textOrNodeOrNodes;
+    if (Array.isArray(nodeOrNodes)) {
+      nodeOrNodes.forEach((node) => this.add(node, escaper));
+      return;
+    }
+    const node = nodeOrNodes;
     if (escaper) {
       this.escapers.push(escaper);
     }
@@ -116,36 +117,37 @@ const visitors: {
 } = {
   blockquote(c, node) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#block-quotes
-    c.addDoubleNewline();
     c.indented(node.children);
+    c.addDoubleNewline();
   },
   break(context) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#line-blocks
     context.addNewline();
-    context.addText("| ");
+    context.add("| ");
   },
   code(c, { lang, value }) {
     if (value === undefined) {
       return;
     }
 
-    c.addDoubleNewline();
-    c.addText(`.. code-block:: ${lang}\n\n`);
+    c.add(`.. code-block:: ${lang}\n\n`);
     c.indented(value);
+    c.addDoubleNewline();
   },
   emphasis(c, { children }) {
-    c.addText("*");
-    c.addNodes(children, (text) => text.replace(/\*/g, "\\*"));
-    c.addText("*");
+    c.add("*");
+    c.add(children, (text) => text.replace(/\*/g, "\\*"));
+    c.add("*");
   },
   heading(c, { children, depth }) {
-    c.addDoubleNewline();
-    c.addNodes(children);
+    c.add(children);
+    c.addNewline();
     assert(1 <= depth && depth <= 6, `invalid heading depth: ${depth}`);
-    c.addText(new Array(4).fill(titleAdornmentCharacters[depth - 1]).join());
+    c.add(new Array(4).fill(titleAdornmentCharacters[depth - 1]).join(""));
+    c.addDoubleNewline();
   },
   html(c, n, i, p) {
-    // TODO
+    // TODO: handle special anchor nodes
   },
   image(c, n, i, p) {
     // TODO
@@ -154,10 +156,11 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    c.addText(`\`\`${value}\`\``);
+    c.add(`\`\`${value}\`\``);
   },
-  link(c, n, i, p) {
-    // TODO
+  link(c, n) {
+    // TODO: type of link (internal, external) determines syntax
+    c.add(n.children);
   },
   list(c, n, i, p) {
     // TODO
@@ -165,25 +168,26 @@ const visitors: {
   listItem(c, n, i, p) {
     // TODO
   },
-  paragraph(c) {
+  paragraph(c, { children }) {
+    c.add(children);
     c.addDoubleNewline();
   },
   root(c, { children }) {
-    c.addNodes(children);
+    c.add(children);
+    c.addNewline();
   },
   separator(c) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#transitions
-    c.addDoubleNewline();
-    c.addText("----");
+    c.add("----");
     c.addDoubleNewline();
   },
   strike() {
     // TODO
   },
   strong(c, { children }) {
-    c.addText("**");
-    c.addNodes(children, (text) => text.replace(/\*/g, "\\*"));
-    c.addText("**");
+    c.add("**");
+    c.add(children, (text) => text.replace(/\*/g, "\\*"));
+    c.add("**");
   },
   table() {
     // TODO,
@@ -198,6 +202,6 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    c.addText(value);
+    c.add(value);
   },
 };

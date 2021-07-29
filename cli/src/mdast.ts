@@ -4,6 +4,7 @@
 export * as md from "mdast-builder";
 export { Node, Parent } from "unist";
 import MdastBuilder from "mdast-builder";
+import { phrasing } from "mdast-util-phrasing";
 import { Node, Parent } from "unist";
 
 /**
@@ -44,3 +45,11 @@ export type TypedNode<Type extends MdastNodeType> = (Type extends "heading"
     ? R
     : typeof MdastBuilder[Type]
   : Node) & { type: Type; value?: string };
+
+/**
+  Returns true if the given node is a 'phrasing' node, including extended nodes.
+  See https://github.com/syntax-tree/mdast#phrasingcontent for details.
+ */
+export const isPhrasing = (node: Node): boolean => {
+  return phrasing(node) || node.type === "linkToEntity";
+};
