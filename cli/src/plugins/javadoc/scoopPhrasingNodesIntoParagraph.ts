@@ -1,7 +1,6 @@
 import * as md from "mdast-builder";
-import { phrasing as isPhrasing } from "mdast-util-phrasing";
 import { Plugin, Transformer } from "unified";
-import { Node, Parent } from "../../mdast.js";
+import { isPhrasing, Node, Parent } from "../../mdast.js";
 
 /**
   All unwrapped 'phrasing' nodes should be in a paragraph, so scoop them into
@@ -17,7 +16,7 @@ export const scoopPhrasingNodesIntoParagraph: Plugin = (): Transformer => {
     let paragraph: Parent | undefined;
     root.children.forEach((node) => {
       if (node.type === "paragraph") {
-        // Start scooping subsequent non-phrasing nodes into this paragraph
+        // Start scooping subsequent phrasing nodes into this paragraph
         paragraph = node as Parent;
         children.push(paragraph);
         return;
