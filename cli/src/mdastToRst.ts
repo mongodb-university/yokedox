@@ -15,25 +15,26 @@ export const toRst = (root: RootNode, options?: ToRstOptions): string => {
   return context.rstString();
 };
 
-type Rst = { indent: number; lines: string[] };
+type Rst = { indent: number; text: string };
 
 /**
   Return the given string modified for escaping.
  */
-type Escaper = (text: string) => string;
+type Escaper = (text: string, relativeNodeDepth: number) => string;
 
 class RstContext {
   private indentationLevel = 0;
+  private nodeDepth = 0;
   private rst: Rst[] = [];
-  private escapers: Escaper[] = [];
+  private escapers: [number /* nodeDepthWhenAdded */, Escaper][] = [];
 
   constructor(public options?: ToRstOptions) {}
 
   rstString(): string {
     return this.rst
-      .map(({ indent, lines }) => {
+      .map(({ indent, text }) => {
         const indentString = new Array(indent).fill(" ").join("");
-        return lines.join("").replace(/\n/g, `\n${indentString}`);
+        return text.replace(/\n/g, `\n${indentString}`);
       })
       .join("");
   }
@@ -61,24 +62,43 @@ class RstContext {
     this.add("\n\n");
   }
 
+  /**
+    Add the given string, node, or nodes to the context.
+   */
   add(textOrNodeOrNodes: string | Node | Node[], escaper?: Escaper): void {
+    // Received string? Add it to the rST.
     if (typeof textOrNodeOrNodes === "string") {
+      const text = this.escapers.reduce(
+        (text, [nodeDepthWhenAdded, escape]) =>
+          escape(text, nodeDepthWhenAdded - this.nodeDepth),
+        textOrNodeOrNodes
+      );
       this.rst.push({
         indent: this.indentationLevel,
-        lines: [textOrNodeOrNodes],
+        text,
       });
       return;
     }
+
+    // Received node array? Pass each to this function.
     const nodeOrNodes = textOrNodeOrNodes;
     if (Array.isArray(nodeOrNodes)) {
       nodeOrNodes.forEach((node) => this.add(node, escaper));
       return;
     }
+
+    // Received single node. Pass it to the node type's corresponding visitor.
     const node = nodeOrNodes;
     if (escaper) {
-      this.escapers.push(escaper);
+      // Add the given escaper to the front of the escaper list. Escapers should
+      // run from newest to oldest (innermost to outermost).
+      this.escapers.unshift([this.nodeDepth, escaper]);
     }
     const lastEscaperLength = this.escapers.length;
+
+    // Increment node depth. This is used for relative node depth passed to
+    // escapers.
+    this.nodeDepth += 1;
     visit(node, undefined, (node, i, parent) => {
       const type = node.type as MdastNodeType;
       // Handler type is defined by node.type value
@@ -92,12 +112,14 @@ class RstContext {
       // Visitors are responsible for visiting node children
       return SKIP;
     });
+    this.nodeDepth -= 1;
+    assert(this.nodeDepth >= 0, "unexpected nodeDepth < 0!");
     if (escaper) {
       assert(
         lastEscaperLength === this.escapers.length,
         "visitor did not remove added escapers!"
       );
-      this.escapers.pop();
+      this.escapers.shift();
     }
   }
 }
@@ -130,8 +152,8 @@ const visitors: {
       return;
     }
 
-    c.add(`.. code-block:: ${lang}\n\n`);
-    c.indented(value);
+    c.add(`.. code-block:: ${lang}\n`);
+    c.indented(`\n${value}`);
     c.addDoubleNewline();
   },
   emphasis(c, { children }) {
@@ -140,10 +162,20 @@ const visitors: {
     c.add("*");
   },
   heading(c, { children, depth }) {
-    c.add(children);
+    let characterCount = 0;
+    c.add(children, (text) => {
+      // Spread the text into an array to get actual character count, including
+      // wider characters
+      characterCount += [...text].length;
+      return text;
+    });
     c.addNewline();
     assert(1 <= depth && depth <= 6, `invalid heading depth: ${depth}`);
-    c.add(new Array(4).fill(titleAdornmentCharacters[depth - 1]).join(""));
+    c.add(
+      new Array(Math.max(characterCount, 4))
+        .fill(titleAdornmentCharacters[depth - 1])
+        .join("")
+    );
     c.addDoubleNewline();
   },
   html(c, n, i, p) {
@@ -162,11 +194,31 @@ const visitors: {
     // TODO: type of link (internal, external) determines syntax
     c.add(n.children);
   },
-  list(c, n, i, p) {
-    // TODO
+  list(c, n) {
+    const firstItemToken = n.ordered ? `${n.start ?? 1}. ` : "- ";
+    const itemToken = n.ordered ? "#. " : "- ";
+    // Add each child as a list item
+    n.children.forEach((child, i) => {
+      const { type } = child;
+      if (type !== "listItem") {
+        // https://github.com/syntax-tree/mdast#listcontent-gfm
+        console.error(
+          `unexpected non-ListContent child node in list: ${child.type}`
+        );
+        return;
+      }
+      const listItem = child as TypedNode<"listItem">;
+      c.add(i === 0 ? firstItemToken : itemToken);
+      c.indented(listItem.children);
+      c.addNewline();
+    });
+    c.addNewline();
   },
-  listItem(c, n, i, p) {
-    // TODO
+  listItem(_, n) {
+    console.error(
+      "unexpected visitor call to listItem: list items should have been handled by list visitor directly",
+      n
+    );
   },
   paragraph(c, { children }) {
     c.add(children);
@@ -189,14 +241,34 @@ const visitors: {
     c.add(children, (text) => text.replace(/\*/g, "\\*"));
     c.add("**");
   },
-  table() {
-    // TODO,
+  table(c, n) {
+    c.add(".. list-table::");
+    c.indented("\n:header-rows: 1\n\n");
+    c.indented(n.children);
+    c.addNewline();
   },
-  tableCell() {
-    // TODO,
+  tableCell(_, n) {
+    console.error(
+      "unexpected visitor call to tableCell: table cells should have been handled by table row visitor directly",
+      n
+    );
   },
-  tableRow() {
-    // TODO,
+  tableRow(c, n) {
+    n.children.forEach((child, i) => {
+      const { type } = child;
+      if (type !== "tableCell") {
+        // https://github.com/syntax-tree/mdast#rowcontent
+        console.error(
+          `unexpected non-RowContent child node in tableRow: ${child.type}`
+        );
+        return;
+      }
+      const cell = child as TypedNode<"tableCell">;
+      c.add(i === 0 ? "* - " : "  - ");
+      c.indented(cell.children);
+      c.addNewline();
+    });
+    c.addNewline();
   },
   text(c, { value }) {
     if (value === undefined) {
