@@ -27,24 +27,31 @@ export type AnchorNode = ReturnType<typeof MdastBuilder.html> & {
 /**
   Represents a root (page) node in mdast.
  */
-export type RootNode =
-  | ReturnType<typeof MdastBuilder.root>
-  | ReturnType<typeof MdastBuilder.rootWithTitle>;
+export type RootNode = ReturnType<typeof MdastBuilder.root>;
 
 export type CodeNode = ReturnType<typeof MdastBuilder.code>;
 
-export type MdastNodeType =
-  | Exclude<keyof typeof MdastBuilder, "brk" | "rootWithTitle">
-  | "break";
+/**
+  Helper to more accurately define mdast-builder types. See TypedNode.
+ */
+type MdastBuilderNodes = Omit<typeof MdastBuilder, "brk" | "rootWithTitle"> & {
+  break: typeof MdastBuilder.brk;
+  // https://github.com/syntax-tree/mdast#heading
+  heading: () => Parent & { depth: number };
+  // https://github.com/syntax-tree/mdast#list
+  list: () => Parent & { start?: number; ordered?: boolean };
+};
 
-export type TypedNode<Type extends MdastNodeType> = (Type extends "heading"
-  ? Parent & { depth: number }
-  : Type extends keyof typeof MdastBuilder
-  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    typeof MdastBuilder[Type] extends (...args: any[]) => infer R
+export type MdastNodeType = keyof MdastBuilderNodes;
+
+/**
+  Contains type information for the specific mdast node.
+ */
+export type TypedNode<Type extends MdastNodeType> =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (MdastBuilderNodes[Type] extends (...args: any[]) => infer R
     ? R
-    : typeof MdastBuilder[Type]
-  : Node) & { type: Type; value?: string };
+    : MdastBuilderNodes[Type]) & { type: Type; value?: string };
 
 /**
   Returns true if the given node is a 'phrasing' node, including extended nodes.
