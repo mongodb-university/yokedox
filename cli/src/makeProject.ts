@@ -19,7 +19,7 @@ import { Entity, Project } from "./Project.js";
 export async function makeProject({
   out,
   fs = promises,
-  outputMdastJson = true,
+  outputMdastJson = false,
   outputMarkdown = false,
   outputRst = true,
 }: {
