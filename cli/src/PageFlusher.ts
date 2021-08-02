@@ -68,6 +68,6 @@ export const markdownPageStringifier = makePageStringifier("md", (page) => {
   });
 });
 
-export const rstPageStringifier = makePageStringifier("rst", (page) => {
+export const rstPageStringifier = makePageStringifier("txt", (page) => {
   return toRst(page.root);
 });

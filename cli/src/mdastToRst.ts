@@ -58,18 +58,18 @@ class RstContext {
       .join("");
   }
 
-  indent(): void {
-    this.indentationLevel += 3;
+  indent(spaces = 3): void {
+    this.indentationLevel += spaces;
   }
 
-  indented(nodesOrText: Node | Node[] | string): void {
-    this.indent();
+  indented(nodesOrText: Node | Node[] | string, spaces?: number): void {
+    this.indent(spaces);
     this.add(nodesOrText);
-    this.deindent();
+    this.deindent(spaces);
   }
 
-  deindent(): void {
-    this.indentationLevel -= 3;
+  deindent(spaces = 3): void {
+    this.indentationLevel -= spaces;
     assert(this.indentationLevel >= 0, "over-deindented!");
   }
 
@@ -198,17 +198,17 @@ const visitors: {
     );
     c.addDoubleNewline();
   },
-  html(c, n, i, p) {
+  html(c, n) {
     const { value } = n;
     if (value === undefined) {
       return;
     }
-    const anchorRe = /^<a\s+name="([^"]+)"\s*>$/i;
+    const anchorRe = /^<a\s+name="([^"]+)"\s*>(?:<\/a>)?$/i;
     const match = anchorRe.exec(value);
     if (match === null) {
       return;
     }
-    c.add(`.. _${match[1]}:`);
+    c.add(`.. _${match[1]}:\n\n`);
   },
   image(c, n, i, p) {
     // TODO
@@ -217,7 +217,14 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    c.add(`\`\`${value}\`\``);
+    if (value.indexOf("\n") === -1) {
+      // Normal case: single inline code
+      c.add(`\`\`${value}\`\``);
+      return;
+    }
+
+    // Weird case (for javadoc)
+    c.indented(value);
   },
   link(c, n) {
     const { url } = n;
@@ -310,7 +317,7 @@ const visitors: {
       }
       const cell = child as TypedNode<"tableCell">;
       c.add(i === 0 ? "* - " : "  - ");
-      c.indented(cell.children);
+      c.indented(cell.children, 4);
       c.addNewline();
     });
     c.addNewline();
