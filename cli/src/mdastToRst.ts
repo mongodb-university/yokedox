@@ -1,9 +1,28 @@
 import { strict as assert } from "assert";
+import { CompilerFunction, Plugin } from "unified";
 import { CONTINUE, SKIP, visit } from "unist-util-visit";
 import { MdastNodeType, Node, Parent, RootNode, TypedNode } from "./mdast.js";
 
 export type ToRstOptions = {
   //
+};
+
+/**
+  Unified plugin to convert mdast directly to rST string.
+ */
+export const mdastRstStringify: Plugin<[ToRstOptions?]> = function (
+  this,
+  options
+) {
+  const Compiler: CompilerFunction = (node) => {
+    const rootNode = node as Partial<RootNode>;
+    if (rootNode.children === undefined) {
+      return "";
+    }
+    return toRst(rootNode as RootNode, options);
+  };
+  // See https://github.com/rehypejs/rehype/blob/8ddc4b84b1c38bd38bb26d8893af65495f60f2c3/packages/rehype-stringify/lib/index.js#L14
+  Object.assign(this, { Compiler });
 };
 
 /**
@@ -139,8 +158,9 @@ const visitors: {
 } = {
   blockquote(c, node) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#block-quotes
+    c.indented("\n");
     c.indented(node.children);
-    c.addDoubleNewline();
+    c.addNewline();
   },
   break(context) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#line-blocks
@@ -179,7 +199,16 @@ const visitors: {
     c.addDoubleNewline();
   },
   html(c, n, i, p) {
-    // TODO: handle special anchor nodes
+    const { value } = n;
+    if (value === undefined) {
+      return;
+    }
+    const anchorRe = /^<a\s+name="([^"]+)"\s*>$/i;
+    const match = anchorRe.exec(value);
+    if (match === null) {
+      return;
+    }
+    c.add(`.. _${match[1]}:`);
   },
   image(c, n, i, p) {
     // TODO
@@ -191,8 +220,24 @@ const visitors: {
     c.add(`\`\`${value}\`\``);
   },
   link(c, n) {
-    // TODO: type of link (internal, external) determines syntax
+    const { url } = n;
+    const isRefLink = !/^https?:\/\//.test(url);
+    if (isRefLink) {
+      c.add(":ref:");
+    }
+    c.add("`");
     c.add(n.children);
+    if (isRefLink) {
+      const anchorName = url.split("#")[1];
+      assert(
+        anchorName !== undefined,
+        `unexpected refLink without anchorName from url: ${url}`
+      );
+      c.add(` <${anchorName}>\``);
+    } else {
+      c.add(` <${url}>`);
+      c.add("`__");
+    }
   },
   list(c, n) {
     const firstItemToken = n.ordered ? `${n.start ?? 1}. ` : "- ";
