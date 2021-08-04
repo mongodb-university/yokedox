@@ -146,4 +146,30 @@ describe("makeProject", () => {
       '{"path":"/index","root":{"type":"root","children":[{"type":"strong","children":[{"type":"text","value":"/foo#bar"},{"type":"text","value":" (?)"}],"targetCanonicalName":"/foo#bar","isPending":true,"linkText":"/foo#bar"}]}}'
     );
   });
+
+  it("asks for extra pages at finalize", async () => {
+    const fs = makeJsonFs();
+    const project = await makeProject({ out: "/", fs });
+    project.declareEntity({
+      canonicalName: "SomeClassA",
+      pageUri: "/SomeClassA",
+    });
+    project.declareEntity({
+      canonicalName: "SomeClassB",
+      pageUri: "/SomeClassB",
+    });
+    const finalizedProject = await project.finalize();
+
+    expect(finalizedProject.entities.map((e) => e.canonicalName)).toStrictEqual(
+      ["SomeClassA", "SomeClassB"]
+    );
+
+    await project.writePage({
+      path: "/index",
+      root: md.root(),
+    });
+    await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
+      '{"path":"/index","root":{"type":"root","children":[]}}'
+    );
+  });
 });

@@ -10,7 +10,7 @@
     "generate": "./node_modules/json-schema-to-typescript/dist/src/cli.js -i ../plugins/JsonDocletJava8/doclet8.schema.json | node ./node_modules/prettier/bin-prettier.js --parser typescript > ./src/plugins/javadoc/doclet8.d.ts",
     "build": "tsc -b",
     "watch": "tsc -b -w",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --watch",
     "coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
   },
   "type": "module",

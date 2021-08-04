@@ -171,11 +171,6 @@ export async function makeProject({
     async finalize() {
       isFinalized = true;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { finalize, declareEntity, ...finalizedProject } = project;
-
-      // TODO: Run additional page builder
-
       // Convert pendingPagesByEntity lookup table into an array of unique pages.
       Array.from(
         new Map(
@@ -192,7 +187,15 @@ export async function makeProject({
 
       await Promise.allSettled(writePromises);
 
-      return finalizedProject;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { finalize, declareEntity, ...finalizedProject } = project;
+
+      return {
+        ...finalizedProject,
+        get entities() {
+          return Array.from(entities.values());
+        },
+      };
     },
   };
   return project;
