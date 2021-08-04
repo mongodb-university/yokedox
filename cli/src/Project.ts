@@ -1,7 +1,6 @@
 import { Entity } from "./Entity.js";
 import { AnchorNode, LinkToEntityNode } from "./mdast.js";
 import { Page } from "./Page.js";
-import { PageBuilder } from "./PageBuilder.js";
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.
@@ -32,30 +31,28 @@ export type Project = {
     To be called when a page is complete and ready to be committed to the
     output.
 
-    Before writing to disk, validates any links to other pages. A link is
-    "resolvable" if the target page was already passed to `writePage()`. If the
-    link has a fragment (i.e. a link to an 'anchor' or subsection within a
-    page), the link is only resolvable if that specific anchor was added on that
-    page.
+    When called before finalize(), writePage() validates any links to entities
+    before writing to disk. A link is "resolvable" if the target entity was
+    already declared with declareEntity(). If all links on the page are
+    resolvable, the page gets written to disk. Otherwise, the page is held until
+    you call `finalize()`, at which point we make a final attempt to resolve the
+    links.
 
-    If all links on the page are resolvable, the page gets written to disk.
-    Otherwise, the page is held until you call `finalize()`, at which point we
-    make a final attempt to resolve the links.
-
-    You do not need to await this.
+    When called before finalize(), you do not need to await.
    */
   writePage(page: Page): Promise<void> | void;
 
   /**
-    Flushes any remaining page writes after a final attempt to resolve any links
-    to other entities.
-
-    Optionally runs the given additional page builder.
+    Seals the list of entities. Flushes any pending pages after a final attempt
+    to resolve any links to other entities.
    */
-  finalize(options?: { page: PageBuilder }): Promise<FinalizedProject>;
+  finalize(): Promise<FinalizedProject>;
 };
 
 /**
-  A finalized project cannot have additional entities added to it.
+  A finalized project cannot have additional entities added to it, but new pages
+  can be written (for example, index pages) based on the existing entities.
  */
-export type FinalizedProject = Omit<Project, "finalize" | "declareEntity">;
+export type FinalizedProject = Omit<Project, "finalize" | "declareEntity"> & {
+  readonly entities: Entity[];
+};
