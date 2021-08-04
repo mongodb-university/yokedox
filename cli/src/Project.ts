@@ -5,7 +5,7 @@ import { Page } from "./Page.js";
 /**
   Represents a collection of documentated pages to be written to the filesystem.
  */
-export type Project = {
+export type Project<UserDataType = unknown> = {
   /**
     Create an anchor node for the given entity. The anchor name will be based on
     the entity's canonical name.
@@ -14,7 +14,7 @@ export type Project = {
     types in mdast. Using this method ensures consistency and enables link
     validation. Anchors made without this function may not be validated.
    */
-  declareEntity(entity: Omit<Entity, "anchorName">): AnchorNode;
+  declareEntity(entity: Entity<UserDataType>): AnchorNode;
 
   /**
     Create a link to a specific entity.
@@ -46,13 +46,16 @@ export type Project = {
     Seals the list of entities. Flushes any pending pages after a final attempt
     to resolve any links to other entities.
    */
-  finalize(): Promise<FinalizedProject>;
+  finalize<UserDataType = unknown>(): Promise<FinalizedProject<UserDataType>>;
 };
 
 /**
   A finalized project cannot have additional entities added to it, but new pages
   can be written (for example, index pages) based on the existing entities.
  */
-export type FinalizedProject = Omit<Project, "finalize" | "declareEntity"> & {
-  readonly entities: Entity[];
+export type FinalizedProject<UserDataType> = Omit<
+  Project<UserDataType>,
+  "finalize" | "declareEntity"
+> & {
+  readonly entities: Entity<UserDataType>[];
 };

@@ -18,8 +18,11 @@ export type Plugin = {
 export type PluginArgs = {
   /**
     The project to write to.
+
+    As the sole writer to the project, the plugin can safely cast the Project to
+    a specific Project<PluginUserData> type. This keeps entity user data typed.
    */
-  project: Project;
+  project: Project<unknown>;
 
   /**
     The generator executable path.
