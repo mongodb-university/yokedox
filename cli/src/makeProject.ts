@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import { promises } from "fs";
 import * as Path from "path";
 import { visit } from "unist-util-visit";
+import { Entity } from "./Entity.js";
 import { LinkToEntityNode, md } from "./mdast.js";
 import { Page } from "./Page.js";
 import {
@@ -11,7 +12,7 @@ import {
   PageStringifier,
   rstPageStringifier,
 } from "./PageFlusher.js";
-import { Entity, Project } from "./Project.js";
+import { Project } from "./Project.js";
 
 /**
   Creates a project object, which is a collection of documentation pages.
@@ -19,7 +20,7 @@ import { Entity, Project } from "./Project.js";
 export async function makeProject({
   out,
   fs = promises,
-  outputMdastJson = false,
+  outputMdastJson = true,
   outputMarkdown = false,
   outputRst = true,
 }: {
@@ -48,6 +49,7 @@ export async function makeProject({
 
   const flushPage = (page: Page) => {
     return _flushPage({
+      fs,
       page,
       outputDirectoryPath,
       stringifiers,
@@ -117,31 +119,50 @@ export async function makeProject({
     writePage(page) {
       // Before writing, make sure links are resolved
       const pendingLinks = findPendingLinks(page);
-
       const resolvedLinks = resolveLinks(pendingLinks, entities);
       // If any links are still missing, hold page
       assert(resolvedLinks.length <= pendingLinks.length);
+
       if (pendingLinks.length - resolvedLinks.length !== 0) {
-        new Set(
-          pendingLinks.map(({ targetCanonicalName }) => targetCanonicalName)
-        ).forEach((targetCanonicalName) => {
-          const pendingPages =
-            pendingPagesByEntity.get(targetCanonicalName) ?? [];
-          if (
-            pendingPages.find((pendingPage) => page.path === pendingPage.path)
-          ) {
-            // Page is already on the waiting list
-            return;
-          }
-          pendingPagesByEntity.set(targetCanonicalName, [
-            ...pendingPages,
-            page,
-          ]);
+        // Before finalization, pages can be held in memory while waiting for
+        // entities to be declared (which then resolves pending links to those
+        // entities)
+        if (!isFinalized) {
+          new Set(
+            pendingLinks.map(({ targetCanonicalName }) => targetCanonicalName)
+          ).forEach((targetCanonicalName) => {
+            const pendingPages =
+              pendingPagesByEntity.get(targetCanonicalName) ?? [];
+            if (
+              pendingPages.find((pendingPage) => page.path === pendingPage.path)
+            ) {
+              // Page is already on the waiting list
+              return;
+            }
+            pendingPagesByEntity.set(targetCanonicalName, [
+              ...pendingPages,
+              page,
+            ]);
+          });
+          return;
+        }
+
+        // After finalization, new entities can't be added, so this link will
+        // never be resolved. Write it as a broken link.
+        console.warn(
+          `page ${page.path} has unresolved internal links:\n${pendingLinks
+            .map((link) => `  ${link.targetCanonicalName}`)
+            .join("\n")}`
+        );
+
+        // Fossilize any broken links as true mdast nodes. This updates the
+        // nodes in-place.
+        pendingLinks.forEach((pendingLink) => {
+          Object.assign(pendingLink, { type: "strong" });
         });
-        return;
       }
 
-      // All links are good, write to disk
+      // All links are dealt with, write to disk
       const promise = flushPage(page).catch(console.error);
       writePromises.push(promise);
       return promise;
@@ -150,53 +171,31 @@ export async function makeProject({
     async finalize() {
       isFinalized = true;
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { finalize, declareEntity, ...finalizedProject } = project;
+
+      // TODO: Run additional page builder
+
       // Convert pendingPagesByEntity lookup table into an array of unique pages.
-      const pendingPages = Array.from(
+      Array.from(
         new Map(
           Array.from(pendingPagesByEntity.values())
             .flat(1)
             .map((page) => [page.path, page]) // Map entries are [key, value] tuples
         )
-      ).map((entry) => entry[1]); // Extract only the page
-
-      // If there are still pending pages (with unresolved links), report error
-      // and flush the pages.
-      writePromises.push(
-        ...pendingPages.map((page) => {
-          const pendingLinks = findPendingLinks(page);
-          console.warn(
-            `page ${page.path} has unresolved internal links:\n${pendingLinks
-              .map((link) => `  ${link.targetCanonicalName}`)
-              .join("\n")}`
-          );
-
-          // Fossilize any broken links as true mdast nodes.
-          pendingLinks.forEach((link) =>
-            Object.assign(link, {
-              type: "strong",
-            })
-          );
-
-          return flushPage(page);
-        })
-      );
+      )
+        .map((entry) => entry[1]) // Extract only the page
+        .forEach((page) => {
+          // Write it to disk
+          this.writePage(page);
+        });
 
       await Promise.allSettled(writePromises);
+
+      return finalizedProject;
     },
   };
-  return {
-    ...project,
-    writePage(page) {
-      // Public guard against writing pages after finalize()
-      if (isFinalized) {
-        throw new Error(
-          `attempted to write page '${page.path}' after finalize()`
-        );
-      }
-      // Dispatch to "internal" implementation
-      return project.writePage(page);
-    },
-  };
+  return project;
 }
 
 function resolvedLinkToEntity(
