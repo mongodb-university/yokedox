@@ -75,19 +75,15 @@ export async function makeProject({
   let isFinalized = false;
 
   const project: Project = {
-    declareEntity(entityIn: Omit<Entity, "anchorName">) {
-      const { canonicalName, pageUri } = entityIn;
-      const anchorName = anchorify(canonicalName);
+    declareEntity<UserDataType>(entity: Entity<UserDataType>) {
+      const { canonicalName, pageUri } = entity;
+      const anchorName = anchorify(entity);
       if (entities.has(canonicalName)) {
         // Users should fix this, but it's not a fatal error.
         console.warn(
           new Error(`duplicate entity: ${canonicalName} (${pageUri})`)
         );
       } else {
-        const entity: Entity = {
-          ...entityIn,
-          anchorName,
-        };
         entities.set(canonicalName, entity);
         // We can now resolve any pages that were waiting for this entity
         onEntityDeclared(this, entity);
@@ -168,7 +164,7 @@ export async function makeProject({
       return promise;
     },
 
-    async finalize() {
+    async finalize<UserDataType>() {
       isFinalized = true;
 
       // Convert pendingPagesByEntity lookup table into an array of unique pages.
@@ -193,7 +189,7 @@ export async function makeProject({
       return {
         ...finalizedProject,
         get entities() {
-          return Array.from(entities.values());
+          return Array.from(entities.values()) as Entity<UserDataType>[];
         },
       };
     },
@@ -205,7 +201,8 @@ function resolvedLinkToEntity(
   entity: Entity,
   linkText: string
 ): LinkToEntityNode {
-  const { pageUri, anchorName } = entity;
+  const { pageUri } = entity;
+  const anchorName = anchorify(entity);
   const path = [pageUri, anchorName].filter((s) => s !== "").join("#");
   return {
     ...md.link(path, linkText, md.text(linkText)),
@@ -255,6 +252,6 @@ function resolveLinks(
 /**
   Create an anchor-friendly string from a given string.
  */
-const anchorify = (string: string): string => {
-  return string.replace(/[^A-z0-9_]/g, "_");
+const anchorify = ({ canonicalName }: { canonicalName: string }): string => {
+  return canonicalName.replace(/[^A-z0-9_]/g, "_");
 };
