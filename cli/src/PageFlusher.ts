@@ -1,16 +1,9 @@
-import { promises as fs } from "fs";
+import { promises } from "fs";
 import { gfmTableToMarkdown } from "mdast-util-gfm-table";
 import { toMarkdown } from "mdast-util-to-markdown";
 import * as Path from "path";
 import { toRst } from "./mdastToRst.js";
 import { Page } from "./Page.js";
-
-export type PageFlusherOptions = {
-  outputMarkdown: boolean;
-  outputMdastJson: boolean;
-  outputRst: boolean;
-  outputDirectory: string;
-};
 
 /**
   Converts the page to a string.
@@ -24,10 +17,12 @@ export const flushPage = async ({
   page,
   stringifiers,
   outputDirectoryPath,
+  fs,
 }: {
   stringifiers: PageStringifier[];
   outputDirectoryPath: string;
   page: Page;
+  fs: typeof promises;
 }): Promise<void> => {
   const files: { outputPath: string; data: string | Promise<string> }[] =
     stringifiers.map(({ stringify, fileExtension }) => {

@@ -1,14 +1,7 @@
+import { Entity } from "./Entity.js";
 import { AnchorNode, LinkToEntityNode } from "./mdast.js";
 import { Page } from "./Page.js";
-
-export type Entity = {
-  /**
-    The complete, unique name of the entity.
-   */
-  canonicalName: string;
-  pageUri: string;
-  anchorName: string;
-};
+import { PageBuilder } from "./PageBuilder.js";
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.
@@ -39,7 +32,7 @@ export type Project = {
     To be called when a page is complete and ready to be committed to the
     output.
 
-    Before writing to disk, we validate any links to other pages. A link is
+    Before writing to disk, validates any links to other pages. A link is
     "resolvable" if the target page was already passed to `writePage()`. If the
     link has a fragment (i.e. a link to an 'anchor' or subsection within a
     page), the link is only resolvable if that specific anchor was added on that
@@ -56,6 +49,13 @@ export type Project = {
   /**
     Flushes any remaining page writes after a final attempt to resolve any links
     to other entities.
+
+    Optionally runs the given additional page builder.
    */
-  finalize(): Promise<void>;
+  finalize(options?: { page: PageBuilder }): Promise<FinalizedProject>;
 };
+
+/**
+  A finalized project cannot have additional entities added to it.
+ */
+export type FinalizedProject = Omit<Project, "finalize" | "declareEntity">;
