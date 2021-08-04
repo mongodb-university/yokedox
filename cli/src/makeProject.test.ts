@@ -44,7 +44,6 @@ describe("makeProject", () => {
         "/index",
         md.root([
           project.declareEntity({
-            anchorName: "index",
             canonicalName: "index",
             pageUri: "/index",
           }),
@@ -101,7 +100,6 @@ describe("makeProject", () => {
         md.root([
           project.declareEntity({
             canonicalName: "bar",
-            anchorName: "bar",
             pageUri: "/foo",
           }),
         ])
