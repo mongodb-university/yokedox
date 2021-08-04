@@ -227,13 +227,14 @@ const visitors: {
     c.indented(value);
   },
   link(c, n) {
+    const escaper = (text: string) => text.replace(/([<`])/g, "\\$1");
     const { url } = n;
     const isRefLink = !/^https?:\/\//.test(url);
     if (isRefLink) {
       c.add(":ref:");
     }
     c.add("`");
-    c.add(n.children);
+    c.add(n.children, escaper);
     if (isRefLink) {
       const anchorName = url.split("#")[1];
       assert(

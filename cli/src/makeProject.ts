@@ -73,25 +73,22 @@ export async function makeProject({
   let isFinalized = false;
 
   const project: Project = {
-    declareEntity(entity) {
-      const { canonicalName } = entity;
+    declareEntity(entityIn: Omit<Entity, "anchorName">) {
+      const { canonicalName, pageUri } = entityIn;
+      const anchorName = anchorify(canonicalName);
       if (entities.has(canonicalName)) {
         // Users should fix this, but it's not a fatal error.
         console.warn(
-          new Error(
-            `duplicate entity: ${entity.canonicalName} (${entity.pageUri})`
-          )
+          new Error(`duplicate entity: ${canonicalName} (${pageUri})`)
         );
       } else {
+        const entity: Entity = {
+          ...entityIn,
+          anchorName,
+        };
         entities.set(canonicalName, entity);
         // We can now resolve any pages that were waiting for this entity
         onEntityDeclared(this, entity);
-      }
-      const { anchorName } = entity;
-      if (anchorName.length === 0 || /["\s]/.test(anchorName)) {
-        throw new Error(
-          `anchorName '${anchorName}' must contain at least one character and must not include doublequotes or whitespace`
-        );
       }
       // See https://stackoverflow.com/questions/5319754/cross-reference-named-anchor-in-markdown/7335259#7335259
       return {
@@ -252,3 +249,10 @@ function resolveLinks(
     })
     .filter((link) => link.isPending === false);
 }
+
+/**
+  Create an anchor-friendly string from a given string.
+ */
+const anchorify = (string: string): string => {
+  return string.replace(/[^A-z0-9_]/g, "_");
+};

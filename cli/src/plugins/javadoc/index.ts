@@ -9,7 +9,7 @@ import { Plugin, PluginArgs } from "../../index.js";
 import { Node } from "../../mdast.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
-import { ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
+import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { tagsToMdast } from "./tagsToMdast.js";
 
 const Javadoc: Plugin = {
@@ -263,7 +263,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
             [
               md.paragraph(
                 project.linkToEntity(
-                  doc.qualifiedName,
+                  getCanonicalNameForMethod(doc),
                   `${doc.name}(${doc.parameters
                     .map((parameter) => parameter.typeName)
                     .join(", ")})`
@@ -285,7 +285,6 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
           .map((doc) => [
             project.declareEntity({
               canonicalName: doc.qualifiedName,
-              anchorName: doc.qualifiedName,
               pageUri,
             }),
             md.heading(3, md.text(doc.name)),
@@ -301,16 +300,22 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       shouldMakeSection: () => doc.methods.length !== 0,
       makeBody: () =>
         doc.methods
-          .map((doc) => [
-            project.declareEntity({
-              canonicalName: doc.qualifiedName,
-              anchorName: doc.qualifiedName,
-              pageUri,
-            }),
-            md.heading(3, md.text(doc.name)),
-            tagsToMdast(project, doc.inlineTags),
-          ])
+          .map((doc) => {
+            const canonicalName = getCanonicalNameForMethod(doc);
+            return [
+              project.declareEntity({
+                canonicalName,
+                pageUri,
+              }),
+              md.heading(3, md.text(doc.name)),
+              tagsToMdast(project, doc.inlineTags),
+            ];
+          })
           .flat(1),
     }),
   ];
 }
+
+const getCanonicalNameForMethod = (doc: MethodDoc): string => {
+  return `${doc.qualifiedName}(${doc.flatSignature})`;
+};

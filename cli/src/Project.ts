@@ -2,6 +2,9 @@ import { AnchorNode, LinkToEntityNode } from "./mdast.js";
 import { Page } from "./Page.js";
 
 export type Entity = {
+  /**
+    The complete, unique name of the entity.
+   */
   canonicalName: string;
   pageUri: string;
   anchorName: string;
@@ -12,13 +15,14 @@ export type Entity = {
  */
 export type Project = {
   /**
-    Create an anchor node for the given entity.
+    Create an anchor node for the given entity. The anchor name will be based on
+    the entity's canonical name.
 
     Use this method to create anchors to sections. Anchors are not official node
     types in mdast. Using this method ensures consistency and enables link
     validation. Anchors made without this function may not be validated.
    */
-  declareEntity(entity: Entity): AnchorNode;
+  declareEntity(entity: Omit<Entity, "anchorName">): AnchorNode;
 
   /**
     Create a link to a specific entity.
