@@ -9,6 +9,7 @@ import { Plugin, PluginArgs } from "../../index.js";
 import { Node } from "../../mdast.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
+import { buildIndexes } from "./buildIndexes.js";
 import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { tagsToMdast } from "./tagsToMdast.js";
 
@@ -18,6 +19,9 @@ const Javadoc: Plugin = {
     const { jsonPath } = await execJavadoc(args);
     // 2. Consume JSON files and produce Yokedox entities
     await processJson({ ...args, jsonPath });
+    // 3. Build indexes and additional pages
+    const finalizedProject = await args.project.finalize();
+    await buildIndexes({ finalizedProject });
   },
 };
 
@@ -83,7 +87,6 @@ async function processJson(
     }
   });
   await Promise.all(promises);
-  await project.finalize();
 }
 
 async function processClassDoc(
