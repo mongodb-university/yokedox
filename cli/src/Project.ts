@@ -53,7 +53,7 @@ export type Project<UserDataType = unknown> = {
   A finalized project cannot have additional entities added to it, but new pages
   can be written (for example, index pages) based on the existing entities.
  */
-export type FinalizedProject<UserDataType> = Omit<
+export type FinalizedProject<UserDataType = unknown> = Omit<
   Project<UserDataType>,
   "finalize" | "declareEntity"
 > & {
