@@ -6,12 +6,12 @@ import * as md from "mdast-builder";
 import * as Path from "path";
 import { cliSourceDirectory } from "../../cliSourceDirectory.js";
 import { Plugin, PluginArgs } from "../../index.js";
-import { Node } from "../../mdast.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
+import { Node } from "../../yokedast.js";
 import { buildIndexes } from "./buildIndexes.js";
 import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
-import { tagsToMdast } from "./tagsToMdast.js";
+import { tagsToMdast } from "./tagsToYokedast.js";
 
 const Javadoc: Plugin = {
   async run(args): Promise<void> {

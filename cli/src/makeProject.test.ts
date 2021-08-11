@@ -1,8 +1,8 @@
 import * as Path from "path";
 import { makeProject } from "./makeProject.js";
-import { md } from "./mdast.js";
 import { Page } from "./Page.js";
 import { makeJsonFs } from "./test/makeJsonFs.js";
+import { md } from "./yokedast.js";
 
 describe("makeProject", () => {
   it("throws on invalid directory", async () => {
