@@ -1,7 +1,13 @@
 import { strict as assert } from "assert";
 import { CompilerFunction, Plugin } from "unified";
 import { CONTINUE, SKIP, visit } from "unist-util-visit";
-import { MdastNodeType, Node, Parent, RootNode, TypedNode } from "./mdast.js";
+import {
+  MdastNodeType,
+  Node,
+  Parent,
+  RootNode,
+  TypedNode,
+} from "./yokedast.js";
 
 export type ToRstOptions = {
   //

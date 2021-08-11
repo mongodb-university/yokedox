@@ -1,6 +1,6 @@
 import * as md from "mdast-builder";
 import { Plugin, Transformer } from "unified";
-import { isPhrasing, Node, Parent } from "../../mdast.js";
+import { isPhrasing, Node, Parent } from "../../yokedast.js";
 
 /**
   All unwrapped 'phrasing' nodes should be in a paragraph, so scoop them into

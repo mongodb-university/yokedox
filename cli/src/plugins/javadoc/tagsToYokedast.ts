@@ -1,8 +1,8 @@
 import { strict as assert } from "assert";
 import * as md from "mdast-builder";
 import unified from "unified";
-import { Node } from "../../mdast.js";
 import { Project } from "../../Project.js";
+import { Node } from "../../yokedast.js";
 import {
   AnyTag,
   ParamTag,

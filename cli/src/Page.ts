@@ -1,5 +1,5 @@
 import isValidPath from "is-valid-path";
-import { RootNode } from "./mdast.js";
+import { RootNode } from "./yokedast.js";
 
 /**
   Represents a specific page on a docs site.

@@ -3,7 +3,6 @@ import { promises } from "fs";
 import * as Path from "path";
 import { visit } from "unist-util-visit";
 import { Entity } from "./Entity.js";
-import { LinkToEntityNode, md } from "./mdast.js";
 import { Page } from "./Page.js";
 import {
   flushPage as _flushPage,
@@ -13,6 +12,7 @@ import {
   rstPageStringifier,
 } from "./PageFlusher.js";
 import { Project } from "./Project.js";
+import { LinkToEntityNode, md } from "./yokedast.js";
 
 /**
   Creates a project object, which is a collection of documentation pages.
@@ -75,7 +75,7 @@ export async function makeProject({
   let isFinalized = false;
 
   const project: Project = {
-    declareEntity<UserDataType>(entity: Entity<UserDataType>) {
+    declareEntity<UserDataType = unknown>(entity: Entity<UserDataType>) {
       const { canonicalName, pageUri } = entity;
       const anchorName = anchorify(entity);
       if (entities.has(canonicalName)) {
@@ -92,6 +92,7 @@ export async function makeProject({
       return {
         ...md.html(`<a name="${anchorName}" ></a>`),
         anchorName,
+        entity,
       };
     },
 

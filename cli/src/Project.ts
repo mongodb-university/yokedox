@@ -1,6 +1,6 @@
 import { Entity } from "./Entity.js";
-import { AnchorNode, LinkToEntityNode } from "./mdast.js";
 import { Page } from "./Page.js";
+import { EntityAnchorNode, LinkToEntityNode } from "./yokedast.js";
 
 /**
   Represents a collection of documentated pages to be written to the filesystem.
@@ -14,7 +14,7 @@ export type Project<UserDataType = unknown> = {
     types in mdast. Using this method ensures consistency and enables link
     validation. Anchors made without this function may not be validated.
    */
-  declareEntity(entity: Entity<UserDataType>): AnchorNode;
+  declareEntity(entity: Entity<UserDataType>): EntityAnchorNode;
 
   /**
     Create a link to a specific entity.
