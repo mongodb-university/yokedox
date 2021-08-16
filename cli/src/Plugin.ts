@@ -3,26 +3,26 @@ import { Project } from "./Project.js";
 /**
   Converts docs generator tool output to Yokedox-friendly output.
  */
-export type Plugin = {
+export type Plugin<UserDataType = unknown> = {
   /**
     Entrypoint for plugin.
     
     Throw Error to report errors.
    */
-  run(args: PluginArgs): Promise<void> | void;
+  run(args: PluginArgs<UserDataType>): Promise<void> | void;
 };
 
 /**
   Passed to a plugin's run() function.
  */
-export type PluginArgs = {
+export type PluginArgs<UserDataType = unknown> = {
   /**
     The project to write to.
 
     As the sole writer to the project, the plugin can safely cast the Project to
     a specific Project<PluginUserData> type. This keeps entity user data typed.
    */
-  project: Project<unknown>;
+  project: Project<UserDataType>;
 
   /**
     The generator executable path.

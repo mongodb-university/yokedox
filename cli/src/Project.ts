@@ -46,7 +46,7 @@ export type Project<UserDataType = unknown> = {
     Seals the list of entities. Flushes any pending pages after a final attempt
     to resolve any links to other entities.
    */
-  finalize<UserDataType = unknown>(): Promise<FinalizedProject<UserDataType>>;
+  finalize(): Promise<FinalizedProject<UserDataType>>;
 };
 
 /**
