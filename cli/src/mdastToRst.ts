@@ -7,6 +7,7 @@ import {
   Parent,
   RootNode,
   TypedNode,
+  YokedastMdastNodeType,
 } from "./yokedast.js";
 
 export type ToRstOptions = {
@@ -152,7 +153,7 @@ class RstContext {
 // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#sections
 const titleAdornmentCharacters = ["^", "=", "-", "~", "_", "`"];
 
-type Visitor<Type extends MdastNodeType> = (
+type Visitor<Type extends YokedastMdastNodeType> = (
   context: RstContext,
   node: TypedNode<Type>,
   index: number | null,
@@ -160,7 +161,7 @@ type Visitor<Type extends MdastNodeType> = (
 ) => void;
 
 const visitors: {
-  [Type in MdastNodeType]: Visitor<Type>;
+  [Type in YokedastMdastNodeType]: Visitor<Type>;
 } = {
   blockquote(c, node) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#block-quotes
@@ -181,6 +182,9 @@ const visitors: {
     c.add(`.. code-block:: ${lang}\n`);
     c.indented(`\n${value}`);
     c.addDoubleNewline();
+  },
+  entityAnchor() {
+    // TODO?
   },
   emphasis(c, { children }) {
     c.add("*");
@@ -252,6 +256,9 @@ const visitors: {
       c.add(` <${url}>`);
       c.add("`__");
     }
+  },
+  linkToEntity() {
+    // TODO
   },
   list(c, n) {
     const firstItemToken = n.ordered ? `${n.start ?? 1}. ` : "- ";
@@ -334,5 +341,21 @@ const visitors: {
       return;
     }
     c.add(value);
+  },
+  toctree(c, n) {
+    c.add(`.. toctree::
+   :titlesonly:
+   :hidden:
+
+`);
+    c.indented("\n");
+    c.indented(n.children);
+  },
+  toctreeItem(c, { value, url }) {
+    c.add(`${value} `, (s) => s.replace(/</g, "\\<"));
+    c.add("<");
+    c.add(url, (s) => s.replace(/>/g, "\\>"));
+    c.add(">");
+    c.addNewline();
   },
 };

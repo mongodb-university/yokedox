@@ -19,6 +19,8 @@ export type LinkToEntityNode = Parent & {
   targetCanonicalName: string;
   isPending: boolean;
   linkText: string;
+  url?: string;
+  title?: string;
 };
 
 /**
@@ -36,8 +38,28 @@ export type ToctreeNode = Parent & {
   type: "toctree";
 };
 
-export type ToctreeItemNode = Parent & {
+export type ToctreeItemNode = {
+  value: string;
+  url: string;
   type: "toctreeItem";
+};
+
+export const toctree = (children: ToctreeItemNode[]): ToctreeNode => {
+  return {
+    children,
+    type: "toctree",
+  };
+};
+
+export const toctreeItem = ({
+  value,
+  url,
+}: Omit<ToctreeItemNode, "type">): ToctreeItemNode => {
+  return {
+    value,
+    url,
+    type: "toctreeItem",
+  };
 };
 
 export type RootNode = ReturnType<typeof MdastBuilder.root>;
@@ -61,7 +83,8 @@ type MdastNodes = Omit<typeof MdastBuilder, "brk" | "rootWithTitle"> & {
 type YokedastNodes = {
   entityAnchor: <UserDataType>() => EntityAnchorNode<UserDataType>;
   linkToEntity: () => LinkToEntityNode;
-  toctree: () => ToctreeNode;
+  toctree: typeof toctree;
+  toctreeItem: typeof toctreeItem;
 };
 
 export type MdastNodeType = keyof MdastNodes;
