@@ -315,7 +315,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       depth,
       title: "Method Detail",
       shouldMakeSection: () => doc.methods.length !== 0,
-      makeBody: () =>
+      makeBody: ({ depth }) =>
         doc.methods
           .map((doc) => {
             const canonicalName = getCanonicalNameForMethod(doc);
@@ -324,12 +324,36 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                 canonicalName,
                 pageUri,
               }),
-              md.heading(3, [
-                md.text(doc.name),
+              md.heading(depth + 1, md.text(doc.name)),
+              md.paragraph([
+                md.text(doc.modifiers),
+                md.text(" "),
+                project.linkToEntity(
+                  doc.returnType.qualifiedTypeName,
+                  doc.returnType.typeName
+                ),
+                md.text(` ${doc.name} `),
                 ...makeTypeParameterListWithLinks(project, doc),
                 ...makeParameterListWithLinks(project, doc),
               ]),
               tagsToMdast(project, doc.inlineTags),
+              ...makeSection({
+                ...args,
+                depth: depth + 1,
+                title: "Parameters",
+                shouldMakeSection: () => doc.paramTags.length !== 0,
+                makeBody: () => {
+                  return md.list(
+                    "unordered",
+                    doc.paramTags.map((paramTag) => {
+                      return md.listItem([
+                        md.text(`${paramTag.name} - `),
+                        tagsToMdast(project, paramTag.inlineTags ?? []),
+                      ]);
+                    })
+                  );
+                },
+              }),
             ];
           })
           .flat(1),

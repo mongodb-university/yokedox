@@ -37,6 +37,15 @@ export const mdastRstStringify: Plugin<[ToRstOptions?]> = function (
  */
 export const toRst = (root: RootNode, options?: ToRstOptions): string => {
   const context = new RstContext(options);
+  context.add(`
+.. contents:: On this page
+   :local:
+   :backlinks: none
+   :depth: 2
+   :class: singlecol
+
+`);
+
   context.add(root);
   return context.rstString();
 };
@@ -291,15 +300,6 @@ const visitors: {
     c.addDoubleNewline();
   },
   root(c, { children }) {
-    c.add(`
-.. contents:: On this page
-   :local:
-   :backlinks: none
-   :depth: 2
-   :class: singlecol
-
-`);
-
     c.add(children);
     c.addNewline();
   },
