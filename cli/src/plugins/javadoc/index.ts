@@ -274,26 +274,17 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
             [
               md.text(doc.modifiers),
               md.text(" "),
-              md.text(doc.returnType.typeName),
+              project.linkToEntity(
+                doc.returnType.qualifiedTypeName,
+                doc.returnType.typeName
+              ),
             ],
             [
               md.paragraph([
                 project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
-                md.text("("),
-                ...doc.parameters
-                  .map((parameter, i) => [
-                    project.linkToEntity(
-                      parameter.type.qualifiedTypeName,
-                      parameter.typeName
-                    ),
-                    md.text(
-                      ` ${parameter.name}${
-                        i < doc.parameters.length - 1 ? ", " : ""
-                      }`
-                    ),
-                  ])
-                  .flat(1),
-                md.text(")"),
+                md.text(" "),
+                ...makeTypeParameterListWithLinks(project, doc),
+                ...makeParameterListWithLinks(project, doc),
               ]),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
@@ -333,7 +324,11 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                 canonicalName,
                 pageUri,
               }),
-              md.heading(3, md.text(doc.name)),
+              md.heading(3, [
+                md.text(doc.name),
+                ...makeTypeParameterListWithLinks(project, doc),
+                ...makeParameterListWithLinks(project, doc),
+              ]),
               tagsToMdast(project, doc.inlineTags),
             ];
           })
@@ -344,4 +339,48 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
 
 const getCanonicalNameForMethod = (doc: MethodDoc): string => {
   return `${doc.qualifiedName}(${doc.flatSignature})`;
+};
+
+const makeParameterListWithLinks = (
+  project: Project<JavadocEntityData>,
+  doc: MethodDoc
+): Node[] => {
+  return [
+    md.text("("),
+    ...doc.parameters
+      .map((parameter, i) => [
+        project.linkToEntity(
+          parameter.type.qualifiedTypeName,
+          parameter.typeName
+        ),
+        md.text(
+          ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
+        ),
+      ])
+      .flat(1),
+    md.text(")"),
+  ];
+};
+
+const makeTypeParameterListWithLinks = (
+  project: Project<JavadocEntityData>,
+  doc: MethodDoc
+): Node[] => {
+  if (doc.typeParameters.length === 0) {
+    return [];
+  }
+  return [
+    md.text("<"),
+    ...doc.typeParameters
+      .map((parameter, i) => [
+        project.linkToEntity(parameter.qualifiedTypeName, parameter.typeName),
+        md.text(
+          ` ${parameter.name ?? ""}${
+            i < doc.typeParameters.length - 1 ? ", " : ""
+          }`
+        ),
+      ])
+      .flat(1),
+    md.text(">"),
+  ];
 };
