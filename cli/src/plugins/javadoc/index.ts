@@ -277,14 +277,24 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
               md.text(doc.returnType.typeName),
             ],
             [
-              md.paragraph(
-                project.linkToEntity(
-                  getCanonicalNameForMethod(doc),
-                  `${doc.name}(${doc.parameters
-                    .map((parameter) => parameter.typeName)
-                    .join(", ")})`
-                )
-              ),
+              md.paragraph([
+                project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
+                md.text("("),
+                ...doc.parameters
+                  .map((parameter, i) => [
+                    project.linkToEntity(
+                      parameter.type.qualifiedTypeName,
+                      parameter.typeName
+                    ),
+                    md.text(
+                      ` ${parameter.name}${
+                        i < doc.parameters.length - 1 ? ", " : ""
+                      }`
+                    ),
+                  ])
+                  .flat(1),
+                md.text(")"),
+              ]),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
           ])
