@@ -337,9 +337,30 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                 ...makeParameterListWithLinks(project, doc),
               ]),
               tagsToMdast(project, doc.inlineTags),
+
+              // Type parameters section
               ...makeSection({
                 ...args,
-                depth: depth + 1,
+                depth: depth + 2,
+                title: "Type Parameters",
+                shouldMakeSection: () => doc.typeParamTags.length !== 0,
+                makeBody: () => {
+                  return md.list(
+                    "unordered",
+                    doc.typeParamTags.map((tag) => {
+                      return md.listItem([
+                        md.text(`${tag.parameterName} - `),
+                        tagsToMdast(project, tag.inlineTags ?? []),
+                      ]);
+                    })
+                  );
+                },
+              }),
+
+              // Parameters section
+              ...makeSection({
+                ...args,
+                depth: depth + 2,
                 title: "Parameters",
                 shouldMakeSection: () => doc.paramTags.length !== 0,
                 makeBody: () => {
@@ -347,11 +368,71 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                     "unordered",
                     doc.paramTags.map((paramTag) => {
                       return md.listItem([
-                        md.text(`${paramTag.name} - `),
+                        md.text(`${paramTag.parameterName} - `),
                         tagsToMdast(project, paramTag.inlineTags ?? []),
                       ]);
                     })
                   );
+                },
+              }),
+
+              // Returns section
+              ...makeSection({
+                ...args,
+                depth: depth + 2,
+                title: "Returns",
+                shouldMakeSection: () =>
+                  doc.tags.filter((tag) => /^returns?$/.test(tag.name))
+                    .length !== 0,
+                makeBody: () => {
+                  const returnTag = doc.tags.find((tag) =>
+                    /^returns?$/.test(tag.name)
+                  );
+                  assert(returnTag !== undefined);
+                  return md.paragraph(
+                    tagsToMdast(project, returnTag.inlineTags ?? [])
+                  );
+                },
+              }),
+
+              // "Throws" section
+              ...makeSection({
+                ...args,
+                depth: depth + 2,
+                title: "Throws",
+                shouldMakeSection: () => doc.throwsTags.length !== 0,
+                makeBody: () => {
+                  // TODO
+                  return [];
+                  /*
+                  return md.list(
+                    "unordered",
+                    doc.throwsTags.map((tag) => {
+                      return md.listItem([
+                        project.linkToEntity(
+                          tag.exceptionType?.qualifiedTypeName,
+                          tag.exceptionName
+                        ),
+                        md.text(" - "),
+                        tagsToMdast(project, tag.inlineTags ?? []),
+                      ]);
+                    })
+                  );
+                  */
+                },
+              }),
+
+              // "See also" section
+              ...makeSection({
+                ...args,
+                depth: depth + 2,
+                title: "Throws",
+                shouldMakeSection: () => doc.seeTags.length !== 0,
+                makeBody: () => {
+                  return doc.seeTags.map((tag) => {
+                    // TODO
+                    return md.text(tag.text);
+                  });
                 },
               }),
             ];
