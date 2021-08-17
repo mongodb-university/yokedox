@@ -291,6 +291,15 @@ const visitors: {
     c.addDoubleNewline();
   },
   root(c, { children }) {
+    c.add(`
+.. contents:: On this page
+   :local:
+   :backlinks: none
+   :depth: 2
+   :class: singlecol
+
+`);
+
     c.add(children);
     c.addNewline();
   },
