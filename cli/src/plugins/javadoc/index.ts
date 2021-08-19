@@ -426,7 +426,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
               ...makeSection({
                 ...args,
                 depth: depth + 2,
-                title: "Throws",
+                title: "See Also",
                 shouldMakeSection: () => doc.seeTags.length !== 0,
                 makeBody: () => {
                   return doc.seeTags.map((tag) => {
