@@ -33,7 +33,14 @@ This is a codeblock.
       .use(gfm)
       .use(mdastRstStringify)
       .processSync(markdown);
-    expect(rstFile.contents).toBe(`This is a heading
+    expect(rstFile.contents).toBe(`
+.. contents:: On this page
+   :local:
+   :backlinks: none
+   :depth: 2
+   :class: singlecol
+
+This is a heading
 ^^^^^^^^^^^^^^^^^
 
 Here is some *text* with an \`external link <https://example.com>\`__ and an :ref:\`anchor link <anchorLink>\`.

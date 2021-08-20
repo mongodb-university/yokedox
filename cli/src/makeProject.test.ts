@@ -53,7 +53,7 @@ describe("makeProject", () => {
     );
 
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
-      '{"path":"/index","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"index\\" ></a>","anchorName":"index"},{"type":"heading","children":[{"type":"text","value":"heading"}],"depth":1}]}}'
+      '{"path":"/index","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"index\\" ></a>","anchorName":"index","entity":{"canonicalName":"index","pageUri":"/index"}},{"type":"heading","children":[{"type":"text","value":"heading"}],"depth":1}]}}'
     );
 
     await project.writePage(
@@ -107,7 +107,7 @@ describe("makeProject", () => {
     );
 
     await expect(fs.readFile("/foo.json", "utf8")).resolves.toBe(
-      '{"path":"/foo","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"bar\\" ></a>","anchorName":"bar"}]}}'
+      '{"path":"/foo","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"bar\\" ></a>","anchorName":"bar","entity":{"canonicalName":"bar","pageUri":"/foo"}}]}}'
     );
 
     // Finalize flushes remaining pages
