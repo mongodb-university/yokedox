@@ -1,38 +1,24 @@
 import tmp from "tmp-promise";
 import { loadPlugin } from "./loadPlugin.js";
-import { makeProject } from "./makeProject.js";
-
+import { makeProject, MakeProjectArgs } from "./makeProject.js";
+import { PluginArgs } from "./Plugin.js";
 /**
   Arguments passed to the run command.
  */
-export interface RunArgs {
-  /**
-    Name of or path to generator executable.
-   */
-  generator: string;
-
-  /**
-    Arguments after end-of-options flag (--) to be passed to the generator.
-   */
-  generatorArgs: (string | number)[];
-
-  /**
+export type RunArgs = Omit<PluginArgs, "tempDir" | "project"> &
+  MakeProjectArgs & {
+    /**
     Path to plugin.
    */
-  plugin?: string;
-
-  /**
-    Output path.
-   */
-  out?: string;
-}
+    plugin?: string;
+  };
 
 /**
   Runs a given generator in the current working directory.
  */
 export const run = async (args: RunArgs): Promise<void> => {
   // Validate and open output location, set up output functions
-  const project = await makeProject({ ...args });
+  const project = await makeProject(args);
 
   // Load the plugin
   const plugin = await loadPlugin(args);
@@ -46,9 +32,8 @@ export const run = async (args: RunArgs): Promise<void> => {
   try {
     // Delegate to plugin
     await plugin.run({
+      ...args,
       project,
-      generator: args.generator,
-      generatorArgs: args.generatorArgs,
       tempDir: tempDir.path,
     });
   } finally {

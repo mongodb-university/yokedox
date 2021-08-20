@@ -14,6 +14,33 @@ import {
 import { Project } from "./Project.js";
 import { LinkToEntityNode, md } from "./yokedast.js";
 
+export type MakeProjectArgs = {
+  /**
+    Output path.
+   */
+  out?: string;
+
+  /**
+    The file system library. Can be swapped for unit testing.
+   */
+  fs?: typeof promises;
+
+  /**
+    Whether to output mdast json files.
+   */
+  outputMdastJson?: boolean;
+
+  /**
+    Whether to output markdown files.
+   */
+  outputMarkdown?: boolean;
+
+  /**
+    Whether to output rST files.
+   */
+  outputRst?: boolean;
+};
+
 /**
   Creates a project object, which is a collection of documentation pages.
  */
@@ -23,13 +50,7 @@ export async function makeProject({
   outputMdastJson = true,
   outputMarkdown = false,
   outputRst = true,
-}: {
-  out?: string;
-  fs?: typeof promises;
-  outputMdastJson?: boolean;
-  outputMarkdown?: boolean;
-  outputRst?: boolean;
-}): Promise<Project> {
+}: MakeProjectArgs): Promise<Project> {
   // Use the current working directy if no output directory was provided
   const outputDirectoryPath = Path.resolve(out ?? "");
 

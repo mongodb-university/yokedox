@@ -26,15 +26,27 @@ export const cli = yargs
           alias: "o",
           string: true,
           describe: "output path",
+        })
+        .option("outputMdastJson", {
+          boolean: true,
+          describe: "whether to output mdast json files",
+        })
+        .option("outputRst", {
+          boolean: true,
+          describe: "whether to output rST files",
+        })
+        .option("debugGeneratorResultPath", {
+          string: true,
+          describe:
+            "bypass the generator step and treat the given path as the result of a generator call",
         });
     },
     (args) => {
       assert(args.generator !== undefined);
       run({
-        generator: args.generator,
-        plugin: args.plugin,
+        ...args,
+        generator: args.generator, // strict null check
         generatorArgs: args._.slice(1),
-        out: args.out,
       });
     }
   )
