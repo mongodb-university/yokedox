@@ -19,8 +19,10 @@ export type JavadocEntityData = {
 
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
-    // 1. Run javadoc with JSON doclet to produce JSON files in temporary directory
-    const { jsonPath } = await execJavadoc(args);
+    // 1. Run javadoc with JSON doclet to produce JSON files in temporary
+    //    directory OR consume existing files at debugGeneratorResultPath
+    const jsonPath =
+      args.debugGeneratorResultPath ?? (await execJavadoc(args)).jsonPath;
     // 2. Consume JSON files and produce Yokedox entities
     await processJson({ ...args, jsonPath });
     // 3. Build indexes and additional pages

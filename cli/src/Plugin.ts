@@ -41,4 +41,10 @@ export type PluginArgs<UserDataType = unknown> = {
     modify these arguments as needed.
    */
   generatorArgs: (string | number)[];
+
+  /**
+    If set, plugins should bypass the generator step and treat the given path as
+    containing the result of a generator call.
+   */
+  debugGeneratorResultPath?: string;
 };
