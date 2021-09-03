@@ -3,7 +3,7 @@ import rehypeParse from "rehype-parse";
 import rehypeToRemark from "rehype-remark";
 import unified from "unified";
 import * as unist from "unist-util-visit";
-import { CodeNode, Node, Parent } from "../../yokedast.js";
+import { CodeNode, Node, Parent } from "./yokedast.js";
 
 const parseHtml = unified().use(rehypeParse, { fragment: true }).parse;
 const hastToMdast = unified()
