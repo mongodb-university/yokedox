@@ -188,6 +188,7 @@ const visitors: {
       return;
     }
 
+    c.addDoubleNewline();
     c.add(`.. code-block:: ${lang}\n`);
     c.indented(`\n${value}`);
     c.addDoubleNewline();
@@ -349,7 +350,7 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    c.add(value);
+    c.add(value.replace(/`/g, "\\`"));
   },
   toctree(c, n) {
     c.add(`.. toctree::
