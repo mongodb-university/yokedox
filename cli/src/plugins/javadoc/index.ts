@@ -19,6 +19,20 @@ export type JavadocEntityData = {
 
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
+    const { project } = args;
+    // Handle external entities
+    project.addExternalEntityTransformer((canonicalName) => {
+      if (!/^java\./.test(canonicalName)) {
+        return undefined;
+      }
+      const path = canonicalName.split(".").join("/");
+      return {
+        isExternal: true,
+        canonicalName,
+        pageUri: `https://docs.oracle.com/javase/7/docs/api/${path}.html`,
+      };
+    });
+
     // 1. Run javadoc with JSON doclet to produce JSON files in temporary
     //    directory OR consume existing files at debugGeneratorResultPath
     const jsonPath =
