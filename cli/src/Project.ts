@@ -1,4 +1,4 @@
-import { Entity } from "./Entity.js";
+import { Entity, ExternalEntityTransformer, InternalEntity } from "./Entity.js";
 import { Page } from "./Page.js";
 import { EntityAnchorNode, LinkToEntityNode } from "./yokedast.js";
 
@@ -14,7 +14,15 @@ export type Project<UserDataType = unknown> = {
     types in mdast. Using this method ensures consistency and enables link
     validation. Anchors made without this function may not be validated.
    */
-  declareEntity(entity: Entity<UserDataType>): EntityAnchorNode;
+  declareEntity(entity: InternalEntity<UserDataType>): EntityAnchorNode;
+
+  /**
+    Adds the given external entity transformer to the project's list of external
+    entity transformers. This takes a 
+   */
+  addExternalEntityTransformer(
+    transform: ExternalEntityTransformer<UserDataType>
+  ): void;
 
   /**
     Create a link to a specific entity.

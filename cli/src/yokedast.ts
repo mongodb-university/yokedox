@@ -21,6 +21,7 @@ export type LinkToEntityNode = Parent & {
   linkText: string;
   url?: string;
   title?: string;
+  isExternal?: boolean;
 };
 
 /**

@@ -53,7 +53,7 @@ describe("makeProject", () => {
     );
 
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
-      '{"path":"/index","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"index\\" ></a>","anchorName":"index","entity":{"canonicalName":"index","pageUri":"/index"}},{"type":"heading","children":[{"type":"text","value":"heading"}],"depth":1}]}}'
+      '{"path":"/index","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"index\\" ></a>","anchorName":"index","entity":{"canonicalName":"index","pageUri":"/index","isExternal":false}},{"type":"heading","children":[{"type":"text","value":"heading"}],"depth":1}]}}'
     );
 
     await project.writePage(
@@ -61,7 +61,7 @@ describe("makeProject", () => {
     );
 
     await expect(fs.readFile("/file2.json", "utf8")).resolves.toBe(
-      '{"path":"/file2","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"index"}],"url":"/index#index","title":"index","linkText":"index","targetCanonicalName":"index","isPending":false}]}}'
+      '{"path":"/file2","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"index"}],"url":"/index#index","title":"index","linkText":"index","targetCanonicalName":"index","isPending":false,"isExternal":false}]}}'
     );
   });
 
@@ -107,7 +107,7 @@ describe("makeProject", () => {
     );
 
     await expect(fs.readFile("/foo.json", "utf8")).resolves.toBe(
-      '{"path":"/foo","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"bar\\" ></a>","anchorName":"bar","entity":{"canonicalName":"bar","pageUri":"/foo"}}]}}'
+      '{"path":"/foo","root":{"type":"root","children":[{"type":"html","value":"<a name=\\"bar\\" ></a>","anchorName":"bar","entity":{"canonicalName":"bar","pageUri":"/foo","isExternal":false}}]}}'
     );
 
     // Finalize flushes remaining pages
@@ -115,7 +115,7 @@ describe("makeProject", () => {
 
     // Finalized with resolved links
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
-      '{"path":"/index","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"bar"}],"targetCanonicalName":"bar","isPending":false,"linkText":"bar","url":"/foo#bar","title":"bar"}]}}'
+      '{"path":"/index","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"bar"}],"targetCanonicalName":"bar","isPending":false,"linkText":"bar","url":"/foo#bar","title":"bar","isExternal":false}]}}'
     );
   });
 
@@ -170,6 +170,34 @@ describe("makeProject", () => {
     });
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
       '{"path":"/index","root":{"type":"root","children":[]}}'
+    );
+  });
+
+  it("supports external entities", async () => {
+    const fs = makeJsonFs();
+    const project = await makeProject({ out: "/", fs });
+    project.addExternalEntityTransformer((canonicalName) => {
+      return /^ext\./.test(canonicalName)
+        ? {
+            isExternal: true,
+            pageUri: `https://example.com/${canonicalName}`,
+            canonicalName,
+          }
+        : undefined;
+    });
+    await project.writePage(
+      new Page(
+        "/index",
+        md.root([
+          project.linkToEntity("ext.something"),
+          project.linkToEntity("int.something"),
+        ])
+      )
+    );
+    await project.finalize();
+
+    await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
+      '{"path":"/index","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"ext.something"}],"targetCanonicalName":"ext.something","isPending":false,"linkText":"ext.something","url":"https://example.com/ext.something","title":"ext.something","isExternal":true},{"type":"strong","children":[{"type":"text","value":"int.something"},{"type":"text","value":" (?)"}],"targetCanonicalName":"int.something","isPending":true,"linkText":"int.something"}]}}'
     );
   });
 });
