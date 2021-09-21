@@ -234,8 +234,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
           "unordered",
           doc.constructors.map((doc) =>
             md.listItem([
-              md.text(doc.qualifiedName),
-              md.text(doc.flatSignature),
+              md.inlineCode(doc.qualifiedName + doc.flatSignature)
             ])
           )
         ),
@@ -250,8 +249,8 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         makeTable(
           ["Modifier and Type", "Class and Description"],
           doc.innerClasses.map((classDoc) => [
-            md.text(classDoc.modifiers ?? ""),
-            md.text(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
+            md.inlineCode(classDoc.modifiers ?? ""),
+            md.inlineCode(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
           ])
         ),
     }),
@@ -266,12 +265,10 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
           ["Modifier and Type", "Field and Description"],
           doc.fields.map((fieldDoc) => [
             md.paragraph([
-              md.text(fieldDoc.modifiers),
-              md.text(" "),
-              md.text(fieldDoc.type.asString),
+              md.inlineCode(fieldDoc.modifiers + fieldDoc.type.asString)
             ]),
             [
-              md.paragraph(md.text(fieldDoc.name)),
+              md.paragraph(md.inlineCode(fieldDoc.name)),
               md.text(fieldDoc.commentText),
             ],
           ])
@@ -320,7 +317,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
               canonicalName: doc.qualifiedName,
               pageUri,
             }),
-            md.heading(3, md.text(doc.name)),
+            md.heading(3, md.inlineCode(doc.name)),
             tagsToMdast(project, doc.inlineTags),
           ])
           .flat(1),
@@ -340,7 +337,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                 canonicalName,
                 pageUri,
               }),
-              md.heading(depth + 1, md.text(doc.name)),
+              md.heading(depth + 1, md.inlineCode(doc.name)),
               md.paragraph([
                 md.text(doc.modifiers),
                 md.text(" "),
@@ -365,7 +362,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                     "unordered",
                     doc.typeParamTags.map((tag) => {
                       return md.listItem([
-                        md.text(`${tag.parameterName} - `),
+                        md.inlineCode(`${tag.parameterName} - `),
                         tagsToMdast(project, tag.inlineTags ?? []),
                       ]);
                     })
@@ -384,7 +381,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
                     "unordered",
                     doc.paramTags.map((paramTag) => {
                       return md.listItem([
-                        md.text(`${paramTag.parameterName} - `),
+                        md.inlineCode(`${paramTag.parameterName} - `),
                         tagsToMdast(project, paramTag.inlineTags ?? []),
                       ]);
                     })
