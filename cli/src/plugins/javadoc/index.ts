@@ -278,6 +278,22 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
     ...makeSection({
       ...args,
       depth,
+      title: "Enum Constant Summary",
+      shouldMakeSection: () => doc.enumConstants.length !== 0,
+      makeBody: () =>
+        makeTable(
+          ["Enum Constant and Description"],
+          doc.enumConstants.map((doc) => [
+            project.linkToEntity(
+              doc.containingClass?.asString + "_" + doc.name
+            ),
+          ])
+        ),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
       title: "Method Summary",
       shouldMakeSection: () => doc.methods.length !== 0,
       makeBody: () =>
@@ -319,6 +335,32 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
             }),
             md.heading(3, md.inlineCode(doc.name)),
             tagsToMdast(project, doc.inlineTags),
+          ])
+          .flat(1),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
+      title: "Enum Constant Detail",
+      shouldMakeSection: () => doc.enumConstants.length !== 0,
+      makeBody: () =>
+        doc.enumConstants
+          .map((doc) => [
+            project.declareEntity({
+              canonicalName: doc.containingClass?.asString + "_" + doc.name,
+              pageUri,
+            }),
+            md.heading(3, md.inlineCode(doc.name)),
+            md.paragraph([
+              md.text(
+                doc.modifiers +
+                  " " +
+                  doc.containingClass?.typeName +
+                  " " +
+                  doc.name
+              ),
+            ]),
           ])
           .flat(1),
     }),
