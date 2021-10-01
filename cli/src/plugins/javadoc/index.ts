@@ -282,11 +282,15 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       shouldMakeSection: () => doc.enumConstants.length !== 0,
       makeBody: () =>
         makeTable(
-          ["Enum Constant and Description"],
+          ["Enum Constant", "Description"],
           doc.enumConstants.map((doc) => [
-            project.linkToEntity(
-              doc.containingClass?.asString + "_" + doc.name
-            ),
+            [
+              project.linkToEntity(
+                doc.qualifiedName + "_" + doc.name,
+                doc.name
+              ),
+            ],
+            [md.paragraph(tagsToMdast(project, doc.firstSentenceTags))],
           ])
         ),
     }),
@@ -348,19 +352,19 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         doc.enumConstants
           .map((doc) => [
             project.declareEntity({
-              canonicalName: doc.containingClass?.asString + "_" + doc.name,
+              canonicalName: doc.qualifiedName + "_" + doc.name,
               pageUri,
             }),
             md.heading(3, md.inlineCode(doc.name)),
             md.paragraph([
-              md.text(
-                doc.modifiers +
-                  " " +
-                  doc.containingClass?.typeName +
-                  " " +
-                  doc.name
+              md.text(doc.modifiers),
+              md.text(" "),
+              project.linkToEntity(
+                doc.type.qualifiedTypeName,
+                doc.type.typeName
               ),
             ]),
+            md.paragraph(md.text(doc.commentText)),
           ])
           .flat(1),
     }),
