@@ -15,6 +15,7 @@ import { tagsToMdast } from "./tagsToYokedast.js";
 
 export type JavadocEntityData = {
   category: "class" | "package";
+  containingPackage?: string;
 };
 
 const Javadoc: Plugin<JavadocEntityData> = {
@@ -113,7 +114,7 @@ async function processClassDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedClassDoc
 ): Promise<void> {
-  const pageUri = `/${doc.qualifiedTypeName}`;
+  const pageUri = `/${doc.qualifiedTypeName.replace(/\./g,'/')}`;
   const root = md.root(
     makeSection({
       project,
@@ -123,15 +124,37 @@ async function processClassDoc(
       title: md.text(doc.asString),
       makeBody: makeClassDocPageBody,
     })
-  );
+  );    
   project.writePage(new Page(pageUri, root));
+
+  // also write the package because package names aren't readily available in parsed packages...
+  const pkgUri = `/${doc.containingPackage.name}` // '/' + doc.containingPackage.name.replace(/\./g,'/')
+  const pkg = md.root(
+    makeSection({
+      project,
+      pageUri: pkgUri,
+      doc,
+      depth: 1,
+      title: md.text(doc.containingPackage.name),
+      makeBody: (args: MakeSectionArgs) => {return []},
+    })
+  );
+
+  project.declareEntity({
+    canonicalName: pkgUri,
+    pageUri: pkgUri,
+    data: {
+      category: "package",
+    },
+  })
 }
 
 async function processPackageDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedPackageDoc
 ): Promise<void> {
-  // TODO
+  // Nothing here because parsed package docs are not comprehensive. Instead, we
+  // identify packages as we process classes.
 }
 
 function makeTable(labels: string[], rows: (Node | Node[])[][]) {
@@ -212,6 +235,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       pageUri,
       data: {
         category: "class",
+        containingPackage: `/${doc.containingPackage.name}`
       },
     }),
 
