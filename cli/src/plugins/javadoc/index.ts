@@ -284,12 +284,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         makeTable(
           ["Enum Constant", "Description"],
           doc.enumConstants.map((doc) => [
-            [
-              project.linkToEntity(
-                doc.qualifiedName + "_" + doc.name,
-                doc.name
-              ),
-            ],
+            [project.linkToEntity(doc.qualifiedName, doc.name)],
             [md.paragraph(tagsToMdast(project, doc.firstSentenceTags))],
           ])
         ),
@@ -352,7 +347,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         doc.enumConstants
           .map((doc) => [
             project.declareEntity({
-              canonicalName: doc.qualifiedName + "_" + doc.name,
+              canonicalName: doc.qualifiedName,
               pageUri,
             }),
             md.heading(3, md.inlineCode(doc.name)),
