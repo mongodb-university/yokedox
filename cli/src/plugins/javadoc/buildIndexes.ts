@@ -60,11 +60,11 @@ export const buildIndexes = async ({
       .filter((e) => e.data?.containingPackage === pkg.canonicalName)
 
     const memberClasses = members
-      .filter((e) => e.data?.classType === "class").sort((a, b) => { return a.canonicalName.localeCompare(b.canonicalName) } );
+      .filter((e) => e.data?.classType === "class").sort((a, b) => a.canonicalName.localeCompare(b.canonicalName) );
     const memberExceptions = members
-      .filter((e) => e.data?.classType === "exception").sort((a, b) => { return a.canonicalName.localeCompare(b.canonicalName) } );
+      .filter((e) => e.data?.classType === "exception").sort((a, b) => a.canonicalName.localeCompare(b.canonicalName) );
     const memberErrors = members
-      .filter((e) => e.data?.classType === "error").sort((a, b) => { return a.canonicalName.localeCompare(b.canonicalName) } );
+      .filter((e) => e.data?.classType === "error").sort((a, b) => a.canonicalName.localeCompare(b.canonicalName) );
 
     const membersSorted = memberClasses.concat(memberExceptions).concat(memberErrors);
     const pkgRoot = md.root([

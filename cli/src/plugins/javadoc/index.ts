@@ -17,8 +17,20 @@ export type JavadocEntityData = {
   category: "class" | "package";
   containingPackage?: string;
   simpleTypeName?: string;
-  classType?: string;
+  classType?: ClassType;
 };
+
+type ClassType = "error" | "exception" | "class"
+
+function getClassType(doc: ParsedClassDoc): ClassType {
+  if (doc.isError) {
+    return "error"
+  } else if (doc.isException) {
+    return "exception"
+  } else {
+    return "class"
+  }
+}
 
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
@@ -213,16 +225,6 @@ function makeSection(args: MakeSectionArgs): Node[] {
     md.heading(depth, typeof title === "string" ? md.text(title) : title),
     ...[makeBody(args)].flat(1),
   ];
-}
-
-function getClassType(doc: ParsedClassDoc): string {
-  if (doc.isError) {
-    return "error"
-  } else if (doc.isException) {
-    return "exception"
-  } else {
-    return "class"
-  }
 }
 
 function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
