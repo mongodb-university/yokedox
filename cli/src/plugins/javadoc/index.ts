@@ -9,13 +9,28 @@ import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../yokedast.js";
-import { buildIndexes } from "./buildIndexes.js";
+import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
 import { tagsToMdast } from "./tagsToYokedast.js";
 
 export type JavadocEntityData = {
   category: "class" | "package";
+  containingPackage?: string;
+  simpleTypeName?: string;
+  classType?: ClassType;
 };
+
+type ClassType = "error" | "exception" | "class"
+
+function getClassType(doc: ParsedClassDoc): ClassType {
+  if (doc.isError) {
+    return "error"
+  } else if (doc.isException) {
+    return "exception"
+  } else {
+    return "class"
+  }
+}
 
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
@@ -113,7 +128,7 @@ async function processClassDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedClassDoc
 ): Promise<void> {
-  const pageUri = `/${doc.qualifiedTypeName}`;
+  const pageUri = `/${packageToFolderPath(doc.qualifiedTypeName)}`;
   const root = md.root(
     makeSection({
       project,
@@ -123,15 +138,25 @@ async function processClassDoc(
       title: md.text(doc.asString),
       makeBody: makeClassDocPageBody,
     })
-  );
+  );    
   project.writePage(new Page(pageUri, root));
+
+  // write packages on the fly, as we find classes that belong to them
+  project.declareEntity({
+    canonicalName: doc.containingPackage.name,
+    pageUri: doc.containingPackage.name,
+    data: {
+      category: "package",
+    },
+  })
 }
 
 async function processPackageDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedPackageDoc
 ): Promise<void> {
-  // TODO
+  // Nothing here because parsed package docs are not comprehensive. Instead, we
+  // identify packages as we process classes.
 }
 
 function makeTable(labels: string[], rows: (Node | Node[])[][]) {
@@ -212,6 +237,9 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       pageUri,
       data: {
         category: "class",
+        containingPackage: doc.containingPackage.name,
+        simpleTypeName: doc.name,
+        classType: getClassType(doc)
       },
     }),
 
