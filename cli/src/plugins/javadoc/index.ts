@@ -20,15 +20,15 @@ export type JavadocEntityData = {
   classType?: ClassType;
 };
 
-type ClassType = "error" | "exception" | "class"
+type ClassType = "error" | "exception" | "class";
 
 function getClassType(doc: ParsedClassDoc): ClassType {
   if (doc.isError) {
-    return "error"
+    return "error";
   } else if (doc.isException) {
-    return "exception"
+    return "exception";
   } else {
-    return "class"
+    return "class";
   }
 }
 
@@ -138,7 +138,7 @@ async function processClassDoc(
       title: md.text(doc.asString),
       makeBody: makeClassDocPageBody,
     })
-  );    
+  );
   project.writePage(new Page(pageUri, root));
 
   // write packages on the fly, as we find classes that belong to them
@@ -148,7 +148,7 @@ async function processClassDoc(
     data: {
       category: "package",
     },
-  })
+  });
 }
 
 async function processPackageDoc(
@@ -206,17 +206,21 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
   ];
 }
 
-type MakeSectionArgs = {
+type MakeBodyFunction<DocType = ParsedClassDoc> = (
+  args: MakeSectionArgs<DocType>
+) => Node[] | Node;
+
+type MakeSectionArgs<DocType> = {
   project: Project<JavadocEntityData>;
   pageUri: string;
-  doc: ParsedClassDoc;
+  doc: DocType;
   title: string | Node | Node[];
   depth: number;
-  shouldMakeSection?(args: MakeSectionArgs): boolean;
-  makeBody(args: MakeSectionArgs): Node[] | Node;
+  shouldMakeSection?(args: MakeSectionArgs<DocType>): boolean;
+  makeBody: MakeBodyFunction<DocType>;
 };
 
-function makeSection(args: MakeSectionArgs): Node[] {
+function makeSection<DocType>(args: MakeSectionArgs<DocType>): Node[] {
   const { shouldMakeSection, depth, title, makeBody } = args;
   if (shouldMakeSection !== undefined && !shouldMakeSection(args)) {
     return [];
@@ -227,7 +231,7 @@ function makeSection(args: MakeSectionArgs): Node[] {
   ];
 }
 
-function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
+const makeClassDocPageBody: MakeBodyFunction = (args) => {
   const { project, doc, pageUri } = args;
   const depth = args.depth + 1;
   return [
@@ -239,7 +243,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         category: "class",
         containingPackage: doc.containingPackage.name,
         simpleTypeName: doc.name,
-        classType: getClassType(doc)
+        classType: getClassType(doc),
       },
     }),
 
@@ -261,9 +265,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
         md.list(
           "unordered",
           doc.constructors.map((doc) =>
-            md.listItem([
-              md.inlineCode(doc.qualifiedName + doc.flatSignature)
-            ])
+            md.listItem([md.inlineCode(doc.qualifiedName + doc.flatSignature)])
           )
         ),
     }),
@@ -293,7 +295,7 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
           ["Modifier and Type", "Field and Description"],
           doc.fields.map((fieldDoc) => [
             md.paragraph([
-              md.inlineCode(fieldDoc.modifiers + fieldDoc.type.asString)
+              md.inlineCode(fieldDoc.modifiers + fieldDoc.type.asString),
             ]),
             [
               md.paragraph(md.inlineCode(fieldDoc.name)),
@@ -397,132 +399,10 @@ function makeClassDocPageBody(args: MakeSectionArgs): Node[] {
       depth,
       title: "Method Detail",
       shouldMakeSection: () => doc.methods.length !== 0,
-      makeBody: ({ depth }) =>
-        doc.methods
-          .map((doc) => {
-            const canonicalName = getCanonicalNameForMethod(doc);
-            return [
-              project.declareEntity({
-                canonicalName,
-                pageUri,
-              }),
-              md.heading(depth + 1, md.inlineCode(doc.name)),
-              md.paragraph([
-                md.text(doc.modifiers),
-                md.text(" "),
-                project.linkToEntity(
-                  doc.returnType.qualifiedTypeName,
-                  doc.returnType.typeName
-                ),
-                md.text(` ${doc.name} `),
-                ...makeTypeParameterListWithLinks(project, doc),
-                ...makeParameterListWithLinks(project, doc),
-              ]),
-              tagsToMdast(project, doc.inlineTags),
-
-              // Type parameters section
-              ...makeSection({
-                ...args,
-                depth: depth + 2,
-                title: "Type Parameters",
-                shouldMakeSection: () => doc.typeParamTags.length !== 0,
-                makeBody: () => {
-                  return md.list(
-                    "unordered",
-                    doc.typeParamTags.map((tag) => {
-                      return md.listItem([
-                        md.inlineCode(`${tag.parameterName} - `),
-                        tagsToMdast(project, tag.inlineTags ?? []),
-                      ]);
-                    })
-                  );
-                },
-              }),
-
-              // Parameters section
-              ...makeSection({
-                ...args,
-                depth: depth + 2,
-                title: "Parameters",
-                shouldMakeSection: () => doc.paramTags.length !== 0,
-                makeBody: () => {
-                  return md.list(
-                    "unordered",
-                    doc.paramTags.map((paramTag) => {
-                      return md.listItem([
-                        md.inlineCode(`${paramTag.parameterName} - `),
-                        tagsToMdast(project, paramTag.inlineTags ?? []),
-                      ]);
-                    })
-                  );
-                },
-              }),
-
-              // Returns section
-              ...makeSection({
-                ...args,
-                depth: depth + 2,
-                title: "Returns",
-                shouldMakeSection: () =>
-                  doc.tags.filter((tag) => /^returns?$/.test(tag.name))
-                    .length !== 0,
-                makeBody: () => {
-                  const returnTag = doc.tags.find((tag) =>
-                    /^returns?$/.test(tag.name)
-                  );
-                  assert(returnTag !== undefined);
-                  return md.paragraph(
-                    tagsToMdast(project, returnTag.inlineTags ?? [])
-                  );
-                },
-              }),
-
-              // "Throws" section
-              ...makeSection({
-                ...args,
-                depth: depth + 2,
-                title: "Throws",
-                shouldMakeSection: () => doc.throwsTags.length !== 0,
-                makeBody: () => {
-                  // TODO
-                  return [];
-                  /*
-                  return md.list(
-                    "unordered",
-                    doc.throwsTags.map((tag) => {
-                      return md.listItem([
-                        project.linkToEntity(
-                          tag.exceptionType?.qualifiedTypeName,
-                          tag.exceptionName
-                        ),
-                        md.text(" - "),
-                        tagsToMdast(project, tag.inlineTags ?? []),
-                      ]);
-                    })
-                  );
-                  */
-                },
-              }),
-
-              // "See also" section
-              ...makeSection({
-                ...args,
-                depth: depth + 2,
-                title: "See Also",
-                shouldMakeSection: () => doc.seeTags.length !== 0,
-                makeBody: () => {
-                  return doc.seeTags.map((tag) => {
-                    // TODO
-                    return md.text(tag.text);
-                  });
-                },
-              }),
-            ];
-          })
-          .flat(1),
+      makeBody: makeMethodDetailBody,
     }),
   ];
-}
+};
 
 const getCanonicalNameForMethod = (doc: MethodDoc): string => {
   return `${doc.qualifiedName}(${doc.flatSignature})`;
@@ -570,4 +450,158 @@ const makeTypeParameterListWithLinks = (
       .flat(1),
     md.text(">"),
   ];
+};
+
+/**
+  Makes a method detail body with all overloads of a method grouped in the same
+  section.
+ */
+const makeMethodDetailBody: MakeBodyFunction = (args) => {
+  const { depth, doc } = args;
+  const methodsGroupedByName = Array.from(
+    doc.methods
+      .reduce((methodsByName, methodDoc) => {
+        const overloads = methodsByName.get(methodDoc.name) ?? [];
+        overloads.push(methodDoc);
+        methodsByName.set(methodDoc.name, overloads);
+        return methodsByName;
+      }, new Map<string, MethodDoc[]>())
+      .entries()
+  );
+  return methodsGroupedByName
+    .map(([methodName, overloadDocs]) =>
+      makeSection({
+        ...args,
+        depth: depth + 1,
+        title: methodName,
+        doc: overloadDocs,
+        shouldMakeSection: () => true,
+        makeBody: makeMethodOverloadsDetailBody,
+      })
+    )
+    .flat(1);
+};
+
+const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
+  const { project, pageUri, depth, doc: overloadDocs } = args;
+  return overloadDocs
+    .map((doc) => {
+      const canonicalName = getCanonicalNameForMethod(doc);
+      return [
+        project.declareEntity({
+          canonicalName,
+          pageUri,
+        }),
+        md.heading(depth + 1, [
+          md.text(doc.modifiers),
+          md.text(" "),
+          project.linkToEntity(
+            doc.returnType.qualifiedTypeName,
+            doc.returnType.typeName
+          ),
+          md.text(` ${doc.name} `),
+          ...makeTypeParameterListWithLinks(project, doc),
+          ...makeParameterListWithLinks(project, doc),
+        ]),
+        tagsToMdast(project, doc.inlineTags),
+
+        // Type parameters section
+        ...makeSection({
+          ...args,
+          depth: depth + 2,
+          title: "Type Parameters",
+          shouldMakeSection: () => doc.typeParamTags.length !== 0,
+          makeBody: () => {
+            return md.list(
+              "unordered",
+              doc.typeParamTags.map((tag) => {
+                return md.listItem([
+                  md.inlineCode(`${tag.parameterName} - `),
+                  tagsToMdast(project, tag.inlineTags ?? []),
+                ]);
+              })
+            );
+          },
+        }),
+
+        // Parameters section
+        ...makeSection({
+          ...args,
+          depth: depth + 2,
+          title: "Parameters",
+          shouldMakeSection: () => doc.paramTags.length !== 0,
+          makeBody: () => {
+            return md.list(
+              "unordered",
+              doc.paramTags.map((paramTag) => {
+                return md.listItem([
+                  md.inlineCode(`${paramTag.parameterName} - `),
+                  tagsToMdast(project, paramTag.inlineTags ?? []),
+                ]);
+              })
+            );
+          },
+        }),
+
+        // Returns section
+        ...makeSection({
+          ...args,
+          depth: depth + 2,
+          title: "Returns",
+          shouldMakeSection: () =>
+            doc.tags.filter((tag) => /^returns?$/.test(tag.name)).length !== 0,
+          makeBody: () => {
+            const returnTag = doc.tags.find((tag) =>
+              /^returns?$/.test(tag.name)
+            );
+            assert(returnTag !== undefined);
+            return md.paragraph(
+              tagsToMdast(project, returnTag.inlineTags ?? [])
+            );
+          },
+        }),
+
+        // "Throws" section
+        ...makeSection({
+          ...args,
+          depth: depth + 2,
+          title: "Throws",
+          shouldMakeSection: () => doc.throwsTags.length !== 0,
+          makeBody: () => {
+            // TODO
+            return [];
+            /*
+                  return md.list(
+                    "unordered",
+                    doc.throwsTags.map((tag) => {
+                      return md.listItem([
+                        project.linkToEntity(
+                          tag.exceptionType?.qualifiedTypeName,
+                          tag.exceptionName
+                        ),
+                        md.text(" - "),
+                        tagsToMdast(project, tag.inlineTags ?? []),
+                      ]);
+                    })
+                  );
+                  */
+          },
+        }),
+
+        // "See also" section
+        ...makeSection({
+          ...args,
+          depth: depth + 2,
+          title: "See Also",
+          shouldMakeSection: () => doc.seeTags.length !== 0,
+          makeBody: () => {
+            return doc.seeTags.map((tag) => {
+              // TODO
+              return md.text(tag.text);
+            });
+          },
+        }),
+      ];
+    })
+    .flat(1);
 };
