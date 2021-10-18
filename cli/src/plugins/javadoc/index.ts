@@ -596,8 +596,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
           shouldMakeSection: () => doc.seeTags.length !== 0,
           makeBody: () => {
             return doc.seeTags.map((tag) => {
-              // TODO
-              return md.text(tag.text);
+              return md.paragraph(md.text(tag.text));
             });
           },
         }),
