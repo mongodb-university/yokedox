@@ -112,7 +112,7 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
   SeeTag(tag, project) {
     return project.linkToEntity(
       [tag.referencedClassName, tag.referencedMemberName]
-        .filter((e) => e !== null)
+        .filter((e) => e != null)
         .join("."),
       tag.text
     );
