@@ -36,15 +36,40 @@ const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
     const { project } = args;
     // Handle external entities
-    project.addExternalEntityTransformer((canonicalName) => {
+    project.addEntityTransformer((canonicalName) => {
       if (!/^java\./.test(canonicalName)) {
         return undefined;
       }
       const path = canonicalName.split(".").join("/");
       return {
-        isExternal: true,
+        type: "external",
         canonicalName,
         pageUri: `https://docs.oracle.com/javase/7/docs/api/${path}.html`,
+      };
+    });
+
+    // Handle built-in entities
+    project.addEntityTransformer((canonicalName) => {
+      if (
+        ![
+          // https://docs.oracle.com/javase/tutorial/java/nutsandbolts/_keywords.html
+          "boolean",
+          "byte",
+          "char",
+          "double",
+          "float",
+          "int",
+          "long",
+          "short",
+          "void",
+        ].includes(canonicalName)
+      ) {
+        return undefined;
+      }
+      return {
+        type: "builtIn",
+        canonicalName,
+        pageUri: "",
       };
     });
 
@@ -92,7 +117,7 @@ async function execJavadoc({
   try {
     await execSh.promise(commandLine);
   } catch (error) {
-    console.error("Exit code:", error.code);
+    console.error("Exit code:", (error as { code: number }).code);
     // throw error;
   }
   return { jsonPath };
