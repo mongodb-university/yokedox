@@ -15,20 +15,18 @@ export type InternalEntity<UserDataType = unknown> = {
   data?: UserDataType;
 };
 
+export type EntityType = "internal" | "external" | "builtIn";
+
 /**
   An entity is anything that can be documented and linked to.
  */
 export type Entity<UserDataType = unknown> = InternalEntity<UserDataType> & {
   /**
-    Whether this entity exists outside of the site.
+    The entity type.
    */
-  isExternal: boolean;
+  type: EntityType;
 };
 
-export type ExternalEntity<UserDataType = unknown> = Entity<UserDataType> & {
-  isExternal: true;
-};
-
-export type ExternalEntityTransformer<UserDataType = unknown> = (
+export type EntityTransformer<UserDataType = unknown> = (
   canonicalName: string
-) => ExternalEntity<UserDataType> | undefined;
+) => Entity<UserDataType> | undefined;

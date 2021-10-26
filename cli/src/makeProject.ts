@@ -1,8 +1,9 @@
 import { strict as assert } from "assert";
 import { promises } from "fs";
 import * as Path from "path";
+import { Parent } from "unist";
 import { visit } from "unist-util-visit";
-import { Entity, ExternalEntityTransformer, InternalEntity } from "./Entity.js";
+import { Entity, EntityTransformer, InternalEntity } from "./Entity.js";
 import { Page } from "./Page.js";
 import {
   flushPage as _flushPage,
@@ -95,17 +96,20 @@ export async function makeProject({
 
   let isFinalized = false;
 
-  const externalEntityTransformers = new Set<ExternalEntityTransformer>();
+  const EntityTransformers = new Set<EntityTransformer>();
 
   const project: Project = {
-    addExternalEntityTransformer(transformer) {
-      externalEntityTransformers.add(transformer);
+    addEntityTransformer(transformer) {
+      EntityTransformers.add(transformer);
     },
 
     declareEntity<UserDataType = unknown>(
       internalEntity: InternalEntity<UserDataType>
     ) {
-      const entity = { ...internalEntity, isExternal: false };
+      const entity: Entity<UserDataType> = {
+        ...internalEntity,
+        type: "internal",
+      };
       const { canonicalName, pageUri } = entity;
       const anchorName = anchorify(entity);
       if (entities.has(canonicalName)) {
@@ -149,7 +153,7 @@ export async function makeProject({
       // Before writing, make sure links are resolved
       const pendingLinks = findPendingLinks(page);
       const resolvedLinks = resolveLinks({
-        externalEntityTransformers: Array.from(externalEntityTransformers),
+        EntityTransformers: Array.from(EntityTransformers),
         links: pendingLinks,
         entities,
       });
@@ -239,16 +243,21 @@ function resolvedLinkToEntity(
   linkText: string
 ): LinkToEntityNode {
   const { pageUri } = entity;
-  const path = entity.isExternal
-    ? pageUri
-    : [pageUri, anchorify(entity)].filter((s) => s !== "").join("#");
+  const entityType = entity.type;
+  const path =
+    entityType === "internal"
+      ? [pageUri, anchorify(entity)].filter((s) => s !== "").join("#")
+      : pageUri;
+  const node: Parent & { type: "strong" | "link" } =
+    entityType === "builtIn"
+      ? { ...md.strong(md.text(linkText)), type: "strong" }
+      : { ...md.link(path, linkText, md.text(linkText)), type: "link" };
   return {
-    ...md.link(path, linkText, md.text(linkText)),
-    type: "link",
+    ...node,
     linkText,
     targetCanonicalName: entity.canonicalName,
+    entityType,
     isPending: false,
-    isExternal: entity.isExternal,
   };
 }
 
@@ -273,13 +282,13 @@ function findPendingLinks(page: Page): LinkToEntityNode[] {
   @return The resolved links.
  */
 function resolveLinks({
-  externalEntityTransformers,
+  EntityTransformers,
   links,
   entities,
 }: {
   links: LinkToEntityNode[];
   entities: Map<string, Entity>;
-  externalEntityTransformers: ExternalEntityTransformer[];
+  EntityTransformers: EntityTransformer[];
 }): LinkToEntityNode[] {
   return links
     .map((link) => {
@@ -287,7 +296,7 @@ function resolveLinks({
       let entity = entities.get(link.targetCanonicalName);
       if (entity === undefined) {
         // No local entity found, try external entity.
-        for (const transformer of externalEntityTransformers) {
+        for (const transformer of EntityTransformers) {
           entity = transformer(link.targetCanonicalName);
           if (entity !== undefined) {
             break;

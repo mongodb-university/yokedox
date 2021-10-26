@@ -1,4 +1,4 @@
-import { Entity, ExternalEntityTransformer, InternalEntity } from "./Entity.js";
+import { Entity, EntityTransformer, InternalEntity } from "./Entity.js";
 import { Page } from "./Page.js";
 import { EntityAnchorNode, LinkToEntityNode } from "./yokedast.js";
 
@@ -17,12 +17,14 @@ export type Project<UserDataType = unknown> = {
   declareEntity(entity: InternalEntity<UserDataType>): EntityAnchorNode;
 
   /**
-    Adds the given external entity transformer to the project's list of external
-    entity transformers. This takes a 
+    Adds the given entity transformer to the project's list of entity
+    transformers.
+
+    This is used to handle entities that are not declared within the actual
+    project -- e.g. built-ins (int, void) or externals (standard library
+    entities).
    */
-  addExternalEntityTransformer(
-    transform: ExternalEntityTransformer<UserDataType>
-  ): void;
+  addEntityTransformer(transform: EntityTransformer<UserDataType>): void;
 
   /**
     Create a link to a specific entity.
