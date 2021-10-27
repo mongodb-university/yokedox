@@ -430,7 +430,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
 };
 
 const getCanonicalNameForMethod = (doc: MethodDoc): string => {
-  return `${doc.qualifiedName}(${doc.flatSignature})`;
+  return `${doc.qualifiedName}${doc.flatSignature}`;
 };
 
 const makeParameterListWithLinks = (
