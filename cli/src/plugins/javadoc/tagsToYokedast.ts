@@ -71,7 +71,7 @@ const decodeTags: Plugin<[Project]> = (project: Project): Transformer => {
                     ? []
                     : node.type === "code"
                     ? md.code("java", decodedSegment)
-                    : md.text(decodedSegment.trimStart());
+                    : md.text(decodedSegment);
                 }
               })
               .flat(1)
