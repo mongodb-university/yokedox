@@ -836,7 +836,7 @@ describe("tagsToYokedast", () => {
             },
             {
               type: "text",
-              value: "is a mutable, ",
+              value: " is a mutable, ",
             },
             {
               type: "text",
@@ -877,7 +877,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "may have the value ",
+                          value: " may have the value ",
                         },
                         {
                           type: "inlineCode",
@@ -926,7 +926,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "operator compares the contained ",
+                          value: " operator compares the contained ",
                         },
                         {
                           type: "text",
@@ -934,7 +934,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "values. ",
+                          value: " values. ",
                         },
                         {
                           type: "inlineCode",
@@ -950,7 +950,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "are ",
+                          value: " are ",
                         },
                         {
                           type: "inlineCode",
@@ -995,7 +995,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "operator compares the contained ",
+                          value: " operator compares the contained ",
                         },
                         {
                           type: "text",
@@ -1003,7 +1003,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "values. It considers ",
+                          value: " values. It considers ",
                         },
                         {
                           type: "inlineCode",
@@ -1011,7 +1011,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "< any non-",
+                          value: " < any non-",
                         },
                         {
                           type: "inlineCode",
@@ -1019,7 +1019,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "value.",
+                          value: " value.",
                         },
                       ],
                       type: "paragraph",
@@ -1060,7 +1060,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "and ",
+                          value: " and ",
                         },
                         {
                           type: "text",
@@ -1068,7 +1068,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "operators throw ",
+                          value: " operators throw ",
                         },
                         {
                           type: "text",
@@ -1076,7 +1076,7 @@ describe("tagsToYokedast", () => {
                         },
                         {
                           type: "text",
-                          value: "when applied to a ",
+                          value: " when applied to a ",
                         },
                         {
                           type: "inlineCode",
