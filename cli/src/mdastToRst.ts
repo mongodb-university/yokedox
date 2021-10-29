@@ -360,6 +360,7 @@ const visitors: {
 `);
     c.indented("\n");
     c.indented(n.children);
+    c.addDoubleNewline();
   },
   toctreeItem(c, { value, url }) {
     c.add(`${value} `, (s) => s.replace(/</g, "\\<"));
