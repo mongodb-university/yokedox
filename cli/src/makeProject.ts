@@ -44,14 +44,18 @@ export type MakeProjectArgs = {
 
 /**
   Creates a project object, which is a collection of documentation pages.
+
+  In practice you can omit the user data type argument. Plugins can freely cast
+  to `Project<their specific data type>`. The type argument is provided here for
+  unit testing.
  */
-export async function makeProject({
+export async function makeProject<UserDataType = unknown>({
   out,
   fs = promises,
   outputMdastJson = true,
   outputMarkdown = false,
   outputRst = true,
-}: MakeProjectArgs): Promise<Project> {
+}: MakeProjectArgs): Promise<Project<UserDataType>> {
   // Use the current working directy if no output directory was provided
   const outputDirectoryPath = Path.resolve(out ?? "");
 
@@ -84,7 +88,10 @@ export async function makeProject({
   // A waiting list of sorts
   const pendingPagesByEntity = new Map<string /* canonical name */, Page[]>();
 
-  const onEntityDeclared = (project: Project, entity: Entity) => {
+  const onEntityDeclared = (
+    project: Project<UserDataType>,
+    entity: Entity<UserDataType>
+  ) => {
     const { canonicalName } = entity;
     const pagesPendingOnEntity = pendingPagesByEntity.get(canonicalName) ?? [];
     pendingPagesByEntity.delete(canonicalName);
@@ -98,14 +105,12 @@ export async function makeProject({
 
   const EntityTransformers = new Set<EntityTransformer>();
 
-  const project: Project = {
+  const project: Project<UserDataType> = {
     addEntityTransformer(transformer) {
       EntityTransformers.add(transformer);
     },
 
-    declareEntity<UserDataType = unknown>(
-      internalEntity: InternalEntity<UserDataType>
-    ) {
+    declareEntity(internalEntity: InternalEntity<UserDataType>) {
       const entity: Entity<UserDataType> = {
         ...internalEntity,
         type: "internal",
@@ -205,7 +210,7 @@ export async function makeProject({
       return promise;
     },
 
-    async finalize<UserDataType>() {
+    async finalize() {
       isFinalized = true;
 
       // Convert pendingPagesByEntity lookup table into an array of unique pages.

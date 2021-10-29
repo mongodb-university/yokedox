@@ -17,6 +17,10 @@ import { JavadocEntityData } from "./index.js";
 
 export type BuildOverviewArgs = BuildIndexesArgs;
 
+/**
+  Builds the main index file, including overview content if specified by the
+  -overview flag in javadoc.
+ */
 export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
   const { finalizedProject } = args;
   const packages = finalizedProject.entities.filter(
@@ -57,17 +61,6 @@ export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
     path: "/index",
     root,
   });
-
-  //
-  // 1. Load overview html file
-  // 2. Parse out tags
-  // 3. Convert overview html to mdast
-
-  // 4. Write file
-  finalizedProject.writePage({
-    path: "/index",
-    root,
-  });
 };
 
 export const buildOverviewContent = async ({
@@ -79,22 +72,23 @@ export const buildOverviewContent = async ({
   }
 
   const overviewHtml = await fs.readFile(overviewPath, "utf8");
-  return await parseOverviewHtml({ finalizedProject, overviewHtml });
+  return parseOverviewHtml({ finalizedProject, overviewHtml });
 };
 
-export const parseOverviewHtml = async ({
+export const parseOverviewHtml = ({
   finalizedProject,
   overviewHtml,
 }: {
   finalizedProject: FinalizedProject<JavadocEntityData>;
   overviewHtml: string;
-}): Promise<Node> => {
+}): Node => {
   const mdast = parseHtmlToMdast(overviewHtml);
   return unified().use(parseOverviewTags, finalizedProject).runSync(mdast);
 };
 
 /**
   Decodes javadoc tags after parsing the HTML from all tags into mdast.
+  Only "\{\@\link}" tags are currently supported.
  */
 const parseOverviewTags: Plugin<[FinalizedProject<JavadocEntityData>]> = (
   project: FinalizedProject
