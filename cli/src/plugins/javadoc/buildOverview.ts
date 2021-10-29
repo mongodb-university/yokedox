@@ -26,6 +26,7 @@ export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
   const packages = finalizedProject.entities.filter(
     (e) => e.data?.category === "package"
   );
+  packages.sort((a, b) => a.canonicalName.localeCompare(b.canonicalName));
 
   const overviewContent = await buildOverviewContent(args);
 
