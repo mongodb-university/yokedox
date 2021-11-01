@@ -15,7 +15,10 @@ export type ParsedClassDoc = Type &
     serializationMethods: MethodDoc[];
     serializableFields: FieldDoc[];
     definesSerializableFields: boolean;
-    superclassType?: AnyType | null;
+    superclasses: AnyType[];
+    inheritedMethods: {
+      [k: string]: string[];
+    };
     interfaceTypes: AnyType[];
     typeParameters: AnyType[];
     typeParamTags: AnyTag[];
