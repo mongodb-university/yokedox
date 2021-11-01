@@ -271,6 +271,7 @@ const visitors: {
     // TODO
   },
   list(c, n) {
+    c.addNewline();
     const firstItemToken = n.ordered ? `${n.start ?? 1}. ` : "- ";
     const itemToken = n.ordered ? "#. " : "- ";
     // Add each child as a list item

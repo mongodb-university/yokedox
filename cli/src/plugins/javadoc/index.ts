@@ -164,16 +164,20 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
 }
 
 function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
-  const { superclassType } = doc;
-  if (superclassType == null) {
+  const { superclasses } = doc;
+  if (superclasses == null) {
     return [];
   }
-
-  const { qualifiedTypeName } = superclassType;
   return [
-    md.paragraph(md.emphasis(md.text("Superclass:"))),
-    md.list("unordered", [
-      md.listItem(project.linkToEntity(qualifiedTypeName)),
+    md.emphasis(md.text("Superclass:")),
+    md.paragraph([
+      md.list(
+        "unordered",
+        superclasses.map((superclassType) => {
+          const { qualifiedTypeName } = superclassType;
+          return md.listItem(project.linkToEntity(qualifiedTypeName));
+        })
+      ),
     ]),
   ];
 }
