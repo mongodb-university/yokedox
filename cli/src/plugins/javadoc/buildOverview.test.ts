@@ -52,22 +52,7 @@ describe("buildOverview", () => {
         },
         {
           type: "text",
-          value: "Please look at ",
-        },
-        {
-          children: [
-            {
-              type: "text",
-              value: "SomeClassA",
-            },
-          ],
-          entityType: "internal",
-          isPending: false,
-          linkText: "SomeClassA",
-          targetCanonicalName: "SomeClassA",
-          title: "SomeClassA",
-          type: "link",
-          url: "/SomeClassA#SomeClassA",
+          value: ". And then look at ",
         },
         {
           children: [
@@ -86,56 +71,7 @@ describe("buildOverview", () => {
         },
         {
           type: "text",
-          value: "Please look at ",
-        },
-        {
-          children: [
-            {
-              type: "text",
-              value: "SomeClassA",
-            },
-          ],
-          entityType: "internal",
-          isPending: false,
-          linkText: "SomeClassA",
-          targetCanonicalName: "SomeClassA",
-          title: "SomeClassA",
-          type: "link",
-          url: "/SomeClassA#SomeClassA",
-        },
-        {
-          type: "text",
-          value: "Please look at ",
-        },
-        {
-          children: [
-            {
-              type: "text",
-              value: "SomeClassA",
-            },
-          ],
-          entityType: "internal",
-          isPending: false,
-          linkText: "SomeClassA",
-          targetCanonicalName: "SomeClassA",
-          title: "SomeClassA",
-          type: "link",
-          url: "/SomeClassA#SomeClassA",
-        },
-        {
-          children: [
-            {
-              type: "text",
-              value: "SomeClassB",
-            },
-          ],
-          entityType: "internal",
-          isPending: false,
-          linkText: "SomeClassB",
-          targetCanonicalName: "SomeClassB",
-          title: "SomeClassB",
-          type: "link",
-          url: "/SomeClassB#SomeClassB",
+          value: ". But you cannot look at ",
         },
         {
           children: [
@@ -152,6 +88,10 @@ describe("buildOverview", () => {
           linkText: "SomeNonexistentClass",
           targetCanonicalName: "SomeNonexistentClass",
           type: "linkToEntity",
+        },
+        {
+          type: "text",
+          value: ".",
         },
       ],
       position: {

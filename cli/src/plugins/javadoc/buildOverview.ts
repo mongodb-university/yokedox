@@ -110,12 +110,13 @@ const parseOverviewTags: Plugin<[FinalizedProject<JavadocEntityData>]> = (
         const textValue = textNode.value ?? "";
         const searchTerm = "{@link ";
         const newNodes: Node[] = [];
+        let start = 0;
         for (
-          let previousPosition = 0, position = textValue.indexOf(searchTerm);
+          let position = textValue.indexOf(searchTerm);
           position !== -1 && position < textValue.length - searchTerm.length;
-          position = textValue.indexOf(searchTerm, position + 1)
+          position = textValue.indexOf(searchTerm, start)
         ) {
-          const previousText = textValue.substring(previousPosition, position);
+          const previousText = textValue.substring(start, position);
           newNodes.push({
             type: "text",
             value: previousText,
@@ -126,7 +127,13 @@ const parseOverviewTags: Plugin<[FinalizedProject<JavadocEntityData>]> = (
             .trim()
             .replace(/#/g, ".");
           newNodes.push(project.linkToEntity(entityName));
-          position = tagEnd;
+          start = tagEnd + 1;
+        }
+        if (start < textValue.length) {
+          newNodes.push({
+            type: "text",
+            value: textValue.substring(start),
+          });
         }
         // Replace the node with the new nodes
         parent.children.splice(index, 1, ...newNodes);
