@@ -43,8 +43,20 @@
               }
             },
             "definesSerializableFields": { "type": "boolean" },
-            "superclassType": {
-              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            "superclasses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyType"
+              }
+            },
+            "inheritedMethods": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             },
             "interfaceTypes": {
               "type": "array",
@@ -752,8 +764,20 @@
               "type": "array",
               "items": { "$ref": "#/definitions/AnyType" }
             },
-            "superclassType": {
-              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            "superclasses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyType"
+              }
+            },
+            "inheritedMethods": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             },
             "interfaceTypes": {
               "type": "array",

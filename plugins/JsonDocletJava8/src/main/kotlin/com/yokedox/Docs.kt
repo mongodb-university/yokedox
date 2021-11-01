@@ -18,7 +18,7 @@ fun parse(v: ClassDoc): JsonValue {
         "serializableFields" to v.serializableFields().map { toJson(it) },
         "definesSerializableFields" to v.definesSerializableFields(),
         "superclasses" to getSuperclasses(v).map { toJson(it) },
-        "inheritedMethods" to getInheritedMethods(v).map { Pair(it.key, it.value.map { methods -> toJson(methods) }) },
+        "inheritedMethods" to getInheritedMethods(v).mapValues { it.value.map { method -> method.name() } },
         // "interfaces" not included because "interfaceTypes" is recommended instead
         "interfaceTypes" to getInterfaces(v).map { toJson(it) },
         "typeParameters" to v.typeParameters().map { toJson(it) },
