@@ -17,9 +17,10 @@ fun parse(v: ClassDoc): JsonValue {
         "serializationMethods" to v.serializationMethods().map { toJson(it) },
         "serializableFields" to v.serializableFields().map { toJson(it) },
         "definesSerializableFields" to v.definesSerializableFields(),
-        "superclassType" to toJson(v.superclassType()),
+        "superclasses" to getSuperclasses(v).map { toJson(it) },
+        "inheritedMethods" to getInheritedMethods(v).map { Pair(it.key, it.value.map { methods -> toJson(methods) }) },
         // "interfaces" not included because "interfaceTypes" is recommended instead
-        "interfaceTypes" to v.interfaceTypes().map { toJson(it) },
+        "interfaceTypes" to getInterfaces(v).map { toJson(it) },
         "typeParameters" to v.typeParameters().map { toJson(it) },
         "typeParamTags" to v.typeParamTags().map { toJson(it) },
         // True = Filter according to specified access modifier option
