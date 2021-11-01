@@ -48,7 +48,8 @@ export type Project<UserDataType = unknown> = {
     you call `finalize()`, at which point we make a final attempt to resolve the
     links.
 
-    When called before finalize(), you do not need to await.
+    When called before finalize(), you do not need to await. When called after
+    finalize, you should await.
    */
   writePage(page: Page): Promise<void> | void;
 
