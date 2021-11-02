@@ -8,7 +8,12 @@ import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc, Type } from "./doclet8.js";
+import {
+  MethodDoc,
+  ParsedClassDoc,
+  ParsedPackageDoc,
+  Type,
+} from "./doclet8.js";
 import { execJavadoc, ExecJavadocResult } from "./execJavadoc.js";
 import { tagsToMdast } from "./tagsToYokedast.js";
 
@@ -213,17 +218,27 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
   return [
     md.list(
       "unordered",
-      args.list.map((interfaceType) => {
-        return [
-          md.listItem(
-            [
-              md.text(args.prefix), args.project.linkToEntity(interfaceType.qualifiedTypeName), md.text(": "), md.paragraph(),
-              md.paragraph([md.text(args.inheritedMethods[interfaceType.qualifiedTypeName].join(", "))])
-            ]
-          )
-        ]
-      }).flat(1))
-  ]
+      args.list
+        .map((interfaceType) => {
+          return [
+            md.listItem([
+              md.text(args.prefix),
+              args.project.linkToEntity(interfaceType.qualifiedTypeName),
+              md.text(": "),
+              md.paragraph(),
+              md.paragraph([
+                md.text(
+                  args.inheritedMethods[interfaceType.qualifiedTypeName].join(
+                    ", "
+                  )
+                ),
+              ]),
+            ]),
+          ];
+        })
+        .flat(1)
+    ),
+  ];
 }
 
 function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
@@ -284,7 +299,11 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     }),
 
     // package
-    md.paragraph([md.emphasis(md.text("Package")), md.text(" "), md.inlineCode(doc.containingPackage.name)]),
+    md.paragraph([
+      md.emphasis(md.text("Package")),
+      md.text(" "),
+      md.inlineCode(doc.containingPackage.name),
+    ]),
 
     // Class hierarchy
     ...makeSuperclassList(project, doc),
@@ -400,15 +419,15 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           doc,
           list: doc.superclasses,
           inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from interface "
+          prefix: "Methods inherited from interface ",
         }),
-        ...makeInheritedMethodList({
-          project,
-          doc,
-          list: doc.interfaceTypes,
-          inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from class "
-        })
+      ...makeInheritedMethodList({
+        project,
+        doc,
+        list: doc.interfaceTypes,
+        inheritedMethods: doc.inheritedMethods,
+        prefix: "Methods inherited from class ",
+      }),
     }),
 
     ...makeSection({
