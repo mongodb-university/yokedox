@@ -230,7 +230,7 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
                 [
                   args.inheritedMethods[interfaceType.qualifiedTypeName].map(
                     (method, index) => {
-                      return md.paragraph([
+                      return md.group([
                         md.inlineCode(method),
                         // separate method names with commas, while avoiding trailing comma
                         index <
