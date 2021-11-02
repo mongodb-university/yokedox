@@ -123,15 +123,15 @@ async function processJson(
 }
 
 function getTitle(doc: ParsedClassDoc): string {
-  let type = ""
+  let type = "";
   if (doc.isInterface) {
-    type = "Interface "
+    type = "Interface ";
   } else if (doc.isClass) {
-    type = "Class "
+    type = "Class ";
   } else if (doc.isEnum) {
-    type = "Enum "
+    type = "Enum ";
   } else if (doc.isException) {
-    type = "Exception "
+    type = "Exception ";
   }
   return `${type}${doc.name}`;
 }
