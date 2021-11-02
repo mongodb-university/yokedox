@@ -8,7 +8,7 @@ import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
+import { MethodDoc, ParsedClassDoc, ParsedPackageDoc, Type } from "./doclet8.js";
 import { execJavadoc, ExecJavadocResult } from "./execJavadoc.js";
 import { tagsToMdast } from "./tagsToYokedast.js";
 
@@ -170,6 +170,7 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   }
   return [
     md.emphasis(md.text("Superclass:")),
+    md.brk,
     md.paragraph([
       md.list(
         "unordered",
@@ -179,6 +180,57 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
         })
       ),
     ]),
+  ];
+}
+
+function makeInterfaceMethodList(project: Project, doc: ParsedClassDoc, interfaceTypes: Type[], inheritedMethods: {[k: string]: string[]}) {
+  if (interfaceTypes.length === 0) {
+    return [];
+  }
+  return [
+    md.heading(2, md.text("Methods Inherited from Interfaces")),
+    md.root(interfaceTypes.map((interfaceType) => {
+      return [
+        md.heading(3, md.text(interfaceType.qualifiedTypeName)),
+        md.list(
+          "unordered",
+          inheritedMethods[interfaceType.qualifiedTypeName].map((method) => {
+            return md.listItem(project.linkToEntity([interfaceType.qualifiedTypeName, method].join('.'), method))
+          }))
+      ]
+    }).flat(1))
+  ]
+}
+
+function makeSuperclassMethodList(project: Project, doc: ParsedClassDoc, superclasses: Type[], inheritedMethods: {[k: string]: string[]}) {
+  if (superclasses.length === 0) {
+    return [];
+  }
+  return [
+    md.heading(2, md.text("Methods Inherited from Superclasses")),
+    md.root(superclasses.map((superclass) => {
+      return [
+        md.heading(3, md.text(superclass.qualifiedTypeName)),
+        md.list(
+        "unordered",
+        inheritedMethods[superclass.qualifiedTypeName].map((method) => {
+          return md.listItem(project.linkToEntity([superclass.qualifiedTypeName, method].join('.'), method))
+        }))
+      ]
+    }).flat(1)
+    ),
+  ]
+}
+
+
+function makeInheritedMethodList(project: Project, doc: ParsedClassDoc) {
+  const { interfaceTypes, inheritedMethods, superclasses } = doc;
+  if (inheritedMethods === null || Object.keys(inheritedMethods).length === 0) {
+    return [];
+  }
+  return [
+    ...makeSuperclassMethodList(project, doc, superclasses, inheritedMethods),
+    ...makeInterfaceMethodList(project, doc, interfaceTypes, inheritedMethods)
   ];
 }
 
@@ -341,6 +393,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ])
         ),
     }),
+
+    ...makeInheritedMethodList(project, doc),
 
     ...makeSection({
       ...args,
