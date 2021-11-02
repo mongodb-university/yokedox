@@ -203,6 +203,7 @@ const visitors: {
   },
   heading(c, { children, depth }) {
     let characterCount = 0;
+    c.addDoubleNewline();
     c.add(children, (text) => {
       // Spread the text into an array to get actual character count, including
       // wider characters
@@ -239,7 +240,7 @@ const visitors: {
     }
     if (value.indexOf("\n") === -1) {
       // Normal case: single inline code
-      c.add(`\`\`${value}\`\``);
+      c.add(`\`\`${value}\`\` `);
       return;
     }
 
@@ -271,7 +272,7 @@ const visitors: {
     // TODO
   },
   list(c, n) {
-    c.addNewline();
+    c.addDoubleNewline();
     const firstItemToken = n.ordered ? `${n.start ?? 1}. ` : "- ";
     const itemToken = n.ordered ? "#. " : "- ";
     // Add each child as a list item
@@ -289,7 +290,7 @@ const visitors: {
       c.indented(listItem.children);
       c.addNewline();
     });
-    c.addNewline();
+    c.addDoubleNewline();
   },
   listItem(_, n) {
     console.error(

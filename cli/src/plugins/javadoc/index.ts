@@ -8,7 +8,12 @@ import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc, Type } from "./doclet8.js";
+import {
+  MethodDoc,
+  ParsedClassDoc,
+  ParsedPackageDoc,
+  Type,
+} from "./doclet8.js";
 import { execJavadoc, ExecJavadocResult } from "./execJavadoc.js";
 import { tagsToMdast } from "./tagsToYokedast.js";
 
@@ -122,6 +127,20 @@ async function processJson(
   await Promise.all(promises);
 }
 
+function getTitle(doc: ParsedClassDoc): string {
+  let type = "";
+  if (doc.isInterface) {
+    type = "Interface ";
+  } else if (doc.isClass) {
+    type = "Class ";
+  } else if (doc.isEnum) {
+    type = "Enum ";
+  } else if (doc.isException) {
+    type = "Exception ";
+  }
+  return `${type}${doc.name}`;
+}
+
 async function processClassDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedClassDoc
@@ -133,7 +152,7 @@ async function processClassDoc(
       pageUri,
       doc,
       depth: 1,
-      title: md.text(doc.asString),
+      title: md.text(getTitle(doc)),
       makeBody: makeClassDocPageBody,
     })
   );
@@ -180,7 +199,6 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   }
   return [
     md.emphasis(md.text("Superclass:")),
-    md.brk,
     md.paragraph([
       md.list(
         "unordered",
@@ -200,17 +218,38 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
   return [
     md.list(
       "unordered",
-      args.list.map((interfaceType) => {
-      return [
-        md.listItem([md.text(args.prefix + interfaceType.qualifiedTypeName),
-        md.list(
-          "unordered",
-          args.inheritedMethods[interfaceType.qualifiedTypeName].map((method) => {
-            return md.listItem(args.project.linkToEntity(interfaceType.qualifiedTypeName, method))
-          }))])
-      ]
-    }).flat(1))
-  ]
+      args.list
+        .map((interfaceType) => {
+          return [
+            md.listItem([
+              md.text(args.prefix),
+              args.project.linkToEntity(interfaceType.qualifiedTypeName),
+              md.text(": "),
+              md.paragraph(),
+              md.paragraph(
+                [
+                  args.inheritedMethods[interfaceType.qualifiedTypeName]
+                    .map((method, index) => {
+                      return [
+                        md.inlineCode(method),
+                        // separate method names with commas, while avoiding trailing comma
+                        index <
+                        args.inheritedMethods[interfaceType.qualifiedTypeName]
+                          .length -
+                          1
+                          ? md.text(", ")
+                          : md.text(""),
+                      ];
+                    })
+                    .flat(1),
+                ].flat(1)
+              ),
+            ]),
+          ];
+        })
+        .flat(1)
+    ),
+  ];
 }
 
 function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
@@ -269,6 +308,11 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
         classType: getClassType(doc),
       },
     }),
+
+    // package
+    md.paragraph([
+      md.emphasis(md.text(`Package ${doc.containingPackage.name}`)),
+    ]),
 
     // Class hierarchy
     ...makeSuperclassList(project, doc),
@@ -384,15 +428,15 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           doc,
           list: doc.superclasses,
           inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from interface "
+          prefix: "Methods inherited from interface ",
         }),
-        ...makeInheritedMethodList({
-          project,
-          doc,
-          list: doc.interfaceTypes,
-          inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from class "
-        })
+      ...makeInheritedMethodList({
+        project,
+        doc,
+        list: doc.interfaceTypes,
+        inheritedMethods: doc.inheritedMethods,
+        prefix: "Methods inherited from class ",
+      }),
     }),
 
     ...makeSection({
