@@ -240,7 +240,7 @@ const visitors: {
     }
     if (value.indexOf("\n") === -1) {
       // Normal case: single inline code
-      c.add(`\`\`${value}\`\``);
+      c.add(` \`\`${value}\`\` `);
       return;
     }
 
