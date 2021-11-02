@@ -123,17 +123,17 @@ async function processJson(
 }
 
 function getTitle(doc: ParsedClassDoc): string {
-  var type = ""
+  let type = ""
   if (doc.isInterface) {
-    type = "Interface"
+    type = "Interface "
   } else if (doc.isClass) {
-    type = "Class"
+    type = "Class "
   } else if (doc.isEnum) {
-    type = "Enum"
+    type = "Enum "
   } else if (doc.isException) {
-    type = "Exception"
+    type = "Exception "
   }
-  return type + " " + doc.name
+  return `${type}${doc.name}`;
 }
 
 async function processClassDoc(
@@ -218,9 +218,7 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
           md.listItem(
             [
               md.text(args.prefix), args.project.linkToEntity(interfaceType.qualifiedTypeName), md.text(": "), md.paragraph(),
-              md.paragraph([args.inheritedMethods[interfaceType.qualifiedTypeName].map(
-                (method, index) => { return md.root([md.inlineCode(method + "()"), (index < args.inheritedMethods[interfaceType.qualifiedTypeName].length - 1 ? md.text(", ") : md.text(""))])}
-              )].flat(1))
+              md.paragraph([md.text(args.inheritedMethods[interfaceType.qualifiedTypeName].join(", "))])
             ]
           )
         ]
