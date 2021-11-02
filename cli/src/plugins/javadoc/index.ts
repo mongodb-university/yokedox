@@ -228,9 +228,9 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
               md.paragraph(),
               md.paragraph(
                 [
-                  args.inheritedMethods[interfaceType.qualifiedTypeName].map(
-                    (method, index) => {
-                      return md.group([
+                  args.inheritedMethods[interfaceType.qualifiedTypeName]
+                    .map((method, index) => {
+                      return [
                         md.inlineCode(method),
                         // separate method names with commas, while avoiding trailing comma
                         index <
@@ -239,9 +239,9 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
                           1
                           ? md.text(", ")
                           : md.text(""),
-                      ]);
-                    }
-                  ),
+                      ];
+                    })
+                    .flat(1),
                 ].flat(1)
               ),
             ]),
