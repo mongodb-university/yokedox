@@ -226,13 +226,24 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
               args.project.linkToEntity(interfaceType.qualifiedTypeName),
               md.text(": "),
               md.paragraph(),
-              md.paragraph([
-                md.text(
-                  args.inheritedMethods[interfaceType.qualifiedTypeName].join(
-                    ", "
-                  )
-                ),
-              ]),
+              md.paragraph(
+                [
+                  args.inheritedMethods[interfaceType.qualifiedTypeName].map(
+                    (method, index) => {
+                      return md.root([
+                        md.inlineCode(method),
+                        // separate method names with commas, while avoiding trailing comma
+                        index <
+                        args.inheritedMethods[interfaceType.qualifiedTypeName]
+                          .length -
+                          1
+                          ? md.text(", ")
+                          : md.text(""),
+                      ]);
+                    }
+                  ),
+                ].flat(1)
+              ),
             ]),
           ];
         })
@@ -300,9 +311,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
 
     // package
     md.paragraph([
-      md.emphasis(md.text("Package")),
-      md.text(" "),
-      md.inlineCode(doc.containingPackage.name),
+      md.emphasis(md.text(`Package ${doc.containingPackage.name}`)),
     ]),
 
     // Class hierarchy
