@@ -122,6 +122,20 @@ async function processJson(
   await Promise.all(promises);
 }
 
+function getTitle(doc: ParsedClassDoc): string {
+  var type = ""
+  if (doc.isInterface) {
+    type = "Interface"
+  } else if (doc.isClass) {
+    type = "Class"
+  } else if (doc.isEnum) {
+    type = "Enum"
+  } else if (doc.isException) {
+    type = "Exception"
+  }
+  return type + " " + doc.name
+}
+
 async function processClassDoc(
   project: Project<JavadocEntityData>,
   doc: ParsedClassDoc
@@ -133,7 +147,7 @@ async function processClassDoc(
       pageUri,
       doc,
       depth: 1,
-      title: md.text(doc.asString),
+      title: md.text(getTitle(doc)),
       makeBody: makeClassDocPageBody,
     })
   );
@@ -180,7 +194,6 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   }
   return [
     md.emphasis(md.text("Superclass:")),
-    md.brk,
     md.paragraph([
       md.list(
         "unordered",
@@ -201,15 +214,17 @@ function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
     md.list(
       "unordered",
       args.list.map((interfaceType) => {
-      return [
-        md.listItem([md.text(args.prefix + interfaceType.qualifiedTypeName),
-        md.list(
-          "unordered",
-          args.inheritedMethods[interfaceType.qualifiedTypeName].map((method) => {
-            return md.listItem(args.project.linkToEntity(interfaceType.qualifiedTypeName, method))
-          }))])
-      ]
-    }).flat(1))
+        return [
+          md.listItem(
+            [
+              md.text(args.prefix), args.project.linkToEntity(interfaceType.qualifiedTypeName), md.text(": "), md.paragraph(),
+              md.paragraph([args.inheritedMethods[interfaceType.qualifiedTypeName].map(
+                (method, index) => { return md.root([md.inlineCode(method + "()"), (index < args.inheritedMethods[interfaceType.qualifiedTypeName].length - 1 ? md.text(", ") : md.text(""))])}
+              )].flat(1))
+            ]
+          )
+        ]
+      }).flat(1))
   ]
 }
 
@@ -269,6 +284,9 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
         classType: getClassType(doc),
       },
     }),
+
+    // package
+    md.paragraph([md.emphasis(md.text("Package")), md.text(" "), md.inlineCode(doc.containingPackage.name)]),
 
     // Class hierarchy
     ...makeSuperclassList(project, doc),
