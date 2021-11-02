@@ -1,5 +1,6 @@
 package com.yokedox
 
+import com.beust.klaxon.JsonArray
 import com.sun.javadoc.*
 
 /**

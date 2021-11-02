@@ -8,7 +8,7 @@ import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
 import { Node } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
-import { MethodDoc, ParsedClassDoc, ParsedPackageDoc } from "./doclet8.js";
+import { MethodDoc, ParsedClassDoc, ParsedPackageDoc, Type } from "./doclet8.js";
 import { execJavadoc, ExecJavadocResult } from "./execJavadoc.js";
 import { tagsToMdast } from "./tagsToYokedast.js";
 
@@ -17,6 +17,16 @@ export type JavadocEntityData = {
   containingPackage?: string;
   simpleTypeName?: string;
   classType?: ClassType;
+};
+
+export type MakeInheritedMethodListArgs = {
+  project: Project;
+  doc: ParsedClassDoc;
+  list: Type[];
+  // maps class qualified name to array of method names inherited from that class
+  inheritedMethods: Record<string, string[]>;
+  // prefix string occurs before each listed item
+  prefix: string;
 };
 
 type ClassType = "error" | "exception" | "class";
@@ -164,18 +174,43 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
 }
 
 function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
-  const { superclassType } = doc;
-  if (superclassType == null) {
+  const { superclasses } = doc;
+  if (superclasses == null) {
     return [];
   }
-
-  const { qualifiedTypeName } = superclassType;
   return [
-    md.paragraph(md.emphasis(md.text("Superclass:"))),
-    md.list("unordered", [
-      md.listItem(project.linkToEntity(qualifiedTypeName)),
+    md.emphasis(md.text("Superclass:")),
+    md.brk,
+    md.paragraph([
+      md.list(
+        "unordered",
+        superclasses.map((superclassType) => {
+          const { qualifiedTypeName } = superclassType;
+          return md.listItem(project.linkToEntity(qualifiedTypeName));
+        })
+      ),
     ]),
   ];
+}
+
+function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
+  if (args.list.length === 0) {
+    return [];
+  }
+  return [
+    md.list(
+      "unordered",
+      args.list.map((interfaceType) => {
+      return [
+        md.listItem([md.text(args.prefix + interfaceType.qualifiedTypeName),
+        md.list(
+          "unordered",
+          args.inheritedMethods[interfaceType.qualifiedTypeName].map((method) => {
+            return md.listItem(args.project.linkToEntity(interfaceType.qualifiedTypeName, method))
+          }))])
+      ]
+    }).flat(1))
+  ]
 }
 
 function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
@@ -336,6 +371,28 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
             ],
           ])
         ),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
+      title: "Inherited Methods",
+      shouldMakeSection: () => Object.keys(doc.inheritedMethods).length !== 0,
+      makeBody: () =>
+        makeInheritedMethodList({
+          project,
+          doc,
+          list: doc.superclasses,
+          inheritedMethods: doc.inheritedMethods,
+          prefix: "Methods inherited from interface "
+        }),
+        ...makeInheritedMethodList({
+          project,
+          doc,
+          list: doc.interfaceTypes,
+          inheritedMethods: doc.inheritedMethods,
+          prefix: "Methods inherited from class "
+        })
     }),
 
     ...makeSection({

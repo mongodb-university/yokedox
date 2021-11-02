@@ -23,7 +23,9 @@
             "methods",
             "constructors",
             "innerClasses",
-            "isAnnotationType"
+            "isAnnotationType",
+            "superclasses",
+            "inheritedMethods"
           ],
           "properties": {
             "_class": { "const": "ParsedClassDoc" },
@@ -43,8 +45,20 @@
               }
             },
             "definesSerializableFields": { "type": "boolean" },
-            "superclassType": {
-              "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]
+            "superclasses": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AnyType"
+              }
+            },
+            "inheritedMethods": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             },
             "interfaceTypes": {
               "type": "array",
