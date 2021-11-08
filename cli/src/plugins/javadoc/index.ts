@@ -208,7 +208,7 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
 }
 
 function makeSeeAlso(project: Project, tags: SeeTag[]) {
-  if (tags.length == 0) {
+  if (tags.length === 0) {
     return [];
   }
   return [
@@ -225,7 +225,7 @@ function makeSeeAlso(project: Project, tags: SeeTag[]) {
 
 function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   const { superclasses } = doc;
-  if (superclasses.length == 0) {
+  if (superclasses.length === 0) {
     return [];
   }
   return [
