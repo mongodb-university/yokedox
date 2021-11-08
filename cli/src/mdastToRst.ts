@@ -201,6 +201,12 @@ const visitors: {
     c.add(children, (text) => text.replace(/\*/g, "\\*"));
     c.add("*");
   },
+  example(c, n) {
+    c.add(`.. example:: `);
+    c.addDoubleNewline();
+    c.indented(n.children);
+    c.addDoubleNewline();
+  },
   heading(c, { children, depth }) {
     let characterCount = 0;
     c.addDoubleNewline();
@@ -314,7 +320,7 @@ const visitors: {
   },
   seealso(c, n) {
     c.add(".. seealso::");
-    c.addNewline();
+    c.addDoubleNewline();
     c.indented(n.children);
     c.addDoubleNewline();
   },

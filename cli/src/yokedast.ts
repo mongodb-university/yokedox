@@ -35,6 +35,10 @@ export type EntityAnchorNode<UserDataType = unknown> = ReturnType<
   entity: Entity<UserDataType>;
 };
 
+export type ExampleNode = Parent & {
+  type: "example";
+};
+
 export type SeeAlsoNode = Parent & {
   type: "seealso";
 };
@@ -74,6 +78,13 @@ export const seealso = (children: Node[]): SeeAlsoNode => {
   };
 };
 
+export const example = (children: Node[]): ExampleNode => {
+  return {
+    children,
+    type: "example",
+  };
+};
+
 export type RootNode = ReturnType<typeof MdastBuilder.root>;
 
 export type CodeNode = ReturnType<typeof MdastBuilder.code>;
@@ -98,6 +109,7 @@ type YokedastNodes = {
   toctree: typeof toctree;
   toctreeItem: typeof toctreeItem;
   seealso: typeof seealso;
+  example: typeof example;
 };
 
 export type MdastNodeType = keyof MdastNodes;
