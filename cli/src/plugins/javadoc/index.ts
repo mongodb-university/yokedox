@@ -225,7 +225,7 @@ function makeSeeAlso(project: Project, tags: SeeTag[], depth: number) {
 
 function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
   const { superclasses } = doc;
-  if (superclasses.length == 0) {
+  if (superclasses.length === 0) {
     return [];
   }
   return [
