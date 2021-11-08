@@ -6,7 +6,7 @@ import * as Path from "path";
 import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
-import { example, Node, seealso } from "../../yokedast.js";
+import { Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   MethodDoc,
@@ -207,6 +207,13 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   );
 }
 
+function makeMethodDetail(method: Node[], detail: Node | Node[]) {
+  return md.table(
+    Array(method.length).map(() => "left"),
+    [md.tableRow(md.tableCell(method)), md.tableRow(md.tableCell(detail))]
+  );
+}
+
 function makeSeeAlso(project: Project, tags: SeeTag[]) {
   if (tags.length === 0) {
     return [];
@@ -221,13 +228,6 @@ function makeSeeAlso(project: Project, tags: SeeTag[]) {
       ).children
     ),
   ];
-}
-
-function makeExample(project: Project, content: Node[]) {
-  if (content.length === 0) {
-    return [];
-  }
-  return [example(content)];
 }
 
 function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
@@ -620,96 +620,101 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
           pageUri,
         }),
 
-        ...makeExample(project, [
-          md.heading(depth + 2, [
-            md.text(doc.modifiers),
-            md.text(" "),
-            project.linkToEntity(
-              doc.returnType.qualifiedTypeName,
-              doc.returnType.typeName
-            ),
-            md.text(` ${doc.name} `),
-            ...makeTypeParameterListWithLinks(project, doc),
-            ...makeParameterListWithLinks(project, doc),
-          ]),
-          md.paragraph(),
-          tagsToMdast(project, doc.inlineTags),
-          // Type Parameters section
-          doc.typeParamTags.length !== 0
-            ? md.paragraph([
-                md.strong(md.text("Type Parameters")),
-                md.list(
-                  "unordered",
-                  doc.typeParamTags.map((tag) => {
-                    return md.listItem([
-                      md.paragraph([
-                        md.inlineCode(`${tag.parameterName}`),
-                        md.text("- "),
-                        tagsToMdast(project, tag.inlineTags ?? []),
-                      ]),
-                    ]);
-                  })
-                ),
-              ])
-            : md.paragraph(),
-          // Parameters section
-          doc.paramTags.length !== 0
-            ? md.paragraph([
-                md.strong(md.text("Parameters")),
-                md.list(
-                  "unordered",
-                  doc.paramTags.map((paramTag) => {
-                    return md.listItem([
-                      md.paragraph([
-                        md.inlineCode(`${paramTag.parameterName}`),
-                        md.text("- "),
-                        tagsToMdast(project, paramTag.inlineTags ?? []),
-                      ]),
-                    ]);
-                  })
-                ),
-              ])
-            : md.paragraph(),
-          // Returns section
-          doc.tags.filter((tag) => /^returns?$/.test(tag.name)).length !== 0
-            ? md.paragraph([
-                md.strong(md.text("Returns")),
-                md.paragraph([
-                  tagsToMdast(
-                    project,
-                    doc.tags.find((tag) => /^returns?$/.test(tag.name))
-                      ?.inlineTags ?? []
+        makeMethodDetail(
+          [
+            md.paragraph([
+              md.text(doc.modifiers),
+              md.text(" "),
+              project.linkToEntity(
+                doc.returnType.qualifiedTypeName,
+                doc.returnType.typeName
+              ),
+              md.text(` ${doc.name} `),
+              ...makeTypeParameterListWithLinks(project, doc),
+              ...makeParameterListWithLinks(project, doc),
+            ]),
+          ],
+          [
+            tagsToMdast(project, doc.inlineTags),
+
+            // Type Parameters section
+            doc.typeParamTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Type Parameters")),
+                  md.list(
+                    "unordered",
+                    doc.typeParamTags.map((tag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${tag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(project, tag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
                   ),
-                ]),
-              ])
-            : md.paragraph(),
+                ])
+              : md.paragraph(),
 
-          // "Throws" section
-          doc.throwsTags.length !== 0
-            ? md.paragraph([
-                md.strong(md.text("Throws")),
-                md.list(
-                  "unordered",
-                  doc.throwsTags.map((tag) => {
-                    return md.listItem([
-                      md.paragraph([
-                        project.linkToEntity(
-                          `${tag.exceptionName}`,
-                          tag.exceptionType.typeName
-                        ),
-                        md.text(" - "),
-                        tagsToMdast(project, tag.inlineTags ?? []),
-                      ]),
-                    ]);
-                  })
-                ),
-              ])
-            : md.paragraph(),
-          ...makeSeeAlso(project, doc.seeTags),
-        ]),
+            // Parameters section
+            doc.paramTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Parameters")),
+                  md.list(
+                    "unordered",
+                    doc.paramTags.map((paramTag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${paramTag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(project, paramTag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
 
-        // "See also" section
-        ...makeSeeAlso(project, doc.seeTags),
+            // Returns section
+            doc.tags.filter((tag) => /^returns?$/.test(tag.name)).length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Returns")),
+                  md.paragraph([
+                    tagsToMdast(
+                      project,
+                      doc.tags.find((tag) => /^returns?$/.test(tag.name))
+                        ?.inlineTags ?? []
+                    ),
+                  ]),
+                ])
+              : md.paragraph(),
+
+            // Throws section
+            doc.throwsTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Throws")),
+                  md.list(
+                    "unordered",
+                    doc.throwsTags.map((tag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          project.linkToEntity(
+                            tag.exceptionType.qualifiedTypeName,
+                            `${tag.exceptionName}`
+                          ),
+                          md.text(" - "),
+                          tagsToMdast(project, tag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
+
+            // "See also" section
+            ...makeSeeAlso(project, doc.seeTags),
+          ].flat(1)
+        ),
       ];
     })
     .flat(1);
