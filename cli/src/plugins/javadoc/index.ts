@@ -64,7 +64,7 @@ function getType(doc: ParsedClassDoc): EntityType {
 }
 
 function capitalize(str: string): string {
-  if (str == null || str.length < 1) {
+  if (str.length < 1) {
     return "";
   } else {
     return str[0].toUpperCase() + str.slice(1);
@@ -207,7 +207,7 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   );
 }
 
-function makeSeeAlso(project: Project, tags: SeeTag[], depth: number) {
+function makeSeeAlso(project: Project, tags: SeeTag[]) {
   if (tags.length == 0) {
     return [];
   }
@@ -352,7 +352,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     tagsToMdast(project, doc.inlineTags),
 
     // See Also
-    ...makeSeeAlso(project, doc.seeTags, depth),
+    ...makeSeeAlso(project, doc.seeTags),
 
     ...makeSection({
       ...args,
@@ -636,8 +636,11 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               "unordered",
               doc.typeParamTags.map((tag) => {
                 return md.listItem([
-                  md.inlineCode(`${tag.parameterName} - `),
-                  tagsToMdast(project, tag.inlineTags ?? []),
+                  md.paragraph([
+                    md.inlineCode(`${tag.parameterName}`),
+                    md.text("- "),
+                    tagsToMdast(project, tag.inlineTags ?? []),
+                  ]),
                 ]);
               })
             );
@@ -655,8 +658,11 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               "unordered",
               doc.paramTags.map((paramTag) => {
                 return md.listItem([
-                  md.inlineCode(`${paramTag.parameterName} - `),
-                  tagsToMdast(project, paramTag.inlineTags ?? []),
+                  md.paragraph([
+                    md.inlineCode(`${paramTag.parameterName}`),
+                    md.text("- "),
+                    tagsToMdast(project, paramTag.inlineTags ?? []),
+                  ]),
                 ]);
               })
             );
@@ -709,7 +715,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
         }),
 
         // "See also" section
-        ...makeSeeAlso(project, doc.seeTags, depth + 2),
+        ...makeSeeAlso(project, doc.seeTags),
       ];
     })
     .flat(1);

@@ -238,19 +238,11 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    if (value.endsWith(" - ")) {
-      // rst does not like the "- ``" character sequence. Don't ask me why.
-      c.add(`\`\`${value.slice(0, -3)}\`\`: `);
-      return;
-    }
     if (value.indexOf("\n") === -1) {
       // Normal case: single inline code
-      c.add(`\`\`${value}\`\` `);
+      c.add(`\`\`${value.trim()}\`\` `);
       return;
     }
-
-    // Weird case (for javadoc)
-    c.indented(value);
   },
   link(c, n) {
     const escaper = (text: string) =>
