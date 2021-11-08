@@ -208,7 +208,7 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
 }
 
 function makeSeeAlso(project: Project, tags: SeeTag[], depth: number) {
-  if (tags.length == 0) {
+  if (tags.length === 0) {
     return [];
   }
   return [
