@@ -45,7 +45,7 @@ This is a codeblock.
 This is a heading
 ^^^^^^^^^^^^^^^^^
 
-Here is some *text* with an \`external link <https://example.com>\`__ and an :ref:\`anchor link <anchorLink>\`.
+Here is some *text* with an \`external link <https://example.com>\`__  and an :ref:\`anchor link <anchorLink>\`.
 
 .. _anchorLink:
 
