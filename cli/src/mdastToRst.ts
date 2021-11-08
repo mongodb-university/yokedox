@@ -240,15 +240,16 @@ const visitors: {
     }
     if (value.indexOf("\n") === -1) {
       // Normal case: single inline code
-      c.add(`\`\`${value}\`\` `);
+      c.add(`\`\`${value.trim()}\`\` `);
       return;
     }
-
-    // Weird case (for javadoc)
-    c.indented(value);
   },
   link(c, n) {
-    const escaper = (text: string) => text.replace(/([<`])/g, "\\$1");
+    const escaper = (text: string) =>
+      text
+        .replace(/([<`])/g, "\\$1")
+        .replace(/^#/, "") // octothorpe at beginning of ref name: remove
+        .replace(/#/, "."); // octothorpe in the middle of ref name: turn into the dot it ought to be;
     const { url } = n;
     const isRefLink = !/^https?:\/\//.test(url);
     if (isRefLink) {
@@ -265,7 +266,7 @@ const visitors: {
       c.add(` <${anchorName}>\``);
     } else {
       c.add(` <${url}>`);
-      c.add("`__");
+      c.add("`__ ");
     }
   },
   linkToEntity() {
@@ -309,6 +310,12 @@ const visitors: {
   separator(c) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#transitions
     c.add("----");
+    c.addDoubleNewline();
+  },
+  seealso(c, n) {
+    c.add(".. seealso::");
+    c.addNewline();
+    c.indented(n.children);
     c.addDoubleNewline();
   },
   strike() {

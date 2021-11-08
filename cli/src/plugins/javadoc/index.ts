@@ -6,12 +6,13 @@ import * as Path from "path";
 import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
-import { Node } from "../../yokedast.js";
+import { Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   MethodDoc,
   ParsedClassDoc,
   ParsedPackageDoc,
+  SeeTag,
   Type,
 } from "./doclet8.js";
 import { execJavadoc, ExecJavadocResult } from "./execJavadoc.js";
@@ -34,6 +35,8 @@ export type MakeInheritedMethodListArgs = {
   prefix: string;
 };
 
+type EntityType = "error" | "exception" | "class" | "enum" | "interface";
+
 type ClassType = "error" | "exception" | "class";
 
 function getClassType(doc: ParsedClassDoc): ClassType {
@@ -43,6 +46,28 @@ function getClassType(doc: ParsedClassDoc): ClassType {
     return "exception";
   } else {
     return "class";
+  }
+}
+
+function getType(doc: ParsedClassDoc): EntityType {
+  if (doc.isError) {
+    return "error";
+  } else if (doc.isException) {
+    return "exception";
+  } else if (doc.isEnum) {
+    return "enum";
+  } else if (doc.isInterface) {
+    return "interface";
+  } else {
+    return "class";
+  }
+}
+
+function capitalize(str: string): string {
+  if (str.length < 1) {
+    return "";
+  } else {
+    return str[0].toUpperCase() + str.slice(1);
   }
 }
 
@@ -128,17 +153,7 @@ async function processJson(
 }
 
 function getTitle(doc: ParsedClassDoc): string {
-  let type = "";
-  if (doc.isInterface) {
-    type = "Interface ";
-  } else if (doc.isClass) {
-    type = "Class ";
-  } else if (doc.isEnum) {
-    type = "Enum ";
-  } else if (doc.isException) {
-    type = "Exception ";
-  }
-  return `${type}${doc.name}`;
+  return `${capitalize(getType(doc))} ${doc.name}`;
 }
 
 async function processClassDoc(
@@ -192,17 +207,32 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   );
 }
 
-function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
-  const { superclasses } = doc;
-  if (superclasses == null) {
+function makeSeeAlso(project: Project, tags: SeeTag[]) {
+  if (tags.length === 0) {
     return [];
   }
   return [
-    md.emphasis(md.text("Superclass:")),
+    seealso(
+      md.paragraph(
+        md.list(
+          "unordered",
+          tags.map((tag) => md.listItem(tagsToMdast(project, [tag])))
+        )
+      ).children
+    ),
+  ];
+}
+
+function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
+  const { superclasses } = doc;
+  if (superclasses.length === 0) {
+    return [];
+  }
+  return [
     md.paragraph([
       md.list(
         "unordered",
-        superclasses.map((superclassType) => {
+        doc.superclasses.map((superclassType) => {
           const { qualifiedTypeName } = superclassType;
           return md.listItem(project.linkToEntity(qualifiedTypeName));
         })
@@ -310,9 +340,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     }),
 
     // package
-    md.paragraph([
-      md.emphasis(md.text(`Package ${doc.containingPackage.name}`)),
-    ]),
+    md.heading(depth, md.text(`${doc.containingPackage.name}`)),
 
     // Class hierarchy
     ...makeSuperclassList(project, doc),
@@ -322,6 +350,9 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
 
     // Comment body
     tagsToMdast(project, doc.inlineTags),
+
+    // See Also
+    ...makeSeeAlso(project, doc.seeTags),
 
     ...makeSection({
       ...args,
@@ -605,8 +636,11 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               "unordered",
               doc.typeParamTags.map((tag) => {
                 return md.listItem([
-                  md.inlineCode(`${tag.parameterName} - `),
-                  tagsToMdast(project, tag.inlineTags ?? []),
+                  md.paragraph([
+                    md.inlineCode(`${tag.parameterName}`),
+                    md.text("- "),
+                    tagsToMdast(project, tag.inlineTags ?? []),
+                  ]),
                 ]);
               })
             );
@@ -624,8 +658,11 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               "unordered",
               doc.paramTags.map((paramTag) => {
                 return md.listItem([
-                  md.inlineCode(`${paramTag.parameterName} - `),
-                  tagsToMdast(project, paramTag.inlineTags ?? []),
+                  md.paragraph([
+                    md.inlineCode(`${paramTag.parameterName}`),
+                    md.text("- "),
+                    tagsToMdast(project, paramTag.inlineTags ?? []),
+                  ]),
                 ]);
               })
             );
@@ -678,17 +715,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
         }),
 
         // "See also" section
-        ...makeSection({
-          ...args,
-          depth: depth + 2,
-          title: "See Also",
-          shouldMakeSection: () => doc.seeTags.length !== 0,
-          makeBody: () => {
-            return doc.seeTags.map((tag) => {
-              return md.paragraph(md.text(tag.text));
-            });
-          },
-        }),
+        ...makeSeeAlso(project, doc.seeTags),
       ];
     })
     .flat(1);
