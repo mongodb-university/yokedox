@@ -190,7 +190,7 @@ const visitors: {
 
     c.addDoubleNewline();
     c.add(`.. code-block:: ${lang}\n`);
-    c.indented(`\n${value}`);
+    c.indented(`\n${value.replace(/\\@/, "@")}`);
     c.addDoubleNewline();
   },
   entityAnchor() {
