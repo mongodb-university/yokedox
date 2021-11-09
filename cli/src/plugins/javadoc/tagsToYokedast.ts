@@ -111,8 +111,8 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
     }
   },
   SeeTag(tag, project) {
-    if (tag.kind === "Text") {
-      return md.text(tag.text);
+    if (tag.text.includes("<a href=")) {
+      return parseHtmlToMdast(tag.text);
     }
     return project.linkToEntity(
       [tag.referencedClassName, tag.referencedMemberName]
@@ -120,7 +120,7 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
         .join("."),
       tag.text
         .replace(/^#/, "") // octothorpe at beginning of ref name: remove
-        .replace(/#/, ".") // octothorpe in the middle of ref name: turn into the dot it ought to be;
+        .replace(/#/g, ".") // octothorpe in the middle of ref name: turn into the dot it ought to be;
     );
   },
 };
