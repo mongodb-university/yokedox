@@ -269,7 +269,7 @@ const visitors: {
         anchorName !== undefined,
         `unexpected refLink without anchorName from url: ${url}`
       );
-      c.add(` <${anchorName}>\``);
+      c.add(` <${anchorName}>\` `);
     } else {
       c.add(` <${url}>`);
       c.add("`__ ");

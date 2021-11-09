@@ -544,7 +544,7 @@ const makeParameterListWithLinks = (
   doc: MethodDoc
 ): Node[] => {
   return [
-    md.text("("),
+    doc.parameters.length > 1 ? md.text("(\n |\t\t") : md.text("("),
     ...doc.parameters
       .map((parameter, i) => [
         project.linkToEntity(
@@ -552,7 +552,9 @@ const makeParameterListWithLinks = (
           parameter.typeName
         ),
         md.text(
-          ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
+          ` ${parameter.name ?? ""}${
+            i < doc.parameters.length - 1 ? ",\n" + " |\t\t" : ""
+          }`
         ),
       ])
       .flat(1),
@@ -647,6 +649,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
           [
             tagsToMdast(project, doc.inlineTags),
 
+            md.paragraph(),
             // Type Parameters section
             doc.typeParamTags.length !== 0
               ? md.paragraph([
