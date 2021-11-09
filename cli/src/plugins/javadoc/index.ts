@@ -400,7 +400,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ["Modifier and Type", "Field and Description"],
           doc.fields.map((fieldDoc) => [
             md.paragraph([
-              md.inlineCode(fieldDoc.modifiers + fieldDoc.type.asString),
+              md.inlineCode(`${fieldDoc.modifiers} ${fieldDoc.type.asString}`),
             ]),
             [
               md.paragraph(md.inlineCode(fieldDoc.name)),
@@ -505,6 +505,10 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           .map((doc) => [
             project.declareEntity({
               canonicalName: doc.qualifiedName,
+              pageUri,
+            }),
+            project.declareEntity({
+              canonicalName: `${doc.containingClass?.typeName}.${doc.name}`,
               pageUri,
             }),
             md.heading(3, md.inlineCode(doc.name)),
@@ -617,6 +621,12 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
       return [
         project.declareEntity({
           canonicalName,
+          pageUri,
+        }),
+        project.declareEntity({
+          canonicalName: `${doc.qualifiedName}(${doc.parameters
+            .map((param) => param.type.simpleTypeName)
+            .join(",")})`,
           pageUri,
         }),
 
