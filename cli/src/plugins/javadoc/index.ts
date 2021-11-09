@@ -236,15 +236,16 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
     return [];
   }
   return [
-    md.paragraph([
-      md.list(
-        "unordered",
-        doc.superclasses.map((superclassType) => {
-          const { qualifiedTypeName } = superclassType;
-          return md.listItem(project.linkToEntity(qualifiedTypeName));
-        })
-      ),
-    ]),
+    md.paragraph(
+      doc.superclasses
+        .map((superclassType, index) => [
+          index != 0
+            ? md.text("\n | " + Array(index * 3).join("\t")) // indent each index 3 spaces more to create a tiered hierarchy
+            : md.text(""),
+          project.linkToEntity(superclassType.qualifiedTypeName),
+        ])
+        .flat(1)
+    ),
   ];
 }
 
@@ -435,6 +436,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ["Modifier and Type", "Method and Description"],
           doc.methods.map((doc) => [
             [
+              md.text("\n"),
               md.text(doc.modifiers),
               md.text(" "),
               project.linkToEntity(
@@ -443,6 +445,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
               ),
             ],
             [
+              md.text("\n"),
               md.paragraph([
                 project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
                 md.text(" "),
@@ -544,18 +547,32 @@ const makeParameterListWithLinks = (
   doc: MethodDoc
 ): Node[] => {
   return [
-    doc.parameters.length > 1 ? md.text("(\n |\t\t") : md.text("("),
+    md.text("("),
     ...doc.parameters
       .map((parameter, i) => [
         project.linkToEntity(
           parameter.type.qualifiedTypeName,
           parameter.typeName
         ),
-        md.text(
-          ` ${parameter.name ?? ""}${
-            i < doc.parameters.length - 1 ? ",\n" + " |\t\t" : ""
-          }`
-        ),
+        ...[
+          md.text(
+            ` ${parameter.name ?? ""}${
+              i < doc.parameters.length - 1 ? ",\n" + "   " : ""
+            }`
+          ),
+          i < doc.parameters.length - 1 && doc.parameters.length != 1
+            ? md.text(
+                Array(
+                  doc.modifiers.length +
+                    1 +
+                    doc.returnType.typeName.length +
+                    1 +
+                    doc.name.length +
+                    1
+                ).join(" ")
+              )
+            : md.text(""),
+        ],
       ])
       .flat(1),
     md.text(")"),
@@ -634,17 +651,16 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
 
         makeMethodDetail(
           [
-            md.paragraph([
-              md.text(doc.modifiers),
-              md.text(" "),
-              project.linkToEntity(
-                doc.returnType.qualifiedTypeName,
-                doc.returnType.typeName
-              ),
-              md.text(` ${doc.name} `),
-              ...makeTypeParameterListWithLinks(project, doc),
-              ...makeParameterListWithLinks(project, doc),
-            ]),
+            md.text("   "),
+            md.text(doc.modifiers),
+            md.text(" "),
+            project.linkToEntity(
+              doc.returnType.qualifiedTypeName,
+              doc.returnType.typeName
+            ),
+            md.text(` ${doc.name} `),
+            ...makeTypeParameterListWithLinks(project, doc),
+            ...makeParameterListWithLinks(project, doc),
           ],
           [
             tagsToMdast(project, doc.inlineTags),
