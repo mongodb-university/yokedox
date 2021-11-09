@@ -161,15 +161,17 @@ function processParam(param: AnyType): string {
   } else if (param.simpleTypeName.includes("Iterable")) {
     return "Iterable";
   } else if (
-    param.simpleTypeName ===
-    "E" /*&& TODO: Figure out how to filter for E implements RealmModel a bit... better
-    (param.bounds as AnyDoc[]).filter(
-      (doc) => doc.simpleTypeName != "RealmModel"
-    ).length > 1*/
+    param.simpleTypeName === "E" // TODO: Figure out how to filter for E implements RealmModel a bit... better
   ) {
     return "RealmModel";
   } else if (param.simpleTypeName == "Callback") {
     return "App.Callback";
+  } else if (param.qualifiedTypeName == "org.json.JSONObject") {
+    return "org.json.JSONObject";
+  } else if (param.qualifiedTypeName == "java.io.InputStream") {
+    return "java.io.InputStream";
+  } else if (param.qualifiedTypeName == "org.json.JSONArray") {
+    return "org.json.JSONArray";
   }
   return param.simpleTypeName;
 }
@@ -655,7 +657,7 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
 };
 
 const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
-  const { project, pageUri, depth, doc: overloadDocs } = args;
+  const { project, pageUri, doc: overloadDocs } = args;
   return overloadDocs
     .map((doc) => {
       const canonicalName = getCanonicalNameForMethod(doc);
