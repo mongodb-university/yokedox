@@ -94,6 +94,7 @@ const preHtmlParseTagDelimiter = "!!!preHtmlParseTagDelimiter!!!";
 
 const visitor: TagVisitor<Project, Node | Node[]> = {
   Tag(tag) {
+    const cleanedText = tag.text.replace("\\@", "@");
     switch (tag.kind) {
       case "Text": {
         return md.text(tag.text);
@@ -102,19 +103,24 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
         // Javadoc uses some combination of <pre> and {@code} to distinguish
         // between inline code and code blocks. But the HTML elements have
         // already been stripped, so we don't know if this was in a <pre>.
-        return /\n/.test(tag.text)
-          ? md.code("java", tag.text)
-          : md.inlineCode(tag.text);
+        return /\n/.test(cleanedText)
+          ? md.code("java", cleanedText)
+          : md.inlineCode(cleanedText);
       default:
-        return md.text(tag.text);
+        return md.text(cleanedText);
     }
   },
   SeeTag(tag, project) {
+    if (tag.kind === "Text") {
+      return md.text(tag.text);
+    }
     return project.linkToEntity(
       [tag.referencedClassName, tag.referencedMemberName]
         .filter((e) => e != null)
         .join("."),
       tag.text
+        .replace(/^#/, "") // octothorpe at beginning of ref name: remove
+        .replace(/#/, ".") // octothorpe in the middle of ref name: turn into the dot it ought to be;
     );
   },
 };
