@@ -9,6 +9,7 @@ import { Project } from "../../Project.js";
 import { Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
+  AnyType,
   MethodDoc,
   ParsedClassDoc,
   ParsedPackageDoc,
@@ -150,6 +151,27 @@ async function processJson(
     }
   });
   await Promise.all(promises);
+}
+
+function processParam(param: AnyType): string {
+  if (param.simpleTypeName.includes("Class")) {
+    return "Class";
+  } else if (param.simpleTypeName.includes("ImportFlag")) {
+    return "ImportFlag...";
+  } else if (param.simpleTypeName.includes("Iterable")) {
+    return "Iterable";
+  } else if (
+    param.simpleTypeName ===
+    "E" /*&& TODO: Figure out how to filter for E implements RealmModel a bit... better
+    (param.bounds as AnyDoc[]).filter(
+      (doc) => doc.simpleTypeName != "RealmModel"
+    ).length > 1*/
+  ) {
+    return "RealmModel";
+  } else if (param.simpleTypeName == "Callback") {
+    return "App.Callback";
+  }
+  return param.simpleTypeName;
 }
 
 function getTitle(doc: ParsedClassDoc): string {
@@ -646,6 +668,12 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
           canonicalName: `${doc.qualifiedName}(${doc.parameters
             .map((param) => param.type.simpleTypeName)
             .join(",")})`,
+          pageUri,
+        }),
+        project.declareEntity({
+          canonicalName: `${doc.qualifiedName}(${doc.parameters
+            .map((param) => processParam(param.type))
+            .join(", ")})`,
           pageUri,
         }),
 
