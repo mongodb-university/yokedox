@@ -319,6 +319,7 @@ const visitors: {
     c.addDoubleNewline();
   },
   seealso(c, n) {
+    c.addDoubleNewline();
     c.add(".. seealso::");
     c.addDoubleNewline();
     c.indented(n.children);
