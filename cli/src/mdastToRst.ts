@@ -190,7 +190,7 @@ const visitors: {
 
     c.addDoubleNewline();
     c.add(`.. code-block:: ${lang}\n`);
-    c.indented(`\n${value}`);
+    c.indented(`\n${value.replace(/\\@/g, "@")}`);
     c.addDoubleNewline();
   },
   entityAnchor() {
@@ -200,6 +200,12 @@ const visitors: {
     c.add("*");
     c.add(children, (text) => text.replace(/\*/g, "\\*"));
     c.add("*");
+  },
+  example(c, n) {
+    c.add(`.. example:: `);
+    c.addDoubleNewline();
+    c.indented(n.children);
+    c.addDoubleNewline();
   },
   heading(c, { children, depth }) {
     let characterCount = 0;
@@ -263,7 +269,7 @@ const visitors: {
         anchorName !== undefined,
         `unexpected refLink without anchorName from url: ${url}`
       );
-      c.add(` <${anchorName}>\``);
+      c.add(` <${anchorName}>\` `);
     } else {
       c.add(` <${url}>`);
       c.add("`__ ");
@@ -313,8 +319,9 @@ const visitors: {
     c.addDoubleNewline();
   },
   seealso(c, n) {
+    c.addDoubleNewline();
     c.add(".. seealso::");
-    c.addNewline();
+    c.addDoubleNewline();
     c.indented(n.children);
     c.addDoubleNewline();
   },
