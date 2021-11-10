@@ -119,9 +119,9 @@ export async function makeProject<UserDataType = unknown>({
       const anchorName = anchorify(entity);
       if (entities.has(canonicalName)) {
         // Users should fix this, but it's not a fatal error.
-        console.warn(
+        /*console.warn(
           new Error(`duplicate entity: ${canonicalName} (${pageUri})`)
-        );
+        );*/
       } else {
         entities.set(canonicalName, entity);
         // We can now resolve any pages that were waiting for this entity
