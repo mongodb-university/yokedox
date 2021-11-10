@@ -1024,7 +1024,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
                   md.strong(md.text("Overrides")),
                   md.text("\n\n"),
                   md.inlineCode(doc.name),
-                  md.text("in class"),
+                  md.text("in class "),
                   project.linkToEntity(
                     doc.overriddenMethodContainingClass!.qualifiedTypeName,
                     doc.overriddenMethodContainingClass?.simpleTypeName
