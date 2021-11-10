@@ -10,6 +10,7 @@ import { EntityAnchorNode, Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   AnyType,
+  ExecutableMemberDoc,
   MethodDoc,
   ParsedClassDoc,
   ParsedPackageDoc,
@@ -421,11 +422,18 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       title: "Constructors",
       shouldMakeSection: () => doc.constructors.length !== 0,
       makeBody: () =>
-        md.list(
-          "unordered",
-          doc.constructors.map((doc) =>
-            md.listItem([md.inlineCode(doc.qualifiedName + doc.flatSignature)])
-          )
+        makeTable(
+          ["Constructor and Description"],
+          doc.constructors.map((doc) => [
+            [
+              md.paragraph([
+                project.linkToEntity(doc.qualifiedName, doc.name),
+                md.text(" "),
+                ...makeParameterListWithLinks(project, doc),
+              ]),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
+          ])
         ),
     }),
 
@@ -631,6 +639,14 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     ...makeSection({
       ...args,
       depth,
+      title: "Constructor Detail",
+      shouldMakeSection: () => doc.constructors.length !== 0,
+      makeBody: makeConstructorDetailBody,
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
       title: "Method Detail",
       shouldMakeSection: () => doc.methods.length !== 0,
       makeBody: makeMethodDetailBody,
@@ -644,7 +660,7 @@ const getCanonicalNameForMethod = (doc: MethodDoc): string => {
 
 const makeParameterListWithLinks = (
   project: Project<JavadocEntityData>,
-  doc: MethodDoc
+  doc: MethodDoc | ExecutableMemberDoc
 ): Node[] => {
   return [
     md.text("("),
@@ -661,16 +677,7 @@ const makeParameterListWithLinks = (
             }`
           ),
           i < doc.parameters.length - 1 && doc.parameters.length != 1
-            ? md.text(
-                Array(
-                  doc.modifiers.length +
-                    1 +
-                    doc.returnType.typeName.length +
-                    1 +
-                    doc.name.length +
-                    1
-                ).join(" ")
-              )
+            ? md.text("   ")
             : md.text(""),
         ],
       ])
@@ -757,6 +764,86 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
           shouldMakeSection: () => true,
           makeBody: makeMethodOverloadsDetailBody,
         }),
+      ].flat(1)
+    )
+    .flat(1);
+};
+
+const makeConstructorDetailBody: MakeBodyFunction = (args) => {
+  const { depth, doc } = args;
+  return doc.constructors
+    .map((constructor) =>
+      [
+        args.project.declareEntity({
+          canonicalName: constructor.name,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.name}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.qualifiedName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.qualifiedName}()`,
+          pageUri: args.pageUri,
+        }),
+        makeDetail(
+          [
+            md.text("   "),
+            md.text(constructor.modifiers),
+            md.text(" "),
+            md.text(` ${constructor.name} `),
+            ...makeParameterListWithLinks(args.project, constructor),
+          ],
+          [
+            tagsToMdast(args.project, constructor.inlineTags),
+
+            md.paragraph(),
+            // Type Parameters section
+            constructor.typeParamTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Type Parameters")),
+                  md.list(
+                    "unordered",
+                    constructor.typeParamTags.map((tag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${tag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(args.project, tag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
+
+            // Parameters section
+            constructor.paramTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Parameters")),
+                  md.list(
+                    "unordered",
+                    constructor.paramTags.map((paramTag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${paramTag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(args.project, paramTag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
+
+            // "See also" section
+            ...makeSeeAlso(args.project, constructor.seeTags),
+          ].flat(1)
+        ),
       ].flat(1)
     )
     .flat(1);
