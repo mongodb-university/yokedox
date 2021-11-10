@@ -2,7 +2,10 @@ package com.yokedox
 
 import com.sun.javadoc.*
 
-fun toJson(v: SourcePosition): JsonObject {
+fun toJson(v: SourcePosition?): JsonObject? {
+    if (v == null) {
+        return null
+    }
     return mapOf(
         "line" to v.line(),
         "column" to v.column(),

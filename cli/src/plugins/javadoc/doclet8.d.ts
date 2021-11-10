@@ -46,7 +46,7 @@ export type ParameterizedType = Type & {
   _class: "ParameterizedType";
   typeArguments: AnyType[];
   superclassType?: AnyType | null;
-  interfaceTypes: AnyType[];
+  interfaceTypes: string[];
   containingType?: AnyType | null;
   [k: string]: unknown;
 };

@@ -40,7 +40,8 @@ fun toJson(v: Type?): JsonObject? {
                 "_class" to "ParameterizedType",
                 "typeArguments" to v.typeArguments().map { toJson(it) },
                 "superclassType" to toJson(v.superclassType()),
-                "interfaceTypes" to v.interfaceTypes().map { toJson(it) },
+                // Prevent infinite recursion in case of circular references
+                "interfaceTypes" to v.interfaceTypes().map { it.qualifiedTypeName() },
                 "containingType" to toJson(v.containingType()),
             ))
         is TypeVariable ->
