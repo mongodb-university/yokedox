@@ -298,8 +298,7 @@
         "isAnnotationType",
         "isOrdinaryClass",
         "isClass",
-        "isIncluded",
-        "position"
+        "isIncluded"
       ],
       "properties": {
         "_class": {
@@ -771,7 +770,7 @@
             },
             "interfaceTypes": {
               "type": "array",
-              "items": { "$ref": "#/definitions/AnyType" }
+              "items": { "type": "string" }
             },
             "containingType": {
               "oneOf": [{ "$ref": "#/definitions/AnyType" }, { "type": "null" }]

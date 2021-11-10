@@ -46,7 +46,7 @@ export type ParameterizedType = Type & {
   _class: "ParameterizedType";
   typeArguments: AnyType[];
   superclassType?: AnyType | null;
-  interfaceTypes: AnyType[];
+  interfaceTypes: string[];
   containingType?: AnyType | null;
   [k: string]: unknown;
 };
@@ -277,7 +277,7 @@ export interface Doc {
   isOrdinaryClass: boolean;
   isClass: boolean;
   isIncluded: boolean;
-  position: SourcePosition;
+  position?: SourcePosition;
   [k: string]: unknown;
 }
 export interface Tag {
