@@ -602,6 +602,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
             }),
             md.heading(3, md.inlineCode(doc.name)),
             tagsToMdast(project, doc.inlineTags),
+            ...makeSeeAlso(project, doc.seeTags),
           ])
           .flat(1),
     }),
