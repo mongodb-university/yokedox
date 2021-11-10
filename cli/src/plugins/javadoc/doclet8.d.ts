@@ -277,7 +277,7 @@ export interface Doc {
   isOrdinaryClass: boolean;
   isClass: boolean;
   isIncluded: boolean;
-  position: SourcePosition;
+  position?: SourcePosition;
   [k: string]: unknown;
 }
 export interface Tag {

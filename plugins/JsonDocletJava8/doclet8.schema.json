@@ -298,8 +298,7 @@
         "isAnnotationType",
         "isOrdinaryClass",
         "isClass",
-        "isIncluded",
-        "position"
+        "isIncluded"
       ],
       "properties": {
         "_class": {
