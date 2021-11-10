@@ -671,16 +671,9 @@ const makeParameterListWithLinks = (
           parameter.type.qualifiedTypeName,
           parameter.typeName
         ),
-        ...[
-          md.text(
-            ` ${parameter.name ?? ""}${
-              i < doc.parameters.length - 1 ? ",\n" + "   " : ""
-            }`
-          ),
-          i < doc.parameters.length - 1 && doc.parameters.length != 1
-            ? md.text("   ")
-            : md.text(""),
-        ],
+        md.text(
+          ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
+        ),
       ])
       .flat(1),
     md.text(")"),
