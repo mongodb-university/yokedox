@@ -770,7 +770,7 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
 };
 
 const makeConstructorDetailBody: MakeBodyFunction = (args) => {
-  const { depth, doc } = args;
+  const { doc } = args;
   return doc.constructors
     .map((constructor) =>
       [
@@ -850,7 +850,7 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
 };
 
 const makeElementDetailBody: MakeBodyFunction = (args) => {
-  const { depth, doc } = args;
+  const { doc } = args;
   return doc
     .elements!.map((elem) =>
       [
