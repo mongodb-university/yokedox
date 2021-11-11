@@ -168,29 +168,11 @@ async function processJson(
 }
 
 function processParam(param: AnyType): string {
-  if (param.simpleTypeName.includes("Class")) {
-    return "Class";
-  } else if (param.simpleTypeName.startsWith("List")) {
-    return "List";
-  } else if (param.simpleTypeName.includes("ImportFlag")) {
-    return "ImportFlag...";
-  } else if (param.simpleTypeName.includes("Iterable")) {
-    return "Iterable";
-  } else if (param.qualifiedTypeName === "org.json.JSONObject") {
-    return "org.json.JSONObject";
-  } else if (param.qualifiedTypeName === "java.io.InputStream") {
-    return "java.io.InputStream";
-  } else if (param.qualifiedTypeName === "org.json.JSONArray") {
-    return "org.json.JSONArray";
-  } else if (param.simpleTypeName === "E") {
-    // TODO: Figure out how to filter for E implements RealmModel a bit... better
-    return "RealmModel";
-  } else if (param.qualifiedTypeName === "io.realm.mongodb.App.Callback") {
-    return "App.Callback";
-  } else if (param.qualifiedTypeName === "io.realm.Realm.Callback") {
-    return param.qualifiedTypeName;
-  } else if (param.simpleTypeName === "RealmObject") {
-    return "Object";
+  if (param.asString.includes(" extends ")) {
+    const name = param.asString.split(".");
+    return name[name.length - 1];
+  } else if (param.dimension == "[]") {
+    return param.simpleTypeName + "...";
   }
   return param.simpleTypeName;
 }
@@ -760,18 +742,14 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
           canonicalName: `${doc.simpleTypeName}.${methodName}()`,
           pageUri: args.pageUri,
         }),
-        overloadDocs.filter((doc) => doc.parameters.length == 0).length > 0
-          ? args.project.declareEntity({
-              canonicalName: `${overloadDocs[0].qualifiedName}`,
-              pageUri: args.pageUri,
-            })
-          : md.text(""),
-        overloadDocs.filter((doc) => doc.parameters.length == 0).length > 0
-          ? args.project.declareEntity({
-              canonicalName: `${overloadDocs[0].qualifiedName}()`,
-              pageUri: args.pageUri,
-            })
-          : md.text(""),
+        args.project.declareEntity({
+          canonicalName: `${overloadDocs[0].qualifiedName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${overloadDocs[0].qualifiedName}()`,
+          pageUri: args.pageUri,
+        }),
         makeSection({
           ...args,
           depth: depth + 1,
