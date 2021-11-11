@@ -6,7 +6,7 @@ import * as Path from "path";
 import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
-import { EntityAnchorNode, Node, seealso } from "../../yokedast.js";
+import { Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   AnyType,
@@ -232,22 +232,6 @@ async function processPackageDoc(
 ): Promise<void> {
   // Nothing here because parsed package docs are not comprehensive. Instead, we
   // identify packages as we process classes.
-}
-
-function makeUniqueEntities(
-  canonicalNames: string[],
-  pageUri: string,
-  project: Project
-): EntityAnchorNode[] {
-  const uniqueNames = [...new Set(canonicalNames)];
-  return [
-    uniqueNames.map((canonicalName) =>
-      project.declareEntity({
-        canonicalName,
-        pageUri,
-      })
-    ),
-  ].flat(1);
 }
 
 function makeTable(labels: string[], rows: (Node | Node[])[][]) {
@@ -936,27 +920,95 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
     .flat(1);
 };
 
+function uniqueify(s: string[]): string[] {
+  return [
+    ...new Set<string>(
+      s.filter((str) => str !== undefined && str !== null && str.trim() !== "")
+    ),
+  ];
+}
+
+function getParamNames(parameter: AnyType): string[] {
+  const paramNames: string[] = [
+    parameter.qualifiedTypeName,
+    parameter.simpleTypeName,
+    parameter.typeName,
+    processParam(parameter),
+  ];
+  return uniqueify(paramNames);
+}
+
+function getMethodNames(method: MethodDoc) {
+  return uniqueify([
+    method.qualifiedName,
+    method.name,
+    method.containingClass?.typeName + "." + method.name,
+  ]);
+}
+
+function getParamNameCombinations(
+  paramNames: string[][],
+  paramPosition: number,
+  current: string[],
+  length: number,
+  paramCombinations: string[]
+) {
+  if (paramPosition === length) {
+    // we've generated a full list of parameters -- add to our parameter name combinations
+    paramCombinations.push(current.join(" "));
+    paramCombinations.push(current.join(", ")); // some references separate with commas, some with spaces
+  } else {
+    paramNames[paramPosition].forEach((pos) => {
+      getParamNameCombinations(
+        paramNames,
+        paramPosition + 1,
+        [...current, pos],
+        length,
+        paramCombinations
+      );
+    });
+  }
+}
+
+function makeMethodAnchors(
+  project: Project,
+  method: MethodDoc,
+  pageUri: string
+) {
+  if (method.parameters.length == 0) {
+    return []; // no need to create any anchors -- there's only one possible anchor, and it conflicts with the top-level method reference
+  }
+  const methodNames = getMethodNames(method);
+  const paramNames = method.parameters.map((parameter) =>
+    getParamNames(parameter.type)
+  );
+  const paramCombinations: string[] = [];
+  getParamNameCombinations(
+    paramNames,
+    0,
+    [],
+    paramNames.length,
+    paramCombinations
+  );
+  const anchors: string[] = [];
+  methodNames.forEach((name) =>
+    paramCombinations.forEach((paramCombo) =>
+      anchors.push(name + "(" + paramCombo + ")")
+    )
+  );
+  // get unique set of anchors, then turn into entities
+  return uniqueify([...anchors, getCanonicalNameForMethod(method)]).map(
+    (anchor) => project.declareEntity({ canonicalName: anchor, pageUri })
+  );
+}
+
 const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
   const { project, pageUri, doc: overloadDocs } = args;
   return overloadDocs
     .map((doc) => {
       const canonicalName = getCanonicalNameForMethod(doc);
       return [
-        ...makeUniqueEntities(
-          doc.parameters.length > 0 // when a method instance has no parameters, it conflicts with the global method detail references
-            ? [
-                canonicalName,
-                `${doc.qualifiedName}(${doc.parameters
-                  .map((param) => param.type.simpleTypeName)
-                  .join(",")})`,
-                `${doc.qualifiedName}(${doc.parameters
-                  .map((param) => processParam(param.type))
-                  .join(", ")})`,
-              ]
-            : [],
-          pageUri,
-          project
-        ),
+        ...makeMethodAnchors(project, doc, pageUri),
 
         makeDetail(
           [
