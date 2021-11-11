@@ -445,7 +445,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           doc.constructors.map((doc) => [
             [
               md.paragraph([
-                md.text(" |   "),
+                md.text("|   "),
                 project.linkToEntity(doc.qualifiedName, doc.name),
                 md.text(" "),
                 ...makeParameterListWithLinks(project, doc),
@@ -560,7 +560,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
               ],
               [
                 md.paragraph([
-                  md.text(" |   "),
+                  md.text("|   "),
                   project.linkToEntity(
                     getCanonicalNameForMethod(doc),
                     doc.name
@@ -691,7 +691,7 @@ const makeParameterListWithLinks = (
     md.text("("),
     ...doc.parameters
       .map((parameter, i) => [
-        md.text("\n |      "),
+        md.text("\n|      "),
         project.linkToEntity(
           parameter.type.qualifiedTypeName,
           parameter.typeName
@@ -701,7 +701,7 @@ const makeParameterListWithLinks = (
         ),
       ])
       .flat(1),
-    doc.parameters.length > 0 ? md.text("\n |   ") : md.text(""),
+    doc.parameters.length > 0 ? md.text("\n|   ") : md.text(""),
     md.text(")"),
   ];
 };
