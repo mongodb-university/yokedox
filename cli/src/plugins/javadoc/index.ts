@@ -477,8 +477,15 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
         makeTable(
           ["Modifier and Type", "Class and Description"],
           doc.innerClasses.map((classDoc) => [
-            md.inlineCode(classDoc.modifiers ?? ""),
-            md.inlineCode(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
+            [md.inlineCode(classDoc.modifiers ?? "")],
+            [
+              project.linkToEntity(
+                classDoc.qualifiedTypeName,
+                classDoc.typeName
+              ),
+              md.text("\n"),
+              // TODO: Fetch description from inline tags of nested class doc
+            ],
           ])
         ),
     }),
