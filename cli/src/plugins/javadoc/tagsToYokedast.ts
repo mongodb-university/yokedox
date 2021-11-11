@@ -121,6 +121,7 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
       tag.text
         .replace(/^#/, "") // octothorpe at beginning of ref name: remove
         .replace(/#/g, ".") // octothorpe in the middle of ref name: turn into the dot it ought to be;
+        .replace(/\n/g, "") // why oh why would you put a newline in your link target
     );
   },
 };
