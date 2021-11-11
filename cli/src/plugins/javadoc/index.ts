@@ -292,17 +292,21 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
     return [];
   }
   return [
-    md.paragraph(
-      doc.superclasses
+    md.paragraph([
+      ...doc.superclasses
         .reverse() // superclasses should go simplest to most complex
         .map((superclassType, index) => [
-          index != 0
-            ? md.text("\n | " + Array(index * 3).join("\t")) // indent each index 3 spaces more to create a tiered hierarchy
-            : md.text(""),
+          md.text("\n | " + Array(index * 3).join("\t")), // indent each index 3 spaces more to create a tiered hierarchy
           project.linkToEntity(superclassType.qualifiedTypeName),
         ])
-        .flat(1)
-    ),
+        .flat(1),
+      md.text(
+        "\n | " +
+          Array(doc.superclasses.length * 3).join("\t") +
+          doc.qualifiedName +
+          "\n"
+      ),
+    ]),
   ];
 }
 
@@ -350,7 +354,7 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
     return [];
   }
   return [
-    md.paragraph(md.emphasis(md.text("Implemented interfaces:"))),
+    md.paragraph(md.strong(md.text("Implemented interfaces:"))),
     md.list(
       "unordered",
       interfaceTypes.map(({ qualifiedTypeName }) =>
@@ -410,6 +414,20 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     // Implemented interfaces
     ...makeImplementedInterfacesList(project, doc),
 
+    // Enclosing class
+    doc.containingClass !== undefined
+      ? md.paragraph([
+          md.text("\n\n"),
+          md.strong(md.text("Enclosing class:")),
+          md.text("\n\n"),
+          project.linkToEntity(
+            doc.containingClass!.qualifiedTypeName,
+            doc.containingClass!.simpleTypeName
+          ),
+          md.text("\n\n"),
+        ])
+      : md.text(""),
+
     // Comment body
     tagsToMdast(project, doc.inlineTags),
 
@@ -427,6 +445,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           doc.constructors.map((doc) => [
             [
               md.paragraph([
+                md.text(" |   "),
                 project.linkToEntity(doc.qualifiedName, doc.name),
                 md.text(" "),
                 ...makeParameterListWithLinks(project, doc),
@@ -496,7 +515,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
               md.paragraph(
                 project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
               ),
-              md.text(fieldDoc.commentText),
+              tagsToMdast(project, fieldDoc.inlineTags),
             ],
           ])
         ),
@@ -509,10 +528,13 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       shouldMakeSection: () => doc.enumConstants.length !== 0,
       makeBody: () =>
         makeTable(
-          ["Enum Constant", "Description"],
+          ["Enum Constant and Description"],
           doc.enumConstants.map((doc) => [
-            [project.linkToEntity(doc.qualifiedName, doc.name)],
-            [md.paragraph(tagsToMdast(project, doc.firstSentenceTags))],
+            [
+              project.linkToEntity(doc.qualifiedName, doc.name),
+              md.text("\n\n"),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
           ])
         ),
     }),
@@ -529,7 +551,6 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
             .sort((a, b) => (a.name > b.name ? 1 : -1)) // sort methods so users have a predictable scan order
             .map((doc) => [
               [
-                md.text("\n"),
                 md.text(doc.modifiers),
                 md.text(" "),
                 project.linkToEntity(
@@ -538,8 +559,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
                 ),
               ],
               [
-                md.text("\n"),
                 md.paragraph([
+                  md.text(" |   "),
                   project.linkToEntity(
                     getCanonicalNameForMethod(doc),
                     doc.name
@@ -603,6 +624,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
             md.heading(3, md.inlineCode(doc.name)),
             tagsToMdast(project, doc.inlineTags),
             ...makeSeeAlso(project, doc.seeTags),
+            md.text("\n\n"),
           ])
           .flat(1),
     }),
@@ -615,6 +637,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         doc.enumConstants
           .map((doc) => [
+            md.text("\n"),
             project.declareEntity({
               canonicalName: doc.qualifiedName,
               pageUri,
@@ -632,7 +655,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
                 doc.type.typeName
               ),
             ]),
-            md.paragraph(md.text(doc.commentText)),
+            tagsToMdast(project, doc.inlineTags),
+            md.text("\n\n"),
           ])
           .flat(1),
     }),
@@ -667,6 +691,7 @@ const makeParameterListWithLinks = (
     md.text("("),
     ...doc.parameters
       .map((parameter, i) => [
+        md.text("\n |      "),
         project.linkToEntity(
           parameter.type.qualifiedTypeName,
           parameter.typeName
@@ -676,6 +701,7 @@ const makeParameterListWithLinks = (
         ),
       ])
       .flat(1),
+    doc.parameters.length > 0 ? md.text("\n |   ") : md.text(""),
     md.text(")"),
   ];
 };
@@ -758,6 +784,7 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
           shouldMakeSection: () => true,
           makeBody: makeMethodOverloadsDetailBody,
         }),
+        md.text("\n\n"),
       ].flat(1)
     )
     .flat(1);
@@ -786,7 +813,7 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
         }),
         makeDetail(
           [
-            md.text("   "),
+            md.text(" |   "),
             md.text(constructor.modifiers),
             md.text(" "),
             md.text(` ${constructor.name} `),
@@ -838,6 +865,7 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
             ...makeSeeAlso(args.project, constructor.seeTags),
           ].flat(1)
         ),
+        md.text("\n\n"),
       ].flat(1)
     )
     .flat(1);
@@ -920,7 +948,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
 
         makeDetail(
           [
-            md.text("   "),
+            md.text(" |   "),
             md.text(doc.modifiers),
             md.text(" "),
             project.linkToEntity(
