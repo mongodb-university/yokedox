@@ -23,7 +23,7 @@ export function tagsToMdast(project: Project, tags: AnyTag[]): Node {
   const tagsAsHtmlParseableString = tags
     .map((tag) => {
       if (tag.kind === "Text") {
-        return tag.text;
+        return tag.text.replace(/\*/g, "\\*");
       }
       const encodedTag = encode(JSON.stringify(tag));
       return `${preHtmlParseTagDelimiter}${encodedTag}${preHtmlParseTagDelimiter}`;
@@ -97,7 +97,7 @@ const visitor: TagVisitor<Project, Node | Node[]> = {
     const cleanedText = tag.text.replace("\\@", "@");
     switch (tag.kind) {
       case "Text": {
-        return md.text(tag.text);
+        return md.text(cleanedText);
       }
       case "@code":
         // Javadoc uses some combination of <pre> and {@code} to distinguish

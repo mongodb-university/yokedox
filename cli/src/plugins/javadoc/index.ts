@@ -10,6 +10,7 @@ import { Node, seealso } from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   AnyType,
+  ExecutableMemberDoc,
   MethodDoc,
   ParsedClassDoc,
   ParsedPackageDoc,
@@ -36,7 +37,13 @@ export type MakeInheritedMethodListArgs = {
   prefix: string;
 };
 
-type EntityType = "error" | "exception" | "class" | "enum" | "interface";
+type EntityType =
+  | "error"
+  | "exception"
+  | "class"
+  | "enum"
+  | "interface"
+  | "annotation type";
 
 type ClassType = "error" | "exception" | "class";
 
@@ -59,6 +66,8 @@ function getType(doc: ParsedClassDoc): EntityType {
     return "enum";
   } else if (doc.isInterface) {
     return "interface";
+  } else if (doc.isAnnotationType) {
+    return "annotation type";
   } else {
     return "class";
   }
@@ -67,6 +76,11 @@ function getType(doc: ParsedClassDoc): EntityType {
 function capitalize(str: string): string {
   if (str.length < 1) {
     return "";
+  } else if (str.split(" ").length > 1) {
+    return str
+      .split(" ")
+      .map((s) => capitalize(s))
+      .join(" ");
   } else {
     return str[0].toUpperCase() + str.slice(1);
   }
@@ -154,24 +168,11 @@ async function processJson(
 }
 
 function processParam(param: AnyType): string {
-  if (param.simpleTypeName.includes("Class")) {
-    return "Class";
-  } else if (param.simpleTypeName.includes("ImportFlag")) {
-    return "ImportFlag...";
-  } else if (param.simpleTypeName.includes("Iterable")) {
-    return "Iterable";
-  } else if (
-    param.simpleTypeName === "E" // TODO: Figure out how to filter for E implements RealmModel a bit... better
-  ) {
-    return "RealmModel";
-  } else if (param.simpleTypeName == "Callback") {
-    return "App.Callback";
-  } else if (param.qualifiedTypeName == "org.json.JSONObject") {
-    return "org.json.JSONObject";
-  } else if (param.qualifiedTypeName == "java.io.InputStream") {
-    return "java.io.InputStream";
-  } else if (param.qualifiedTypeName == "org.json.JSONArray") {
-    return "org.json.JSONArray";
+  if (param.asString.includes(" extends ")) {
+    const name = param.asString.split(".");
+    return name[name.length - 1];
+  } else if (param.dimension == "[]") {
+    return param.simpleTypeName + "...";
   }
   return param.simpleTypeName;
 }
@@ -231,7 +232,7 @@ function makeTable(labels: string[], rows: (Node | Node[])[][]) {
   );
 }
 
-function makeMethodDetail(method: Node[], detail: Node | Node[]) {
+function makeDetail(method: Node[], detail: Node | Node[]) {
   return md.table(
     Array(method.length).map(() => "left"),
     [md.tableRow(md.tableCell(method)), md.tableRow(md.tableCell(detail))]
@@ -260,53 +261,57 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
     return [];
   }
   return [
-    md.paragraph(
-      doc.superclasses
+    md.paragraph([
+      ...doc.superclasses
+        .reverse() // superclasses should go simplest to most complex
         .map((superclassType, index) => [
-          index != 0
-            ? md.text("\n | " + Array(index * 3).join("\t")) // indent each index 3 spaces more to create a tiered hierarchy
-            : md.text(""),
+          md.text("\n | " + Array(index * 3).join("\t")), // indent each index 3 spaces more to create a tiered hierarchy
           project.linkToEntity(superclassType.qualifiedTypeName),
         ])
-        .flat(1)
-    ),
+        .flat(1),
+      md.text(
+        "\n | " +
+          Array(doc.superclasses.length * 3).join("\t") +
+          doc.qualifiedName +
+          "\n"
+      ),
+    ]),
   ];
 }
 
 function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
-  if (args.list.length === 0) {
+  // some inherited-from classes can pass on NO methods. This looks silly. Omit them from the inherited method list.
+  const typesWithInheritedMethods = args.list.filter(
+    (type) => args.inheritedMethods[type.qualifiedTypeName].length > 0
+  );
+  if (typesWithInheritedMethods.length === 0) {
     return [];
   }
   return [
     md.list(
       "unordered",
-      args.list
-        .map((interfaceType) => {
+      typesWithInheritedMethods
+        .map((type) => {
           return [
-            md.listItem([
-              md.text(args.prefix),
-              args.project.linkToEntity(interfaceType.qualifiedTypeName),
-              md.text(": "),
-              md.paragraph(),
-              md.paragraph(
-                [
-                  args.inheritedMethods[interfaceType.qualifiedTypeName]
-                    .map((method, index) => {
-                      return [
-                        md.inlineCode(method),
-                        // separate method names with commas, while avoiding trailing comma
-                        index <
-                        args.inheritedMethods[interfaceType.qualifiedTypeName]
-                          .length -
-                          1
-                          ? md.text(", ")
-                          : md.text(""),
-                      ];
-                    })
-                    .flat(1),
-                ].flat(1)
-              ),
-            ]),
+            md.listItem(
+              [
+                md.text(args.prefix),
+                args.project.linkToEntity(type.qualifiedTypeName),
+                md.text(": "),
+                args.inheritedMethods[type.qualifiedTypeName]
+                  .map((method, index) => {
+                    return [
+                      md.inlineCode(method),
+                      // separate method names with commas, while avoiding trailing comma
+                      index <
+                      args.inheritedMethods[type.qualifiedTypeName].length - 1
+                        ? md.text(", ")
+                        : md.text(""),
+                    ];
+                  })
+                  .flat(1),
+              ].flat(1)
+            ),
           ];
         })
         .flat(1)
@@ -320,7 +325,7 @@ function makeImplementedInterfacesList(project: Project, doc: ParsedClassDoc) {
     return [];
   }
   return [
-    md.paragraph(md.emphasis(md.text("Implemented interfaces:"))),
+    md.paragraph(md.strong(md.text("Implemented interfaces:"))),
     md.list(
       "unordered",
       interfaceTypes.map(({ qualifiedTypeName }) =>
@@ -358,6 +363,13 @@ function makeSection<DocType>(args: MakeSectionArgs<DocType>): Node[] {
 const makeClassDocPageBody: MakeBodyFunction = (args) => {
   const { project, doc, pageUri } = args;
   const depth = args.depth + 1;
+
+  // sort properties of class so users have a predictable scan order
+  doc.methods.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.enumConstants.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.fields.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.elements?.sort((a, b) => (a.name > b.name ? 1 : -1));
+
   return [
     // Declare the class itself as an entity
     project.declareEntity({
@@ -380,6 +392,20 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     // Implemented interfaces
     ...makeImplementedInterfacesList(project, doc),
 
+    // Enclosing class
+    doc.containingClass !== undefined
+      ? md.paragraph([
+          md.text("\n\n"),
+          md.strong(md.text("Enclosing class:")),
+          md.text("\n\n"),
+          project.linkToEntity(
+            doc.containingClass!.qualifiedTypeName,
+            doc.containingClass!.simpleTypeName
+          ),
+          md.text("\n\n"),
+        ])
+      : md.text(""),
+
     // Comment body
     tagsToMdast(project, doc.inlineTags),
 
@@ -392,11 +418,19 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       title: "Constructors",
       shouldMakeSection: () => doc.constructors.length !== 0,
       makeBody: () =>
-        md.list(
-          "unordered",
-          doc.constructors.map((doc) =>
-            md.listItem([md.inlineCode(doc.qualifiedName + doc.flatSignature)])
-          )
+        makeTable(
+          ["Constructor and Description"],
+          doc.constructors.map((doc) => [
+            [
+              md.paragraph([
+                md.text("|   "),
+                project.linkToEntity(doc.qualifiedName, doc.name),
+                md.text(" "),
+                ...makeParameterListWithLinks(project, doc),
+              ]),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
+          ])
         ),
     }),
 
@@ -409,8 +443,37 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
         makeTable(
           ["Modifier and Type", "Class and Description"],
           doc.innerClasses.map((classDoc) => [
-            md.inlineCode(classDoc.modifiers ?? ""),
-            md.inlineCode(classDoc.qualifiedTypeName), // TODO: Must fetch complete classDoc from another file
+            [md.inlineCode(classDoc.modifiers ?? "")],
+            [
+              project.linkToEntity(
+                classDoc.qualifiedTypeName,
+                classDoc.typeName
+              ),
+              md.text("\n"),
+              // TODO: Fetch description from inline tags of nested class doc
+            ],
+          ])
+        ),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
+      title: "Optional Element Summary",
+      shouldMakeSection: () =>
+        doc.elements !== undefined && doc.elements?.length !== 0,
+      makeBody: () =>
+        makeTable(
+          ["Modifier and Type", "Optional Element and Description"],
+          doc.elements!.map((elem) => [
+            md.paragraph([
+              md.text(`${elem.modifiers} `),
+              project.linkToEntity(
+                elem.returnType.qualifiedTypeName,
+                elem.returnType.typeName
+              ),
+            ]),
+            [md.paragraph(tagsToMdast(project, elem.firstSentenceTags))],
           ])
         ),
     }),
@@ -425,11 +488,17 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ["Modifier and Type", "Field and Description"],
           doc.fields.map((fieldDoc) => [
             md.paragraph([
-              md.inlineCode(`${fieldDoc.modifiers} ${fieldDoc.type.asString}`),
+              md.text(`${fieldDoc.modifiers} `),
+              project.linkToEntity(
+                fieldDoc.type.qualifiedTypeName,
+                fieldDoc.type.typeName
+              ),
             ]),
             [
-              md.paragraph(md.inlineCode(fieldDoc.name)),
-              md.text(fieldDoc.commentText),
+              md.paragraph(
+                project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
+              ),
+              tagsToMdast(project, fieldDoc.inlineTags),
             ],
           ])
         ),
@@ -442,10 +511,13 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       shouldMakeSection: () => doc.enumConstants.length !== 0,
       makeBody: () =>
         makeTable(
-          ["Enum Constant", "Description"],
+          ["Enum Constant and Description"],
           doc.enumConstants.map((doc) => [
-            [project.linkToEntity(doc.qualifiedName, doc.name)],
-            [md.paragraph(tagsToMdast(project, doc.firstSentenceTags))],
+            [
+              project.linkToEntity(doc.qualifiedName, doc.name),
+              md.text("\n\n"),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
           ])
         ),
     }),
@@ -460,7 +532,6 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ["Modifier and Type", "Method and Description"],
           doc.methods.map((doc) => [
             [
-              md.text("\n"),
               md.text(doc.modifiers),
               md.text(" "),
               project.linkToEntity(
@@ -469,8 +540,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
               ),
             ],
             [
-              md.text("\n"),
               md.paragraph([
+                md.text("|   "),
                 project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
                 md.text(" "),
                 ...makeTypeParameterListWithLinks(project, doc),
@@ -486,22 +557,34 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       ...args,
       depth,
       title: "Inherited Methods",
-      shouldMakeSection: () => Object.keys(doc.inheritedMethods).length !== 0,
+      shouldMakeSection: () =>
+        Object.keys(doc.inheritedMethods).length !== 0 &&
+        !doc.isAnnotationType &&
+        !doc.isAnnotationTypeElement,
       makeBody: () =>
         makeInheritedMethodList({
           project,
           doc,
           list: doc.superclasses,
           inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from interface ",
+          prefix: "Methods inherited from class ",
         }),
       ...makeInheritedMethodList({
         project,
         doc,
         list: doc.interfaceTypes,
         inheritedMethods: doc.inheritedMethods,
-        prefix: "Methods inherited from class ",
+        prefix: "Methods inherited from interface ",
       }),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
+      title: "Element Detail",
+      shouldMakeSection: () =>
+        doc.elements != undefined && doc.elements.length !== 0,
+      makeBody: makeElementDetailBody,
     }),
 
     ...makeSection({
@@ -518,6 +601,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
             }),
             md.heading(3, md.inlineCode(doc.name)),
             tagsToMdast(project, doc.inlineTags),
+            ...makeSeeAlso(project, doc.seeTags),
+            md.text("\n\n"),
           ])
           .flat(1),
     }),
@@ -530,6 +615,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         doc.enumConstants
           .map((doc) => [
+            md.text("\n"),
             project.declareEntity({
               canonicalName: doc.qualifiedName,
               pageUri,
@@ -547,9 +633,18 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
                 doc.type.typeName
               ),
             ]),
-            md.paragraph(md.text(doc.commentText)),
+            tagsToMdast(project, doc.inlineTags),
+            md.text("\n\n"),
           ])
           .flat(1),
+    }),
+
+    ...makeSection({
+      ...args,
+      depth,
+      title: "Constructor Detail",
+      shouldMakeSection: () => doc.constructors.length !== 0,
+      makeBody: makeConstructorDetailBody,
     }),
 
     ...makeSection({
@@ -568,37 +663,23 @@ const getCanonicalNameForMethod = (doc: MethodDoc): string => {
 
 const makeParameterListWithLinks = (
   project: Project<JavadocEntityData>,
-  doc: MethodDoc
+  doc: MethodDoc | ExecutableMemberDoc
 ): Node[] => {
   return [
     md.text("("),
     ...doc.parameters
       .map((parameter, i) => [
+        md.text("\n|      "),
         project.linkToEntity(
           parameter.type.qualifiedTypeName,
           parameter.typeName
         ),
-        ...[
-          md.text(
-            ` ${parameter.name ?? ""}${
-              i < doc.parameters.length - 1 ? ",\n" + "   " : ""
-            }`
-          ),
-          i < doc.parameters.length - 1 && doc.parameters.length != 1
-            ? md.text(
-                Array(
-                  doc.modifiers.length +
-                    1 +
-                    doc.returnType.typeName.length +
-                    1 +
-                    doc.name.length +
-                    1
-                ).join(" ")
-              )
-            : md.text(""),
-        ],
+        md.text(
+          ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
+        ),
       ])
       .flat(1),
+    doc.parameters.length > 0 ? md.text("\n|   ") : md.text(""),
     md.text(")"),
   ];
 };
@@ -644,17 +725,260 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
   );
   return methodsGroupedByName
     .map(([methodName, overloadDocs]) =>
-      makeSection({
-        ...args,
-        depth: depth + 1,
-        title: methodName,
-        doc: overloadDocs,
-        shouldMakeSection: () => true,
-        makeBody: makeMethodOverloadsDetailBody,
-      })
+      [
+        args.project.declareEntity({
+          canonicalName: methodName,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${methodName}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${doc.simpleTypeName}.${methodName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${doc.simpleTypeName}.${methodName}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${overloadDocs[0].qualifiedName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${overloadDocs[0].qualifiedName}()`,
+          pageUri: args.pageUri,
+        }),
+        makeSection({
+          ...args,
+          depth: depth + 1,
+          title: methodName,
+          doc: overloadDocs,
+          shouldMakeSection: () => true,
+          makeBody: makeMethodOverloadsDetailBody,
+        }),
+        md.text("\n\n"),
+      ].flat(1)
     )
     .flat(1);
 };
+
+const makeConstructorDetailBody: MakeBodyFunction = (args) => {
+  const { doc } = args;
+  return doc.constructors
+    .map((constructor) =>
+      [
+        args.project.declareEntity({
+          canonicalName: constructor.name,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.name}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.qualifiedName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${constructor.qualifiedName}()`,
+          pageUri: args.pageUri,
+        }),
+        makeDetail(
+          [
+            md.text(" |   "),
+            md.text(constructor.modifiers),
+            md.text(" "),
+            md.text(` ${constructor.name} `),
+            ...makeParameterListWithLinks(args.project, constructor),
+          ],
+          [
+            tagsToMdast(args.project, constructor.inlineTags),
+
+            md.paragraph(),
+            // Type Parameters section
+            constructor.typeParamTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Type Parameters")),
+                  md.list(
+                    "unordered",
+                    constructor.typeParamTags.map((tag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${tag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(args.project, tag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
+
+            // Parameters section
+            constructor.paramTags.length !== 0
+              ? md.paragraph([
+                  md.strong(md.text("Parameters")),
+                  md.list(
+                    "unordered",
+                    constructor.paramTags.map((paramTag) => {
+                      return md.listItem([
+                        md.paragraph([
+                          md.inlineCode(`${paramTag.parameterName}`),
+                          md.text("- "),
+                          tagsToMdast(args.project, paramTag.inlineTags ?? []),
+                        ]),
+                      ]);
+                    })
+                  ),
+                ])
+              : md.paragraph(),
+
+            // "See also" section
+            ...makeSeeAlso(args.project, constructor.seeTags),
+          ].flat(1)
+        ),
+        md.text("\n\n"),
+      ].flat(1)
+    )
+    .flat(1);
+};
+
+const makeElementDetailBody: MakeBodyFunction = (args) => {
+  const { doc } = args;
+  return doc
+    .elements!.map((elem) =>
+      [
+        args.project.declareEntity({
+          canonicalName: elem.name,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${elem.name}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${doc.simpleTypeName}.${elem.name}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${doc.simpleTypeName}.${elem.name}()`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${elem.qualifiedName}`,
+          pageUri: args.pageUri,
+        }),
+        args.project.declareEntity({
+          canonicalName: `${elem.qualifiedName}()`,
+          pageUri: args.pageUri,
+        }),
+        makeDetail(
+          [md.text(elem.name)],
+          [
+            md.inlineCode(
+              `${elem.modifiers} ${elem.returnType.typeName} ${elem.name}`
+            ),
+            md.text("\n\n"),
+            tagsToMdast(args.project, elem.inlineTags),
+            elem.defaultValue !== null && elem.defaultValue !== undefined
+              ? md.paragraph([
+                  md.text("\n\n"),
+                  md.strong(md.text("Default:")),
+                  md.text("\n"),
+                  md.inlineCode(elem.defaultValue!),
+                ])
+              : md.text(""),
+            ...makeSeeAlso(args.project, elem.seeTags),
+          ]
+        ),
+      ].flat(1)
+    )
+    .flat(1);
+};
+
+function uniqueify(s: string[]): string[] {
+  return [
+    ...new Set<string>(
+      s.filter((str) => str !== undefined && str !== null && str.trim() !== "")
+    ),
+  ];
+}
+
+function getParamNames(parameter: AnyType): string[] {
+  const paramNames: string[] = [
+    parameter.qualifiedTypeName,
+    parameter.simpleTypeName,
+    parameter.typeName,
+    processParam(parameter),
+  ];
+  return uniqueify(paramNames);
+}
+
+function getMethodNames(method: MethodDoc) {
+  return uniqueify([
+    method.qualifiedName,
+    method.name,
+    method.containingClass?.typeName + "." + method.name,
+  ]);
+}
+
+function getParamNameCombinations(
+  paramNames: string[][],
+  paramPosition: number,
+  current: string[],
+  length: number,
+  paramCombinations: string[]
+) {
+  if (paramPosition === length) {
+    // we've generated a full list of parameters -- add to our parameter name combinations
+    paramCombinations.push(current.join(" "));
+    paramCombinations.push(current.join(", ")); // some references separate with commas, some with spaces
+  } else {
+    paramNames[paramPosition].forEach((pos) => {
+      getParamNameCombinations(
+        paramNames,
+        paramPosition + 1,
+        [...current, pos],
+        length,
+        paramCombinations
+      );
+    });
+  }
+}
+
+function makeMethodAnchors(
+  project: Project,
+  method: MethodDoc,
+  pageUri: string
+) {
+  if (method.parameters.length == 0) {
+    return []; // no need to create any anchors -- there's only one possible anchor, and it conflicts with the top-level method reference
+  }
+  const methodNames = getMethodNames(method);
+  const paramNames = method.parameters.map((parameter) =>
+    getParamNames(parameter.type)
+  );
+  const paramCombinations: string[] = [];
+  getParamNameCombinations(
+    paramNames,
+    0,
+    [],
+    paramNames.length,
+    paramCombinations
+  );
+  const anchors: string[] = [];
+  methodNames.forEach((name) =>
+    paramCombinations.forEach((paramCombo) =>
+      anchors.push(name + "(" + paramCombo + ")")
+    )
+  );
+  // get unique set of anchors, then turn into entities
+  return uniqueify([...anchors, getCanonicalNameForMethod(method)]).map(
+    (anchor) => project.declareEntity({ canonicalName: anchor, pageUri })
+  );
+}
 
 const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
   const { project, pageUri, doc: overloadDocs } = args;
@@ -662,26 +986,11 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
     .map((doc) => {
       const canonicalName = getCanonicalNameForMethod(doc);
       return [
-        project.declareEntity({
-          canonicalName,
-          pageUri,
-        }),
-        project.declareEntity({
-          canonicalName: `${doc.qualifiedName}(${doc.parameters
-            .map((param) => param.type.simpleTypeName)
-            .join(",")})`,
-          pageUri,
-        }),
-        project.declareEntity({
-          canonicalName: `${doc.qualifiedName}(${doc.parameters
-            .map((param) => processParam(param.type))
-            .join(", ")})`,
-          pageUri,
-        }),
+        ...makeMethodAnchors(project, doc, pageUri),
 
-        makeMethodDetail(
+        makeDetail(
           [
-            md.text("   "),
+            md.text("|   "),
             md.text(doc.modifiers),
             md.text(" "),
             project.linkToEntity(
@@ -757,10 +1066,12 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
                     doc.throwsTags.map((tag) => {
                       return md.listItem([
                         md.paragraph([
-                          project.linkToEntity(
-                            tag.exceptionType.qualifiedTypeName,
-                            `${tag.exceptionName}`
-                          ),
+                          tag.exceptionType !== undefined
+                            ? project.linkToEntity(
+                                tag.exceptionType.qualifiedTypeName,
+                                `${tag.exceptionName}`
+                              )
+                            : md.text(""),
                           md.text(" - "),
                           tagsToMdast(project, tag.inlineTags ?? []),
                         ]),
@@ -769,6 +1080,20 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
                   ),
                 ])
               : md.paragraph(),
+
+            // Overrides section
+            doc.overriddenMethodContainingClass !== undefined
+              ? md.paragraph([
+                  md.strong(md.text("Overrides")),
+                  md.text("\n\n"),
+                  md.inlineCode(doc.name),
+                  md.text("in class "),
+                  project.linkToEntity(
+                    doc.overriddenMethodContainingClass!.qualifiedTypeName,
+                    doc.overriddenMethodContainingClass?.simpleTypeName
+                  ),
+                ])
+              : md.text(""),
 
             // "See also" section
             ...makeSeeAlso(project, doc.seeTags),
