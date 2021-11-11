@@ -948,7 +948,7 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
 
         makeDetail(
           [
-            md.text(" |   "),
+            md.text("|   "),
             md.text(doc.modifiers),
             md.text(" "),
             project.linkToEntity(
