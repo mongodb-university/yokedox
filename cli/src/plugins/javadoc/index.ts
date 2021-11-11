@@ -170,24 +170,27 @@ async function processJson(
 function processParam(param: AnyType): string {
   if (param.simpleTypeName.includes("Class")) {
     return "Class";
+  } else if (param.simpleTypeName.startsWith("List")) {
+    return "List";
   } else if (param.simpleTypeName.includes("ImportFlag")) {
     return "ImportFlag...";
   } else if (param.simpleTypeName.includes("Iterable")) {
     return "Iterable";
-  } else if (
-    param.simpleTypeName === "E" // TODO: Figure out how to filter for E implements RealmModel a bit... better
-  ) {
-    return "RealmModel";
-  } else if (param.qualifiedTypeName == "io.realm.mongodb.App.Callback") {
-    return "App.Callback";
-  } else if (param.qualifiedTypeName == "io.realm.Realm.Callback") {
-    return param.qualifiedTypeName;
-  } else if (param.qualifiedTypeName == "org.json.JSONObject") {
+  } else if (param.qualifiedTypeName === "org.json.JSONObject") {
     return "org.json.JSONObject";
-  } else if (param.qualifiedTypeName == "java.io.InputStream") {
+  } else if (param.qualifiedTypeName === "java.io.InputStream") {
     return "java.io.InputStream";
-  } else if (param.qualifiedTypeName == "org.json.JSONArray") {
+  } else if (param.qualifiedTypeName === "org.json.JSONArray") {
     return "org.json.JSONArray";
+  } else if (param.simpleTypeName === "E") {
+    // TODO: Figure out how to filter for E implements RealmModel a bit... better
+    return "RealmModel";
+  } else if (param.qualifiedTypeName === "io.realm.mongodb.App.Callback") {
+    return "App.Callback";
+  } else if (param.qualifiedTypeName === "io.realm.Realm.Callback") {
+    return param.qualifiedTypeName;
+  } else if (param.simpleTypeName === "RealmObject") {
+    return "Object";
   }
   return param.simpleTypeName;
 }
@@ -311,29 +314,31 @@ function makeSuperclassList(project: Project, doc: ParsedClassDoc) {
 }
 
 function makeInheritedMethodList(args: MakeInheritedMethodListArgs) {
-  if (args.list.length === 0) {
+  // some inherited-from classes can pass on NO methods. This looks silly. Omit them from the inherited method list.
+  const typesWithInheritedMethods = args.list.filter(
+    (type) => args.inheritedMethods[type.qualifiedTypeName].length > 0
+  );
+  if (typesWithInheritedMethods.length === 0) {
     return [];
   }
   return [
     md.list(
       "unordered",
-      args.list
-        .map((interfaceType) => {
+      typesWithInheritedMethods
+        .map((type) => {
           return [
             md.listItem(
               [
                 md.text(args.prefix),
-                args.project.linkToEntity(interfaceType.qualifiedTypeName),
+                args.project.linkToEntity(type.qualifiedTypeName),
                 md.text(": "),
-                args.inheritedMethods[interfaceType.qualifiedTypeName]
+                args.inheritedMethods[type.qualifiedTypeName]
                   .map((method, index) => {
                     return [
                       md.inlineCode(method),
                       // separate method names with commas, while avoiding trailing comma
                       index <
-                      args.inheritedMethods[interfaceType.qualifiedTypeName]
-                        .length -
-                        1
+                      args.inheritedMethods[type.qualifiedTypeName].length - 1
                         ? md.text(", ")
                         : md.text(""),
                     ];
@@ -589,14 +594,14 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           doc,
           list: doc.superclasses,
           inheritedMethods: doc.inheritedMethods,
-          prefix: "Methods inherited from interface ",
+          prefix: "Methods inherited from class ",
         }),
       ...makeInheritedMethodList({
         project,
         doc,
         list: doc.interfaceTypes,
         inheritedMethods: doc.inheritedMethods,
-        prefix: "Methods inherited from class ",
+        prefix: "Methods inherited from interface ",
       }),
     }),
 
