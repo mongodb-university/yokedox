@@ -40,6 +40,11 @@ export type MakeProjectArgs = {
     Whether to output rST files.
    */
   outputRst?: boolean;
+
+  /**
+    Whether to output information about duplicate entities generated internally.
+   */
+  enableDuplicateEntityWarning?: boolean;
 };
 
 /**
@@ -55,6 +60,7 @@ export async function makeProject<UserDataType = unknown>({
   outputMdastJson = true,
   outputMarkdown = false,
   outputRst = true,
+  enableDuplicateEntityWarning,
 }: MakeProjectArgs): Promise<Project<UserDataType>> {
   // Use the current working directy if no output directory was provided
   const outputDirectoryPath = Path.resolve(out ?? "");
@@ -118,10 +124,12 @@ export async function makeProject<UserDataType = unknown>({
       const { canonicalName, pageUri } = entity;
       const anchorName = anchorify(entity);
       if (entities.has(canonicalName)) {
-        // Users should fix this, but it's not a fatal error.
-        /*console.warn(
-          new Error(`duplicate entity: ${canonicalName} (${pageUri})`)
-        );*/
+        if (enableDuplicateEntityWarning) {
+          // Users should fix this, but it's not a fatal error.
+          console.warn(
+            new Error(`duplicate entity: ${canonicalName} (${pageUri})`)
+          );
+        }
       } else {
         entities.set(canonicalName, entity);
         // We can now resolve any pages that were waiting for this entity

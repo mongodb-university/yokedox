@@ -39,6 +39,11 @@ export const cli = yargs
           string: true,
           describe:
             "bypass the generator step and treat the given path as the result of a generator call",
+        })
+        .option("enableDuplicateEntityWarning", {
+          boolean: true,
+          describe:
+            "output information about duplicate entities generated internally",
         });
     },
     (args) => {

@@ -392,6 +392,13 @@ function makeSection<DocType>(args: MakeSectionArgs<DocType>): Node[] {
 const makeClassDocPageBody: MakeBodyFunction = (args) => {
   const { project, doc, pageUri } = args;
   const depth = args.depth + 1;
+
+  // sort properties of class so users have a predictable scan order
+  doc.methods.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.enumConstants.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.fields.sort((a, b) => (a.name > b.name ? 1 : -1));
+  doc.elements?.sort((a, b) => (a.name > b.name ? 1 : -1));
+
   return [
     // Declare the class itself as an entity
     project.declareEntity({
@@ -480,18 +487,16 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Modifier and Type", "Optional Element and Description"],
-          doc
-            .elements!.sort((a, b) => (a.name > b.name ? 1 : -1)) // sort elements so users have a predictable scan order
-            .map((elem) => [
-              md.paragraph([
-                md.text(`${elem.modifiers} `),
-                project.linkToEntity(
-                  elem.returnType.qualifiedTypeName,
-                  elem.returnType.typeName
-                ),
-              ]),
-              [md.paragraph(tagsToMdast(project, elem.firstSentenceTags))],
-            ])
+          doc.elements!.map((elem) => [
+            md.paragraph([
+              md.text(`${elem.modifiers} `),
+              project.linkToEntity(
+                elem.returnType.qualifiedTypeName,
+                elem.returnType.typeName
+              ),
+            ]),
+            [md.paragraph(tagsToMdast(project, elem.firstSentenceTags))],
+          ])
         ),
     }),
 
@@ -547,31 +552,26 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Modifier and Type", "Method and Description"],
-          doc.methods
-            .sort((a, b) => (a.name > b.name ? 1 : -1)) // sort methods so users have a predictable scan order
-            .map((doc) => [
-              [
-                md.text(doc.modifiers),
+          doc.methods.map((doc) => [
+            [
+              md.text(doc.modifiers),
+              md.text(" "),
+              project.linkToEntity(
+                doc.returnType.qualifiedTypeName,
+                doc.returnType.typeName
+              ),
+            ],
+            [
+              md.paragraph([
+                md.text("|   "),
+                project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
                 md.text(" "),
-                project.linkToEntity(
-                  doc.returnType.qualifiedTypeName,
-                  doc.returnType.typeName
-                ),
-              ],
-              [
-                md.paragraph([
-                  md.text("|   "),
-                  project.linkToEntity(
-                    getCanonicalNameForMethod(doc),
-                    doc.name
-                  ),
-                  md.text(" "),
-                  ...makeTypeParameterListWithLinks(project, doc),
-                  ...makeParameterListWithLinks(project, doc),
-                ]),
-                md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
-              ],
-            ])
+                ...makeTypeParameterListWithLinks(project, doc),
+                ...makeParameterListWithLinks(project, doc),
+              ]),
+              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+            ],
+          ])
         ),
     }),
 
