@@ -57,7 +57,7 @@ function getClassType(doc: ParsedClassDoc): ClassType {
   }
 }
 
-function getType(doc: ParsedClassDoc): EntityType {
+export function getType(doc: ParsedClassDoc): EntityType {
   if (doc.isError) {
     return "error";
   } else if (doc.isException) {
@@ -73,7 +73,7 @@ function getType(doc: ParsedClassDoc): EntityType {
   }
 }
 
-function capitalize(str: string): string {
+export function capitalize(str: string): string {
   if (str.length < 1) {
     return "";
   } else if (str.split(" ").length > 1) {

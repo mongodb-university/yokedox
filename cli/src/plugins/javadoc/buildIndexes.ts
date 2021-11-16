@@ -2,7 +2,7 @@ import { brk, list } from "mdast-builder";
 import { FinalizedProject } from "../../Project.js";
 import { md, toctree, toctreeItem, ToctreeItemNode } from "../../yokedast.js";
 import { buildOverview } from "./buildOverview.js";
-import { JavadocEntityData } from "./index.js";
+import { capitalize, JavadocEntityData } from "./index.js";
 
 export type BuildIndexesArgs = {
   finalizedProject: FinalizedProject<JavadocEntityData>;
@@ -50,7 +50,10 @@ export const buildIndexes = async ({
       toctree(
         membersSorted
           .map((member) => {
-            const value = "" + member.data?.simpleTypeName;
+            const value =
+              capitalize(
+                member.data?.classType ? member.data?.classType + " " : ""
+              ) + member.data?.simpleTypeName;
             return toctreeItem({
               url: packageToFolderPath(member.canonicalName),
               value,
