@@ -787,7 +787,7 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
         }),
         makeDetail(
           [
-            md.text(" |   "),
+            md.text("|   "),
             md.text(constructor.modifiers),
             md.text(" "),
             md.text(` ${constructor.name} `),
