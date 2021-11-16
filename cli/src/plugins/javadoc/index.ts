@@ -486,21 +486,23 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Modifier and Type", "Field and Description"],
-          doc.fields.map((fieldDoc) => [
-            md.paragraph([
-              md.text(`${fieldDoc.modifiers} `),
-              project.linkToEntity(
-                fieldDoc.type.qualifiedTypeName,
-                fieldDoc.type.typeName
-              ),
-            ]),
-            [
-              md.paragraph(
-                project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
-              ),
-              tagsToMdast(project, fieldDoc.inlineTags),
-            ],
-          ])
+          doc.fields
+            .filter((fieldDoc) => !fieldDoc.modifiers.startsWith("protected"))
+            .map((fieldDoc) => [
+              md.paragraph([
+                md.text(`${fieldDoc.modifiers} `),
+                project.linkToEntity(
+                  fieldDoc.type.qualifiedTypeName,
+                  fieldDoc.type.typeName
+                ),
+              ]),
+              [
+                md.paragraph(
+                  project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
+                ),
+                tagsToMdast(project, fieldDoc.inlineTags),
+              ],
+            ])
         ),
     }),
 
@@ -594,6 +596,7 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       shouldMakeSection: () => doc.fields.length !== 0,
       makeBody: () =>
         doc.fields
+          .filter((fieldDoc) => !fieldDoc.modifiers.startsWith("protected"))
           .map((doc) => [
             project.declareEntity({
               canonicalName: doc.qualifiedName,
