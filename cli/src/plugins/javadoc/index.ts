@@ -420,17 +420,19 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Constructor and Description"],
-          doc.constructors.map((doc) => [
-            [
-              md.paragraph([
-                md.text("|   "),
-                project.linkToEntity(doc.qualifiedName, doc.name),
-                md.text(" "),
-                ...makeParameterListWithLinks(project, doc),
-              ]),
-              md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
-            ],
-          ])
+          doc.constructors
+            .filter((doc) => !doc.modifiers.startsWith("protected"))
+            .map((doc) => [
+              [
+                md.paragraph([
+                  md.text("|   "),
+                  project.linkToEntity(doc.qualifiedName, doc.name),
+                  md.text(" "),
+                  ...makeParameterListWithLinks(project, doc),
+                ]),
+                md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
+              ],
+            ])
         ),
     }),
 
@@ -770,6 +772,7 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
 const makeConstructorDetailBody: MakeBodyFunction = (args) => {
   const { doc } = args;
   return doc.constructors
+    .filter((doc) => !doc.modifiers.startsWith("protected"))
     .map((constructor) =>
       [
         args.project.declareEntity({
