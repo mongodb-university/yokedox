@@ -35,6 +35,19 @@ export type EntityAnchorNode<UserDataType = unknown> = ReturnType<
   entity: Entity<UserDataType>;
 };
 
+export type LiteralIndentationBlockNode = ReturnType<
+  typeof MdastBuilder.html
+> & {
+  children: LiteralIndentationNode[];
+  type: "literalIndentationBlock";
+};
+
+export type LiteralIndentationNode = ReturnType<typeof MdastBuilder.html> & {
+  depth: number;
+  children: Node[];
+  type: "literalIndentationNode";
+};
+
 export type ExampleNode = Parent & {
   type: "example";
 };
@@ -85,6 +98,19 @@ export const example = (children: Node[]): ExampleNode => {
   };
 };
 
+export const literalIndentationBlock = (
+  children: LiteralIndentationNode[]
+): LiteralIndentationBlockNode => {
+  return { children, type: "literalIndentationBlock" };
+};
+
+export const literalIndentationNode = (
+  depth: number,
+  children: Node[]
+): LiteralIndentationNode => {
+  return { depth, children, type: "literalIndentationNode" };
+};
+
 export type RootNode = ReturnType<typeof MdastBuilder.root>;
 
 export type CodeNode = ReturnType<typeof MdastBuilder.code>;
@@ -110,6 +136,8 @@ type YokedastNodes = {
   toctreeItem: typeof toctreeItem;
   seealso: typeof seealso;
   example: typeof example;
+  literalIndentationBlock: typeof literalIndentationBlock;
+  literalIndentationNode: typeof literalIndentationNode;
 };
 
 export type MdastNodeType = keyof MdastNodes;

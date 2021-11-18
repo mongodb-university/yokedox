@@ -6,7 +6,13 @@ import * as Path from "path";
 import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
-import { Node, seealso } from "../../yokedast.js";
+import {
+  literalIndentationBlock,
+  LiteralIndentationBlockNode,
+  literalIndentationNode,
+  Node,
+  seealso,
+} from "../../yokedast.js";
 import { buildIndexes, packageToFolderPath } from "./buildIndexes.js";
 import {
   AnyType,
@@ -37,6 +43,13 @@ export type MakeInheritedMethodListArgs = {
   prefix: string;
 };
 
+export type MakeFunctionDeclarationArgs = {
+  project: Project<JavadocEntityData>;
+  doc: MethodDoc | ExecutableMemberDoc;
+  modifiers: boolean;
+  returnType: boolean;
+};
+
 type EntityType =
   | "error"
   | "exception"
@@ -57,7 +70,7 @@ function getClassType(doc: ParsedClassDoc): ClassType {
   }
 }
 
-function getType(doc: ParsedClassDoc): EntityType {
+export function getType(doc: ParsedClassDoc): EntityType {
   if (doc.isError) {
     return "error";
   } else if (doc.isException) {
@@ -73,7 +86,7 @@ function getType(doc: ParsedClassDoc): EntityType {
   }
 }
 
-function capitalize(str: string): string {
+export function capitalize(str: string): string {
   if (str.length < 1) {
     return "";
   } else if (str.split(" ").length > 1) {
@@ -370,6 +383,14 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
   doc.fields.sort((a, b) => (a.name > b.name ? 1 : -1));
   doc.elements?.sort((a, b) => (a.name > b.name ? 1 : -1));
 
+  // remove protected constructors and fields
+  doc.constructors = doc.constructors.filter(
+    (doc) => !doc.modifiers.startsWith("protected")
+  );
+  doc.fields = doc.fields.filter(
+    (fieldDoc) => !fieldDoc.modifiers.startsWith("protected")
+  );
+
   return [
     // Declare the class itself as an entity
     project.declareEntity({
@@ -422,12 +443,12 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
           ["Constructor and Description"],
           doc.constructors.map((doc) => [
             [
-              md.paragraph([
-                md.text("|   "),
-                project.linkToEntity(doc.qualifiedName, doc.name),
-                md.text(" "),
-                ...makeParameterListWithLinks(project, doc),
-              ]),
+              makeFunctionDeclaration({
+                project,
+                doc,
+                modifiers: false,
+                returnType: false,
+              }),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
           ])
@@ -540,13 +561,12 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
               ),
             ],
             [
-              md.paragraph([
-                md.text("|   "),
-                project.linkToEntity(getCanonicalNameForMethod(doc), doc.name),
-                md.text(" "),
-                ...makeTypeParameterListWithLinks(project, doc),
-                ...makeParameterListWithLinks(project, doc),
-              ]),
+              makeFunctionDeclaration({
+                project,
+                doc,
+                modifiers: false,
+                returnType: false,
+              }),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
             ],
           ])
@@ -661,27 +681,50 @@ const getCanonicalNameForMethod = (doc: MethodDoc): string => {
   return `${doc.qualifiedName}${doc.flatSignature}`;
 };
 
+function makeFunctionDeclaration(
+  args: MakeFunctionDeclarationArgs
+): LiteralIndentationBlockNode {
+  const { project, doc } = args;
+  const noParams = doc.parameters.length === 0;
+  return literalIndentationBlock([
+    literalIndentationNode(
+      1,
+      [
+        args.modifiers
+          ? [md.text(args.doc.modifiers), md.text(" ")]
+          : md.text(""),
+        args.returnType
+          ? [
+              project.linkToEntity(
+                (doc as MethodDoc).returnType.qualifiedTypeName,
+                (doc as MethodDoc).returnType.typeName
+              ),
+              md.text(" "),
+            ]
+          : md.text(""),
+        project.linkToEntity(doc.qualifiedName, doc.name),
+        ...makeTypeParameterListWithLinks(project, doc as MethodDoc),
+        md.text("("),
+        noParams ? md.text(")") : md.text(""),
+      ].flat(1)
+    ),
+    ...makeParameterListWithLinks(args.project, args.doc).map((param) =>
+      literalIndentationNode(2, param)
+    ),
+    literalIndentationNode(1, [noParams ? md.text("") : md.text(")")]),
+  ]);
+}
+
 const makeParameterListWithLinks = (
   project: Project<JavadocEntityData>,
   doc: MethodDoc | ExecutableMemberDoc
-): Node[] => {
-  return [
-    md.text("("),
-    ...doc.parameters
-      .map((parameter, i) => [
-        md.text("\n|      "),
-        project.linkToEntity(
-          parameter.type.qualifiedTypeName,
-          parameter.typeName
-        ),
-        md.text(
-          ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
-        ),
-      ])
-      .flat(1),
-    doc.parameters.length > 0 ? md.text("\n|   ") : md.text(""),
-    md.text(")"),
-  ];
+): Node[][] => {
+  return doc.parameters.map((parameter, i) => [
+    project.linkToEntity(parameter.type.qualifiedTypeName, parameter.typeName),
+    md.text(
+      ` ${parameter.name ?? ""}${i < doc.parameters.length - 1 ? ", " : ""}`
+    ),
+  ]);
 };
 
 const makeTypeParameterListWithLinks = (
@@ -765,7 +808,7 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
 };
 
 const makeConstructorDetailBody: MakeBodyFunction = (args) => {
-  const { doc } = args;
+  const { project, doc } = args;
   return doc.constructors
     .map((constructor) =>
       [
@@ -787,11 +830,12 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
         }),
         makeDetail(
           [
-            md.text(" |   "),
-            md.text(constructor.modifiers),
-            md.text(" "),
-            md.text(` ${constructor.name} `),
-            ...makeParameterListWithLinks(args.project, constructor),
+            makeFunctionDeclaration({
+              project,
+              doc: constructor,
+              modifiers: true,
+              returnType: false,
+            }),
           ],
           [
             tagsToMdast(args.project, constructor.inlineTags),
@@ -882,7 +926,7 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
             ),
             md.text("\n\n"),
             tagsToMdast(args.project, elem.inlineTags),
-            elem.defaultValue !== null && elem.defaultValue !== undefined
+            elem.defaultValue !== null
               ? md.paragraph([
                   md.text("\n\n"),
                   md.strong(md.text("Default:")),
@@ -900,9 +944,7 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
 
 function uniqueify(s: string[]): string[] {
   return [
-    ...new Set<string>(
-      s.filter((str) => str !== undefined && str !== null && str.trim() !== "")
-    ),
+    ...new Set<string>(s.filter((str) => str !== null && str.trim() !== "")),
   ];
 }
 
@@ -990,16 +1032,12 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
 
         makeDetail(
           [
-            md.text("|   "),
-            md.text(doc.modifiers),
-            md.text(" "),
-            project.linkToEntity(
-              doc.returnType.qualifiedTypeName,
-              doc.returnType.typeName
-            ),
-            md.text(` ${doc.name} `),
-            ...makeTypeParameterListWithLinks(project, doc),
-            ...makeParameterListWithLinks(project, doc),
+            makeFunctionDeclaration({
+              project,
+              doc,
+              modifiers: true,
+              returnType: true,
+            }),
           ],
           [
             tagsToMdast(project, doc.inlineTags),
