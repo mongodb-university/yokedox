@@ -385,6 +385,31 @@ const visitors: {
     c.add(">");
     c.addNewline();
   },
+  /*
+   * Provides variable indentation levels for nodes.
+   * Accomplishes this by prefixing groups of nodes with the vertical bar ("|") character
+   * and *depth* number of spaces. rST only supports indentation relative to previous indentation
+   * levels in the same literal block, so:
+   *
+   * | foo
+   * |      bar
+   *
+   * renders the same as
+   *
+   * | foo
+   * |  bar
+   *
+   * (essentially, whether 'bar' has 1 or 1 million spaces more than foo, rST only renders it as "a level deeper")
+   *
+   * To indent more than two levels, you need to "build" your way there with additional lines:
+   *
+   * | foo
+   * |  baz
+   * |   bar
+   *
+   * TL;DR: The depth of spaces does *not* correspond to the indentation level, other than more spaces = more indented.
+   * Indentation is capped at "1 more than the previous largest level of indentation" regardless of the number of spaces.
+   */
   literalIndentationBlock(c, n) {
     c.add(n.children);
     c.addDoubleNewline();
