@@ -785,13 +785,13 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
           canonicalName: `${doc.simpleTypeName}.${methodName}()`,
           pageUri: args.pageUri,
         }),
-        doc.simpleTypeName != doc.name
+        doc.simpleTypeName !== doc.name
           ? args.project.declareEntity({
               canonicalName: `${doc.name}.${overloadDocs[0].name}`,
               pageUri: args.pageUri,
             })
           : md.text(""),
-        doc.simpleTypeName != doc.name
+        doc.simpleTypeName !== doc.name
           ? args.project.declareEntity({
               canonicalName: `${doc.name}.${overloadDocs[0].name}()`,
               pageUri: args.pageUri,
