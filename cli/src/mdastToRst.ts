@@ -385,4 +385,14 @@ const visitors: {
     c.add(">");
     c.addNewline();
   },
+  literalIndentationBlock(c, n) {
+    c.add(n.children);
+    c.addDoubleNewline();
+  },
+  literalIndentationNode(c, n) {
+    c.add("| ");
+    c.add(Array(n.depth).join(" "));
+    c.add(n.children);
+    c.addNewline();
+  },
 };
