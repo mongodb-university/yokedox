@@ -414,14 +414,14 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
     ...makeImplementedInterfacesList(project, doc),
 
     // Enclosing class
-    doc.containingClass !== undefined
+    doc.containingClass != null
       ? md.paragraph([
           md.text("\n\n"),
           md.strong(md.text("Enclosing class:")),
           md.text("\n\n"),
           project.linkToEntity(
-            doc.containingClass!.qualifiedTypeName,
-            doc.containingClass!.simpleTypeName
+            doc.containingClass.qualifiedTypeName,
+            doc.containingClass.simpleTypeName
           ),
           md.text("\n\n"),
         ])
@@ -482,10 +482,11 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       depth,
       title: "Optional Element Summary",
       shouldMakeSection: () =>
-        doc.elements !== undefined && doc.elements?.length !== 0,
+        doc.elements != null && doc.elements.length !== 0,
       makeBody: () =>
         makeTable(
           ["Modifier and Type", "Optional Element and Description"],
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           doc.elements!.map((elem) => [
             md.paragraph([
               md.text(`${elem.modifiers} `),
@@ -891,8 +892,8 @@ const makeConstructorDetailBody: MakeBodyFunction = (args) => {
 
 const makeElementDetailBody: MakeBodyFunction = (args) => {
   const { doc } = args;
-  return doc
-    .elements!.map((elem) =>
+  return (doc.elements ?? [])
+    .map((elem) =>
       [
         args.project.declareEntity({
           canonicalName: elem.name,
@@ -1120,15 +1121,15 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               : md.paragraph(),
 
             // Overrides section
-            doc.overriddenMethodContainingClass !== undefined
+            doc.overriddenMethodContainingClass != null
               ? md.paragraph([
                   md.strong(md.text("Overrides")),
                   md.text("\n\n"),
                   md.inlineCode(doc.name),
                   md.text("in class "),
                   project.linkToEntity(
-                    doc.overriddenMethodContainingClass!.qualifiedTypeName,
-                    doc.overriddenMethodContainingClass?.simpleTypeName
+                    doc.overriddenMethodContainingClass.qualifiedTypeName,
+                    doc.overriddenMethodContainingClass.simpleTypeName
                   ),
                 ])
               : md.text(""),
