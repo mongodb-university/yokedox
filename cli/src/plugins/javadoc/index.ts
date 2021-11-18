@@ -383,6 +383,14 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
   doc.fields.sort((a, b) => (a.name > b.name ? 1 : -1));
   doc.elements?.sort((a, b) => (a.name > b.name ? 1 : -1));
 
+  // remove protected constructors and fields
+  doc.constructors = doc.constructors.filter(
+    (doc) => !doc.modifiers.startsWith("protected")
+  );
+  doc.fields = doc.fields.filter(
+    (fieldDoc) => !fieldDoc.modifiers.startsWith("protected")
+  );
+
   return [
     // Declare the class itself as an entity
     project.declareEntity({
@@ -433,9 +441,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Constructor and Description"],
-          doc.constructors
-            .filter((doc) => !doc.modifiers.startsWith("protected"))
-            .map((doc) => [
+          doc.constructors.map((doc) => [
+            [
               makeFunctionDeclaration({
                 project,
                 doc,
@@ -443,7 +450,8 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
                 returnType: false,
               }),
               md.paragraph(tagsToMdast(project, doc.firstSentenceTags)),
-            ])
+            ],
+          ])
         ),
     }),
 
@@ -499,23 +507,21 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       makeBody: () =>
         makeTable(
           ["Modifier and Type", "Field and Description"],
-          doc.fields
-            .filter((fieldDoc) => !fieldDoc.modifiers.startsWith("protected"))
-            .map((fieldDoc) => [
-              md.paragraph([
-                md.text(`${fieldDoc.modifiers} `),
-                project.linkToEntity(
-                  fieldDoc.type.qualifiedTypeName,
-                  fieldDoc.type.typeName
-                ),
-              ]),
-              [
-                md.paragraph(
-                  project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
-                ),
-                tagsToMdast(project, fieldDoc.inlineTags),
-              ],
-            ])
+          doc.fields.map((fieldDoc) => [
+            md.paragraph([
+              md.text(`${fieldDoc.modifiers} `),
+              project.linkToEntity(
+                fieldDoc.type.qualifiedTypeName,
+                fieldDoc.type.typeName
+              ),
+            ]),
+            [
+              md.paragraph(
+                project.linkToEntity(fieldDoc.qualifiedName, fieldDoc.name)
+              ),
+              tagsToMdast(project, fieldDoc.inlineTags),
+            ],
+          ])
         ),
     }),
 
@@ -608,7 +614,6 @@ const makeClassDocPageBody: MakeBodyFunction = (args) => {
       shouldMakeSection: () => doc.fields.length !== 0,
       makeBody: () =>
         doc.fields
-          .filter((fieldDoc) => !fieldDoc.modifiers.startsWith("protected"))
           .map((doc) => [
             project.declareEntity({
               canonicalName: doc.qualifiedName,
@@ -805,7 +810,6 @@ const makeMethodDetailBody: MakeBodyFunction = (args) => {
 const makeConstructorDetailBody: MakeBodyFunction = (args) => {
   const { project, doc } = args;
   return doc.constructors
-    .filter((doc) => !doc.modifiers.startsWith("protected"))
     .map((constructor) =>
       [
         args.project.declareEntity({
@@ -922,7 +926,7 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
             ),
             md.text("\n\n"),
             tagsToMdast(args.project, elem.inlineTags),
-            elem.defaultValue !== null && elem.defaultValue !== undefined
+            elem.defaultValue !== null
               ? md.paragraph([
                   md.text("\n\n"),
                   md.strong(md.text("Default:")),
@@ -940,9 +944,7 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
 
 function uniqueify(s: string[]): string[] {
   return [
-    ...new Set<string>(
-      s.filter((str) => str !== undefined && str !== null && str.trim() !== "")
-    ),
+    ...new Set<string>(s.filter((str) => str !== null && str.trim() !== "")),
   ];
 }
 
