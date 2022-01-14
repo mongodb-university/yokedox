@@ -3,7 +3,7 @@ package com.yokedox.test;
 /**
  * Inherit doc
  */
-public class InheritDoc2 extends InheritDoc1 {
+public class InheritDoc2 implements InheritDoc1 {
     /**
      * Ignore this text! {@inheritDoc} instead.
      *
