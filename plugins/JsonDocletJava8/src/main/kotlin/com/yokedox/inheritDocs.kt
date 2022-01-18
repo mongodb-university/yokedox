@@ -1,9 +1,6 @@
 package com.yokedox
 
-import com.sun.javadoc.ClassDoc
-import com.sun.javadoc.Doc
-import com.sun.javadoc.MethodDoc
-import com.sun.javadoc.Tag
+import com.sun.javadoc.*
 
 
 /*
@@ -34,30 +31,43 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
         return tagsAsIs
     }
 
+    // Initialize map of each parameter name to a tag. Will look to fill
+    // in missing tags for all parameters.
+    val paramTagsByName = mutableMapOf<String, ParamTag?>()
+    v.parameters().forEach {
+        paramTagsByName[it.name()] = null
+    }
+    collectParamTags(paramTagsByName, v.tags("param"))
+    val haveParams = {
+        // Have all params when none of the map entries have null values
+        paramTagsByName.values.count {
+            it == null
+        } == 0
+    }
+
     var haveMainDescription = isUsableComment(v.tags())
     var haveReturn = isUsableTag(v,"return")
-    var haveParams = isUsableTag(v, "param")
     var haveThrows = isUsableTag(v, "throws")
 
-    if (haveMainDescription && haveReturn && haveParams && haveThrows) {
+    if (haveMainDescription && haveReturn && haveThrows && haveParams()) {
         return tagsAsIs
     }
 
     val result = tagsAsIs.toMutableMap()
 
-    val tags = v.tags().toMutableList()
+    val tags = v.tags().filter {
+        it.name() != "param"
+    }.toMutableList()
 
     traverseHierarchy(v) {
         if (!haveReturn && isUsableTag(it, "return")) {
             haveReturn = true
             tags.addAll(it.tags("return"))
         }
-        // This doesn't necessarily cover ALL params
-        if (!haveParams && isUsableTag(it, "param")) {
-            haveParams = true
-            tags.addAll(it.tags("param"))
+        if (!haveParams()) {
+            collectParamTags(paramTagsByName, it.tags("param"))
         }
-        // This doesn't necessarily cover ALL throws
+        // This doesn't necessarily cover ALL throws?
         if (!haveThrows && isUsableTag(it, "throws")) {
             haveThrows = true
             tags.addAll(it.tags("throws"))
@@ -72,8 +82,14 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
                 )
             )
         }
-        haveMainDescription && haveReturn && haveParams && haveThrows
+        val shouldContinue = !haveMainDescription || !haveReturn || !haveParams() || !haveThrows
+        shouldContinue
     }
+    tags.addAll(
+        paramTagsByName.values.filter {
+            it != null
+        }
+    )
     result["tags"] = tags.map { toJson(it) }
     return result
 }
@@ -81,7 +97,7 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
 /**
     Traverse the hierarchy per the standard doclet algorithm.
 
-    Algorithm is as follows:
+    Algorithm is as follows (from "Automatic Copying of Method Comments" https://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javadoc.html):
     >1. Look in each directly implemented (or extended) interface in the order they appear following the word implements (or extends) in the method declaration. Use the first doc comment found for this method.
     >2. If step 1 failed to find a doc comment, recursively apply this entire algorithm to each directly implemented (or extended) interface, in the same order they were examined in step 1.
     >3. If step 2 failed to find a doc comment and this is a class other than Object (not an interface):
@@ -94,11 +110,6 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
     @return false if the traversal was stopped by onOverriddenMethodFound returning false, otherwise true.
  */
 private fun traverseHierarchy(methodDoc: MethodDoc, containingClass: ClassDoc = methodDoc.containingClass(), onOverriddenMethodFound: (methodDoc: MethodDoc) -> Boolean): Boolean {
-    /*
-    >Algorithm for Inheriting Method Comments - If a method does not have a doc comment, or has an {@inheritDoc} tag, the Javadoc tool searches for an applicable comment using the following algorithm, which is designed to find the most specific applicable doc comment, giving preference to interfaces over superclasses:
-    >
-
-    */
     val methodId = methodDoc.name() + methodDoc.signature()
 
     // Step 1.
@@ -144,4 +155,16 @@ private fun isUsableComment(tags: Array<Tag>?): Boolean {
 private fun isUsableTag(methodDoc: MethodDoc, tagName: String): Boolean {
     val tags = methodDoc.tags(tagName)
     return isUsableComment(tags)
+}
+
+private fun collectParamTags(paramTagsByName: MutableMap<String, ParamTag?>, tags: Array<Tag>?) {
+    tags?.forEach { tag ->
+        val paramTag = tag as ParamTag
+        if (isUsableComment(paramTag.inlineTags())) {
+            val parameterName = paramTag.parameterName()
+            if (paramTagsByName.containsKey(parameterName) && paramTagsByName[parameterName] == null) {
+                paramTagsByName[parameterName] = paramTag
+            }
+        }
+    }
 }
