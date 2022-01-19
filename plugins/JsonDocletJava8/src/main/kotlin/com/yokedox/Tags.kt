@@ -60,5 +60,6 @@ fun toJson(v: Tag, level: Int = 0): JsonObject {
                 "exceptionType" to toJson(v.exceptionType()),
             ))
     }
+
     return value
 }

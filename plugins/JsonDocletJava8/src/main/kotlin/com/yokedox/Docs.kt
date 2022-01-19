@@ -105,10 +105,6 @@ fun toJson(v: Doc?, deepParse: Boolean = false): JsonObject? {
 
     val value = mutableMapOf<String, Any?>(
         "commentText" to v.commentText(),
-        "tags" to v.tags().map { toJson(it) },
-        "seeTags" to v.seeTags().map { toJson(it) },
-        "inlineTags" to v.inlineTags().map { toJson(it) },
-        "firstSentenceTags" to v.firstSentenceTags().map { toJson(it) },
         "name" to v.name(),
         "isField" to v.isField,
         "isEnumConstant" to v.isEnumConstant,
@@ -125,10 +121,17 @@ fun toJson(v: Doc?, deepParse: Boolean = false): JsonObject? {
         "isIncluded" to v.isIncluded,
         "position" to toJson(v.position())
     )
+
+    // Special case to allow method docs to inherit tags from overridden methods.
+    value.putAll(inheritDocs(v))
+
     when (v) {
         is ProgramElementDoc ->
             value.putAll(moreJson(v))
     }
+
+
+
     return value
 }
 
@@ -216,6 +219,7 @@ private fun moreJson(v: MethodDoc): JsonObject {
                 (if (v.overriddenMethod() == null)
                     null else toJson(v.overriddenMethod().containingClass())),
     )
+
     when (v) {
         is AnnotationTypeElementDoc ->
             value.putAll(moreJson(v))
