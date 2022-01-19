@@ -3,22 +3,24 @@ package com.yokedox
 import com.sun.javadoc.*
 
 
-/*
-In Javadoc, docs inheritance seems to happen in the standard doclet.
-We don't have access to inherited docs. So we need to implement it here.
+/**
+    Inherit method docs from interfaces and superclasses according to the standard doclet algorithm.
 
-From "Automatic Copying of Method Comments" https://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javadoc.html
+    In Javadoc, docs inheritance seems to happen in the standard doclet.
+    We don't have access to inherited docs. So we need to implement it here.
 
->When a main description, or @return, @param or @throws tag is missing from a method comment, the Javadoc tool copies the corresponding main description or tag comment from the method it overrides or implements (if any), according to the algorithm below.
->
->...
->
->Inherit from classes and interfaces - Inheriting of comments occurs in all three possible cases of inheritance from classes and interfaces:
->
->- When a method in a class overrides a method in a superclass
->- When a method in an interface overrides a method in a superinterface
->- When a method in a class implements a method in an interface
->
+    From "Automatic Copying of Method Comments" https://docs.oracle.com/javase/6/docs/technotes/tools/solaris/javadoc.html
+
+    >When a main description, or @return, @param or @throws tag is missing from a method comment, the Javadoc tool copies the corresponding main description or tag comment from the method it overrides or implements (if any), according to the algorithm below.
+    >
+    >...
+    >
+    >Inherit from classes and interfaces - Inheriting of comments occurs in all three possible cases of inheritance from classes and interfaces:
+    >
+    >- When a method in a class overrides a method in a superclass
+    >- When a method in an interface overrides a method in a superinterface
+    >- When a method in a class implements a method in an interface
+    >
 */
 fun inheritDocs(v: Doc): Map<String, Any?> {
     val tagsAsIs = mapOf(
@@ -45,7 +47,7 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
         } == 0
     }
 
-    var haveMainDescription = isUsableComment(v.tags())
+    var haveMainDescription = isUsableComment(v.inlineTags())
     var haveReturn = isUsableTag(v,"return")
     var haveThrows = isUsableTag(v, "throws")
 
@@ -82,7 +84,7 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
                 )
             )
         }
-        val shouldContinue = !haveMainDescription || !haveReturn || !haveParams() || !haveThrows
+        val shouldContinue = !haveMainDescription || !haveReturn || !haveThrows || !haveParams()
         shouldContinue
     }
     tags.addAll(
@@ -110,13 +112,13 @@ fun inheritDocs(v: Doc): Map<String, Any?> {
     @return false if the traversal was stopped by onOverriddenMethodFound returning false, otherwise true.
  */
 private fun traverseHierarchy(methodDoc: MethodDoc, containingClass: ClassDoc = methodDoc.containingClass(), onOverriddenMethodFound: (methodDoc: MethodDoc) -> Boolean): Boolean {
-    val methodId = methodDoc.name() + methodDoc.signature()
+    val methodId = getMethodId(methodDoc)
 
-    // Step 1.
+    // Step 1. (See method comment ^)
     val interfaceTypes = containingClass.interfaceTypes()
     for (interfaceType in interfaceTypes) {
         val classDoc = interfaceType.asClassDoc() ?: continue
-        val overloadedMethod = classDoc.methods().find { methodId == it.name() + it.signature() } ?: continue
+        val overloadedMethod = classDoc.methods().find { methodId == getMethodId(it) } ?: continue
         val shouldContinueTraversal = onOverriddenMethodFound(overloadedMethod)
         if (!shouldContinueTraversal) {
             return false
@@ -133,30 +135,51 @@ private fun traverseHierarchy(methodDoc: MethodDoc, containingClass: ClassDoc = 
     }
 
     // Step 3.
-    val superclass = containingClass.superclassType()?.asClassDoc()
-    if (superclass != null) {
-        val overriddenMethod = superclass.methods().find { methodId == it.name() + it.signature() }
-        if (overriddenMethod != null) {
-            onOverriddenMethodFound(overriddenMethod)
-        }
-        // Step 3b.
-        val shouldContinueTraversal = traverseHierarchy(methodDoc, superclass, onOverriddenMethodFound)
-        if (!shouldContinueTraversal) {
-            return false
-        }
+    val superclass = containingClass.superclassType()?.asClassDoc() ?: return true
+    var shouldContinueTraversal = true
+    val overriddenMethod = superclass.methods().find { methodId == getMethodId(it) }
+    if (overriddenMethod != null) {
+        shouldContinueTraversal = onOverriddenMethodFound(overriddenMethod)
+    }
+    if (!shouldContinueTraversal) {
+        return false
+    }
+    // Step 3b.
+    shouldContinueTraversal = traverseHierarchy(methodDoc, superclass, onOverriddenMethodFound)
+    if (!shouldContinueTraversal) {
+        return false
     }
     return true
 }
 
+/**
+ * Returns the method name and signature.
+ */
+private fun getMethodId(methodDoc: MethodDoc): String {
+    return methodDoc.name() + methodDoc.signature()
+}
+
+/**
+ * Returns true if the comment can be used because it has content and does not have an inheritDoc tag.
+ */
 private fun isUsableComment(tags: Array<Tag>?): Boolean {
     return tags != null && tags.isNotEmpty() && tags.count { it.kind() == "@inheritDoc" } == 0
 }
 
+/**
+ * Returns true if the tags of the given type can be used.
+ */
 private fun isUsableTag(methodDoc: MethodDoc, tagName: String): Boolean {
     val tags = methodDoc.tags(tagName)
     return isUsableComment(tags)
 }
 
+/**
+ * Looks through the given tags array to gather param tags for a set of parameter names.
+ *
+ * Gathers param tags where the parameter name is a key in the given paramTagsByName
+ * map. Stores those param tags as values in the given map if the value for that entry is still null.
+ */
 private fun collectParamTags(paramTagsByName: MutableMap<String, ParamTag?>, tags: Array<Tag>?) {
     tags?.forEach { tag ->
         val paramTag = tag as ParamTag
