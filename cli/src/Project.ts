@@ -22,7 +22,22 @@ export type Project<UserDataType = unknown> = {
 
     This is used to handle entities that are not declared within the actual
     project -- e.g. built-ins (int, void) or externals (standard library
-    entities).
+    entities that should link to other docs sites).
+
+    A transformer accepts a canonical name and returns a complete entity if that
+    name is relevant to it or undefined otherwise.
+
+    Transformers run in the link resolution stage. Transformers run in the order
+    they were added.
+
+    If a transformer returns undefined, the link resolver tries the next
+    transformer until one returns an entity or until all transformers have been
+    tried.
+
+    If no transformer returns a new entity, then the entity in question is
+    considered to be internal. If an internal entity with that canonical name
+    was never declared before the project was finalized, then any references to
+    that entity are effectively broken links.
    */
   addEntityTransformer(transform: EntityTransformer<UserDataType>): void;
 

@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import glob from "glob-promise";
 import * as md from "mdast-builder";
 import * as Path from "path";
+import { addExternalEntityPattern } from "../../addExternalEntityTransformer.js";
 import { Plugin, PluginArgs } from "../../index.js";
 import { Page } from "../../Page.js";
 import { Project } from "../../Project.js";
@@ -102,17 +103,16 @@ export function capitalize(str: string): string {
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
     const { project } = args;
-    // Handle external entities
-    project.addEntityTransformer((canonicalName) => {
-      if (!/^java\./.test(canonicalName)) {
-        return undefined;
-      }
-      const path = canonicalName.split(".").join("/");
-      return {
-        type: "external",
-        canonicalName,
-        pageUri: `https://docs.oracle.com/javase/7/docs/api/${path}.html`,
-      };
+    // Handle standard external entities
+    addExternalEntityPattern(project, {
+      from: /^java\./,
+      toPrefix: "https://docs.oracle.com/javase/7/docs/api/",
+      toSuffix: ".html",
+    });
+
+    addExternalEntityPattern(project, {
+      from: /^android\./,
+      toPrefix: "https://developer.android.com/reference/",
     });
 
     // Handle built-in entities
@@ -227,6 +227,8 @@ async function processPackageDoc(
 ): Promise<void> {
   // Nothing here because parsed package docs are not comprehensive. Instead, we
   // identify packages as we process classes.
+  doc; // unused
+  project;
 }
 
 function makeTable(labels: string[], rows: (Node | Node[])[][]) {
@@ -944,7 +946,7 @@ const makeElementDetailBody: MakeBodyFunction = (args) => {
                   md.text("\n\n"),
                   md.strong(md.text("Default:")),
                   md.text("\n"),
-                  md.inlineCode(elem.defaultValue!),
+                  md.inlineCode(elem.defaultValue ?? ""),
                 ])
               : md.text(""),
             ...makeSeeAlso(args.project, elem.seeTags),
@@ -1039,7 +1041,6 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
   const { project, pageUri, doc: overloadDocs } = args;
   return overloadDocs
     .map((doc) => {
-      const canonicalName = getCanonicalNameForMethod(doc);
       return [
         ...makeMethodAnchors(project, doc, pageUri),
 
