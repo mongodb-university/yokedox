@@ -1096,13 +1096,13 @@ const makeMethodOverloadsDetailBody: MakeBodyFunction<MethodDoc[]> = (args) => {
               : md.paragraph(),
 
             // Returns section
-            doc.tags.filter((tag) => /^@returns?$/.test(tag.kind)).length !== 0
+            doc.tags.filter((tag) => /^returns?$/.test(tag.kind)).length !== 0
               ? md.paragraph([
                   md.paragraph(md.strong(md.text("Returns"))),
                   md.paragraph([
                     tagsToMdast(
                       project,
-                      doc.tags.find((tag) => /^@returns?$/.test(tag.kind))
+                      doc.tags.find((tag) => /^returns?$/.test(tag.kind))
                         ?.inlineTags ?? []
                     ),
                   ]),
