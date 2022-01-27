@@ -3,6 +3,10 @@ import { promises } from "fs";
 import * as Path from "path";
 import { Parent } from "unist";
 import { visit } from "unist-util-visit";
+import {
+  addExternalEntityPattern,
+  ExternalEntityPattern,
+} from "./addExternalEntityTransformer.js";
 import { Entity, EntityTransformer, InternalEntity } from "./Entity.js";
 import { Page } from "./Page.js";
 import {
@@ -45,6 +49,12 @@ export type MakeProjectArgs = {
     Whether to output information about duplicate entities generated internally.
    */
   enableDuplicateEntityWarning?: boolean;
+
+  /**
+    A way to connect entity canonical names that match a certain pattern with
+    some external docs site.
+   */
+  externalEntityPatterns?: ExternalEntityPattern[];
 };
 
 /**
@@ -61,6 +71,7 @@ export async function makeProject<UserDataType = unknown>({
   outputMarkdown = false,
   outputRst = true,
   enableDuplicateEntityWarning,
+  externalEntityPatterns = [],
 }: MakeProjectArgs): Promise<Project<UserDataType>> {
   // Use the current working directy if no output directory was provided
   const outputDirectoryPath = Path.resolve(out ?? "");
@@ -109,11 +120,11 @@ export async function makeProject<UserDataType = unknown>({
 
   let isFinalized = false;
 
-  const EntityTransformers = new Set<EntityTransformer>();
+  const EntityTransformers: EntityTransformer[] = [];
 
   const project: Project<UserDataType> = {
     addEntityTransformer(transformer) {
-      EntityTransformers.add(transformer);
+      EntityTransformers.push(transformer);
     },
 
     declareEntity(internalEntity: InternalEntity<UserDataType>) {
@@ -166,7 +177,7 @@ export async function makeProject<UserDataType = unknown>({
       // Before writing, make sure links are resolved
       const pendingLinks = findPendingLinks(page);
       const resolvedLinks = resolveLinks({
-        EntityTransformers: Array.from(EntityTransformers),
+        EntityTransformers,
         links: pendingLinks,
         entities,
       });
@@ -248,6 +259,11 @@ export async function makeProject<UserDataType = unknown>({
       };
     },
   };
+
+  externalEntityPatterns.forEach((pattern) => {
+    addExternalEntityPattern(project, pattern);
+  });
+
   return project;
 }
 

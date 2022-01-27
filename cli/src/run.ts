@@ -8,8 +8,8 @@ import { PluginArgs } from "./Plugin.js";
 export type RunArgs = Omit<PluginArgs, "tempDir" | "project"> &
   MakeProjectArgs & {
     /**
-    Path to plugin.
-   */
+      Path to plugin.
+     */
     plugin?: string;
   };
 

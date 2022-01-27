@@ -1,5 +1,6 @@
 import { strict as assert } from "assert";
 import yargs from "yargs";
+import { loadConfiguration } from "./loadConfiguration.js";
 import { run } from "./run.js";
 
 /**
@@ -46,11 +47,16 @@ export const cli = yargs
             "output information about duplicate entities generated internally",
         });
     },
-    (args) => {
+    async (args) => {
       assert(args.generator !== undefined);
+
+      // Load .yokedox.(yaml|json|...) from current working directory
+      const configuration = await loadConfiguration();
+
       run({
+        ...configuration,
         ...args,
-        generator: args.generator, // strict null check
+        generator: args.generator, // this line makes `...args` compatible with RunArgs by eliminating the undefined
         generatorArgs: args._.slice(1),
       });
     }
