@@ -163,7 +163,7 @@ export async function makeProject<UserDataType = unknown>({
         // External entity links are resolved after project finalization. For
         // now, return a pending link.
         return {
-          ...md.strong([md.text(linkText), md.text(" (?)")]),
+          ...md.strong([md.text(linkText)]),
           type: "linkToEntity",
           targetCanonicalName,
           isPending: true,

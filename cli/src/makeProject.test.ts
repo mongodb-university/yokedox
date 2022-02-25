@@ -143,7 +143,7 @@ describe("makeProject", () => {
 
     // Finalized with broken links
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
-      '{"path":"/index","root":{"type":"root","children":[{"type":"strong","children":[{"type":"text","value":"/foo#bar"},{"type":"text","value":" (?)"}],"targetCanonicalName":"/foo#bar","isPending":true,"linkText":"/foo#bar"}]}}'
+      '{"path":"/index","root":{"type":"root","children":[{"type":"strong","children":[{"type":"text","value":"/foo#bar"}],"targetCanonicalName":"/foo#bar","isPending":true,"linkText":"/foo#bar"}]}}'
     );
   });
 
@@ -197,7 +197,7 @@ describe("makeProject", () => {
     await project.finalize();
 
     await expect(fs.readFile("/index.json", "utf8")).resolves.toBe(
-      '{"path":"/index","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"ext.something"}],"targetCanonicalName":"ext.something","isPending":false,"linkText":"ext.something","url":"https://example.com/ext.something","title":"ext.something","entityType":"external"},{"type":"strong","children":[{"type":"text","value":"int.something"},{"type":"text","value":" (?)"}],"targetCanonicalName":"int.something","isPending":true,"linkText":"int.something"}]}}'
+      '{"path":"/index","root":{"type":"root","children":[{"type":"link","children":[{"type":"text","value":"ext.something"}],"targetCanonicalName":"ext.something","isPending":false,"linkText":"ext.something","url":"https://example.com/ext.something","title":"ext.something","entityType":"external"},{"type":"strong","children":[{"type":"text","value":"int.something"}],"targetCanonicalName":"int.something","isPending":true,"linkText":"int.something"}]}}'
     );
   });
 });

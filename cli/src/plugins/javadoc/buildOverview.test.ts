@@ -79,10 +79,6 @@ describe("buildOverview", () => {
               type: "text",
               value: "SomeNonexistentClass",
             },
-            {
-              type: "text",
-              value: " (?)",
-            },
           ],
           isPending: true,
           linkText: "SomeNonexistentClass",
