@@ -47,4 +47,9 @@ export type PluginArgs<UserDataType = unknown> = {
     containing the result of a generator call.
    */
   debugGeneratorResultPath?: string;
+
+  /**
+    Additional path to use when building indexes.
+   */
+  indexPathPrefix?: string;
 };

@@ -22,7 +22,7 @@ export type BuildOverviewArgs = BuildIndexesArgs;
   -overview flag in javadoc.
  */
 export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
-  const { finalizedProject } = args;
+  const { finalizedProject, indexPathPrefix } = args;
   const packages = finalizedProject.entities.filter(
     (e) => e.data?.category === "package"
   );
@@ -43,7 +43,10 @@ export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
           }
           const link = linkToEntity as TypedNode<"link">;
           return toctreeItem({
-            url: packageToFolderPath(link.url.replace(/#.*$/, "")),
+            url: packageToFolderPath(
+              link.url.replace(/#.*$/, ""),
+              indexPathPrefix
+            ),
             value: entity.canonicalName.replace(/#.*$/, ""),
           });
         })

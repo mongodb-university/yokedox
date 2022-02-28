@@ -7,17 +7,19 @@ import { JavadocEntityData } from "./index.js";
 export type BuildIndexesArgs = {
   finalizedProject: FinalizedProject<JavadocEntityData>;
   overviewPath?: string;
+  indexPathPrefix?: string;
 };
 
 // transforms a java package path (e.g. "io.realm.annotations")
 // into a folder path for docs ("io/realm/annotations")
-export function packageToFolderPath(pkg: string): string {
-  return pkg.replace(/\./g, "/");
+export function packageToFolderPath(pkg: string, prefix?: string): string {
+  return `${prefix ?? ""}${pkg.replace(/\./g, "/")}`;
 }
 
 export const buildIndexes = async ({
   finalizedProject,
   overviewPath,
+  indexPathPrefix,
 }: BuildIndexesArgs): Promise<void> => {
   await buildOverview({
     finalizedProject,
@@ -52,7 +54,7 @@ export const buildIndexes = async ({
           .map((member) => {
             const value = "" + member.data?.simpleTypeName;
             return toctreeItem({
-              url: packageToFolderPath(member.canonicalName),
+              url: packageToFolderPath(member.canonicalName, indexPathPrefix),
               value,
             });
           })
