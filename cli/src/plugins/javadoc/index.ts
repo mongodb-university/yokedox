@@ -102,7 +102,7 @@ export function capitalize(str: string): string {
 
 const Javadoc: Plugin<JavadocEntityData> = {
   async run(args): Promise<void> {
-    const { project } = args;
+    const { project, indexPathPrefix } = args;
     // Handle standard external entities
     addExternalEntityPattern(project, {
       from: /^java\./,
@@ -148,7 +148,7 @@ const Javadoc: Plugin<JavadocEntityData> = {
     await processJson({ ...args, jsonPath });
     // 3. Build indexes and additional pages
     const finalizedProject = await args.project.finalize();
-    await buildIndexes({ finalizedProject, overviewPath });
+    await buildIndexes({ finalizedProject, overviewPath, indexPathPrefix });
   },
 };
 

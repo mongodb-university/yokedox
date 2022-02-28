@@ -45,6 +45,11 @@ export const cli = yargs
           boolean: true,
           describe:
             "output information about duplicate entities generated internally",
+        })
+        .option("indexPathPrefix", {
+          string: true,
+          describe:
+            "path prefix to use when building indexes and tables of contents",
         });
     },
     async (args) => {
