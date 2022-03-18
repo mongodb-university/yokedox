@@ -55,6 +55,11 @@ export type MakeProjectArgs = {
     some external docs site.
    */
   externalEntityPatterns?: ExternalEntityPattern[];
+
+  /**
+    The title of the project. If not provided, uses "API Reference".
+   */
+  title?: string;
 };
 
 /**
@@ -66,6 +71,7 @@ export type MakeProjectArgs = {
  */
 export async function makeProject<UserDataType = unknown>({
   out,
+  title = "API Reference",
   fs = promises,
   outputMdastJson = true,
   outputMarkdown = false,
@@ -123,6 +129,7 @@ export async function makeProject<UserDataType = unknown>({
   const EntityTransformers: EntityTransformer[] = [];
 
   const project: Project<UserDataType> = {
+    title,
     addEntityTransformer(transformer) {
       EntityTransformers.push(transformer);
     },

@@ -49,6 +49,7 @@ export const buildIndexes = async ({
       .concat(memberExceptions)
       .concat(memberErrors);
     const pkgRoot = md.root([
+      md.heading(1, md.text(pkg.canonicalName)),
       toctree(
         membersSorted
           .map((member) => {
