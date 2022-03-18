@@ -7,6 +7,11 @@ import { EntityAnchorNode, LinkToEntityNode } from "./yokedast.js";
  */
 export type Project<UserDataType = unknown> = {
   /**
+    The title of the project.
+   */
+  title: string;
+
+  /**
     Create an anchor node for the given entity. The anchor name will be based on
     the entity's canonical name.
 

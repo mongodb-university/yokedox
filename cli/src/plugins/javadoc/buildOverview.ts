@@ -18,8 +18,8 @@ import { JavadocEntityData } from "./index.js";
 export type BuildOverviewArgs = BuildIndexesArgs;
 
 /**
-  Builds the main index file, including overview content if specified by the
-  -overview flag in javadoc.
+  Builds and writes the main index file, including overview content if specified
+  by the -overview flag in javadoc.
  */
 export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
   const { finalizedProject, indexPathPrefix } = args;
@@ -32,6 +32,7 @@ export const buildOverview = async (args: BuildOverviewArgs): Promise<void> => {
 
   // Build index page toctree
   const root = md.root([
+    md.heading(1, md.text(finalizedProject.title)),
     toctree(
       packages
         .map((entity) => {

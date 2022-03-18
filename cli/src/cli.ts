@@ -50,6 +50,10 @@ export const cli = yargs
           string: true,
           describe:
             "path prefix to use when building indexes and tables of contents",
+        })
+        .option("title", {
+          string: true,
+          describe: "the title of the overall documentation site",
         });
     },
     async (args) => {
