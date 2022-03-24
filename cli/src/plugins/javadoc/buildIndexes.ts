@@ -10,21 +10,17 @@ export type BuildIndexesArgs = {
   indexPathPrefix?: string;
 };
 
-// transforms a java package path (e.g. "io.realm.annotations")
-// into a folder path for docs ("io/realm/annotations")
+/**
+  Transforms a java package path (e.g. "io.realm.annotations")
+  into a folder path for docs ("io/realm/annotations")
+ */
 export function packageToFolderPath(pkg: string, prefix?: string): string {
   return `${prefix ?? ""}${pkg.replace(/\./g, "/")}`;
 }
 
-export const buildIndexes = async ({
-  finalizedProject,
-  overviewPath,
-  indexPathPrefix,
-}: BuildIndexesArgs): Promise<void> => {
-  await buildOverview({
-    finalizedProject,
-    overviewPath,
-  });
+export const buildIndexes = async (args: BuildIndexesArgs): Promise<void> => {
+  await buildOverview(args);
+  const { finalizedProject, indexPathPrefix } = args;
 
   const packages = finalizedProject.entities.filter(
     (e) => e.data?.category === "package"
