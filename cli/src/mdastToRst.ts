@@ -174,6 +174,9 @@ const visitors: {
 } = {
   blockquote(c, node) {
     // https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#block-quotes
+    // Snooty doesn't support the indent-only blockquote, instead uses a directive.
+    c.addDoubleNewline();
+    c.add(`.. block-quote::\n`);
     c.indented("\n");
     c.indented(node.children);
     c.addNewline();
@@ -366,7 +369,8 @@ const visitors: {
     if (value === undefined) {
       return;
     }
-    c.add(value.replace(/`/g, "\\`"));
+    // @-symbol must be escaped in sphinx or else it creates a mailto: link
+    c.add(value.replace(/`/g, "\\`").replace(/@/g, "\\@"));
   },
   toctree(c, n) {
     c.add(`.. toctree::

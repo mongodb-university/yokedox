@@ -13,6 +13,8 @@ Here is some *text* with an [external link](https://example.com) and an [anchor 
 
 ## Anchored subheading
 
+This at-symbol will turn into a mailto link if not escaped: @LinkingObjects
+
 >It's a **blockquote.**
 
 \`\`\`java
@@ -56,6 +58,11 @@ Here is some *text* with an \`external link <https://example.com>\`__  and an :r
 Anchored subheading
 ===================
 
+This at-symbol will turn into a mailto link if not escaped: \\@LinkingObjects
+
+
+
+.. block-quote::
 
    It's a **blockquote.**
    
